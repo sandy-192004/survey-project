@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+
+<h3>Family Dashboard</h3>
+
+<form class="row mb-3">
+  <div class="col">
+    <input class="form-control" name="name" placeholder="Name">
+  </div>
+  <div class="col">
+    <input class="form-control" name="mobile" placeholder="Mobile">
+  </div>
+  <div class="col">
+    <input class="form-control" name="district" placeholder="District">
+  </div>
+  <div class="col">
+    <button class="btn btn-primary">Search</button>
+  </div>
+</form>
+
+<table class="table table-bordered table-striped">
+  <tr>
+    <th>Parent</th>
+    <th>Mobile</th>
+    <th>District</th>
+    <th>Children</th>
+    <th>Actions</th>
+  </tr>
+
+  <tbody>
+    <% families.forEach(f => { %>
+      <tr>
+        <td><%= f.name %></td>
+        <td><%= f.mobile %></td>
+        <td><%= f.district %></td>
+        <td><%= f.children || "-" %></td>
+        <td>
+          <a class="btn btn-sm btn-warning" href="/family/edit/<%= f.id %>">
+            Edit
+          </a>
+          <a class="btn btn-sm btn-danger"
+             href="/family/delete/<%= f.id %>"
+             onclick="return confirm('Delete family?')">
+            Delete
+          </a>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+  
+</table>
+
+<a class="btn btn-success" href="/export/excel">Export Excel</a>
+<a class="btn btn-danger" href="/export/pdf">Export PDF</a>
+
+<nav>
+  <ul class="pagination mt-3">
+    <% if (page > 1) { %>
+      <li class="page-item">
+        <a class="page-link" href="?page=<%= page - 1 %>">Prev</a>
+      </li>
+    <% } %>
+    <li class="page-item active">
+      <span class="page-link"><%= page %></span>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="?page=<%= page + 1 %>">Next</a>
+    </li>
+  </ul>
+</nav>
+
+
+</body>
+</html>
