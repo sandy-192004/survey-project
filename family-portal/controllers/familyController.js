@@ -1,56 +1,109 @@
-const Family = require("../models/FamilyMember");
+
+
+const Parent = require("../models/Parent");
+const Child = require("../models/Child");
+const User = require("../models/User");
+
 
 exports.showForm = (req, res) => {
   res.render("family-form");
 };
 
-exports.saveFamily = (req, res) => {
-  const parent = { ...req.body.parent, parent_id: null };
 
-  Family.create(parent, (err, result) => {
+exports.saveFamily = (req, res) => {
+  const parentData = {
+    name: req.body.parent.name,
+    mobile: req.body.parent.mobile,
+    email: req.body.parent.email,
+    occupation: req.body.parent.occupation,
+    door_no: req.body.parent.door_no,
+    street: req.body.parent.street,
+    district: req.body.parent.district,
+    state: req.body.parent.state,
+    pincode: req.body.parent.pincode
+  };
+
+  
+  Parent.create(parentData, (err, result) => {
     if (err) throw err;
 
     const parentId = result.insertId;
 
+   
     (req.body.children || []).forEach(child => {
-      Family.create(
-        { ...child, parent_id: parentId },
-        () => {}
-      );
+      const childData = {
+        parent_id: parentId,
+        name: child.name,
+        occupation: child.occupation
+      };
+      Child.create(childData, () => {});
     });
+
+    
+    const userData = {
+      parent_id: parentId,
+      email: req.body.parent.email,
+      password: req.body.parent.password || "default123"
+    };
+    User.create(userData, () => {});
 
     res.redirect("/dashboard");
   });
 };
 
-exports.dashboard = (req, res) => {
-  const page = parseInt(req.query.page || 1);
 
-  Family.getPaginated(req.query, page, 10, (err, rows) => {
-    res.render("dashboard", { families: rows, page });
+exports.dashboard = (req, res) => {
+  const page = parseInt(req.query.page || 1); // default page = 1
+
+  Parent.getAll((err, parents) => {
+    if (err) throw err;
+
+    if (!parents || parents.length === 0) {
+      return res.render("dashboard", { families: [], page });
+    }
+
+    let count = 0;
+    const families = [];
+
+    parents.forEach(parent => {
+      Child.getByParent(parent.id, (err, children) => {
+        if (err) throw err;
+
+        families.push({
+          parent,
+          children
+        });
+
+        count++;
+        if (count === parents.length) {
+          res.render("dashboard", { families, page }); // pass page here!
+        }
+      });
+    });
   });
 };
 
+
+
 exports.editForm = (req, res) => {
-  Family.getFamilyWithChildren(req.params.id, (err, rows) => {
+  const parentId = req.params.id;
+
+  Parent.getById(parentId, (err, parentRows) => {
     if (err) throw err;
 
-    if (!rows || rows.length === 0) {
-      return res.status(404).send("Family not found");
+    if (!parentRows || parentRows.length === 0) {
+      return res.status(404).send("Parent not found");
     }
 
-    // ✅ Parent is the one with parent_id NULL
-    const parent = rows.find(r => r.parent_id === null || r.parent_id === undefined);
+    const parent = parentRows[0];
 
-    if (!parent) {
-      return res.status(500).send("Parent record missing");
-    }
+    Child.getByParent(parentId, (err, children) => {
+      if (err) throw err;
 
-    const children = rows.filter(r => r.parent_id === parent.id);
-
-    res.render("family-edit", {
-      parent,
-      children
+      res.render("family-edit", {
+        parent,
+        children
+      });
     });
   });
 };
@@ -60,19 +113,22 @@ exports.updateFamily = (req, res) => {
   const parentId = req.params.id;
   const parentData = { ...req.body.parent };
 
-  Family.update(parentId, parentData, err => {
+
+  Parent.update(parentId, parentData, err => {
     if (err) throw err;
 
-    // delete old children
-    Family.deleteChildren(parentId, err => {
+   
+    Child.deleteByParent(parentId, err => {
       if (err) throw err;
 
-      // insert new children
+      
       (req.body.children || []).forEach(child => {
-        Family.create(
-          { ...child, parent_id: parentId },
-          () => {}
-        );
+        const childData = {
+          parent_id: parentId,
+          name: child.name,
+          occupation: child.occupation
+        };
+        Child.create(childData, () => {});
       });
 
       res.redirect("/dashboard");
@@ -82,9 +138,10 @@ exports.updateFamily = (req, res) => {
 
 
 exports.deleteFamily = (req, res) => {
-  Family.delete(req.params.id, () => {
+  const parentId = req.params.id;
+
+
+  Parent.delete(parentId, () => {
     res.redirect("/dashboard");
   });
 };
-
-

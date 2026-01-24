@@ -5,8 +5,8 @@ const db = mysql.createPool({
   user: "root",
   password: "DisneyTron@2345",
   database: "family_portal",
-  socketPath: '/tmp/mysql.sock',
-  port:'60776'
+  // socketPath: '/tmp/mysql.sock',
+  port:'3306'
 });
 
 module.exports = db;
