@@ -2,11 +2,12 @@ const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 
+
 const familyRoutes = require("./routes/familyRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
-const adminRoutes = require("./routes/adminRoutes");
-app.use("/admin", adminRoutes);
+
 
 
 app.set("view engine", "ejs");
@@ -20,6 +21,8 @@ app.use(session({
 }));
 
 app.use("/", familyRoutes);
+app.use("/admin", adminRoutes);
+
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
