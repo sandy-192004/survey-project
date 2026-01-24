@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>View Family Member</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+  <h4>Family Member Details</h4>
+
+  <div class="card p-4 shadow-sm">
+    <p><b>Name:</b> <%= family.name %></p>
+    <p><b>Mobile:</b> <%= family.mobile %></p>
+    <p><b>Email:</b> <%= family.email %></p>
+    <p><b>Occupation:</b> <%= family.occupation %></p>
+    <p><b>Address:</b> 
+      <%= family.door_no %>, <%= family.street %>, <%= family.district %>, <%= family.state %> - <%= family.pincode %>
+    </p>
+    <p><b>Date of Birth:</b> <%= family.dob ? family.dob.toDateString() : 'N/A' %></p>
+    <p><b>Gender:</b> <%= family.gender %></p>
+    <p><b>Parent ID:</b> <%= family.parent_id || 'N/A' %></p>
+
+    <a href="/" class="btn btn-secondary mt-3">Back</a>
+  </div>
+</div>
+
+</body>
+</html>
