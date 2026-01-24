@@ -1,6 +1,6 @@
 const express = require("express");
 const session = require("express-session");
-const bodyParser = require("body-parser");
+const multer = require("multer");
 
 
 const familyRoutes = require("./routes/familyRoutes");
@@ -10,8 +10,12 @@ const app = express();
 
 
 
+
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({ extended: true }));
+
+// Middleware setup - IMPORTANT ORDER
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
 
 app.use(session({
@@ -20,6 +24,7 @@ app.use(session({
   saveUninitialized: true
 }));
 
+app.use("/admin", adminRoutes);
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 
