@@ -23,17 +23,18 @@
   <input class="form-control mb-2" name="parent[door_no]" placeholder="Door No">
   <input class="form-control mb-2" name="parent[street]" placeholder="Street">
 
-  <input id="state" class="form-control mb-2" name="parent[state]" placeholder="State">
-<input id="district" class="form-control mb-2" name="parent[district]" placeholder="District">
-  <select class="form-control mb-2" name="parent[state]" id="state"></select>
-  <select class="form-control mb-2" name="parent[district]" id="district"></select>
+  <select class="form-control mb-2" name="parent[state]" id="state">
+    <option value="">Select State</option>
+  </select>
+  <select class="form-control mb-2" name="parent[district]" id="district">
+    <option value="">Select District</option>
+  </select>
 
   <input class="form-control mb-2" name="parent[pincode]" placeholder="Pincode">
 
   <h5 class="mt-4">Children</h5>
   <div id="children"></div>
-
-  <button type="button" class="btn btn-secondary" onclick="addChild()">Add Child</button>
+  <button type="button" class="btn btn-success mb-3" onclick="addChild()">+ Add Child</button>
   <button class="btn btn-primary mt-3">Save Family</button>
 
 </form>
