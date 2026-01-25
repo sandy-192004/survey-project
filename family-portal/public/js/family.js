@@ -4,12 +4,27 @@ async function loadIndiaData() {
   const res = await fetch("/data/india-states-districts.json");
   indiaData = await res.json();
 
-  $("#state").typeahead({
-    source: Object.keys(indiaData),
-    afterSelect: function (state) {
-      $("#district").typeahead("destroy");
-      $("#district").typeahead({
-        source: indiaData[state]
+  // Populate State dropdown
+  const stateSelect = document.getElementById("state");
+  Object.keys(indiaData).forEach(state => {
+    const option = document.createElement("option");
+    option.value = state;
+    option.textContent = state;
+    stateSelect.appendChild(option);
+  });
+
+  // Update District dropdown when state changes
+  stateSelect.addEventListener("change", function() {
+    const selectedState = this.value;
+    const districtSelect = document.getElementById("district");
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    
+    if (selectedState && indiaData[selectedState]) {
+      indiaData[selectedState].forEach(district => {
+        const option = document.createElement("option");
+        option.value = district;
+        option.textContent = district;
+        districtSelect.appendChild(option);
       });
     }
   });
