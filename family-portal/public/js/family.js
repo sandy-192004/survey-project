@@ -30,16 +30,26 @@ async function loadIndiaData() {
   });
 }
 
+let childCount = 0;
+
 function addChild() {
-  document.getElementById("children").insertAdjacentHTML(
-    "beforeend",
-    `
-    <div class="border p-2 mb-2">
-      <input class="form-control mb-1" name="children[][name]" placeholder="Child Name">
+  const id = `child_${childCount++}`;
+  const html = `
+    <div class="border p-2 mb-2" id="${id}">
+      <input class="form-control mb-1" name="children[][name]" placeholder="Child Name" required>
+      <input class="form-control mb-1" name="children[][dob]" type="date" placeholder="Date of Birth">
       <input class="form-control mb-1" name="children[][occupation]" placeholder="Occupation">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeChild('${id}')">Remove</button>
     </div>
-    `
-  );
+  `;
+  document.getElementById("children").insertAdjacentHTML("beforeend", html);
+}
+
+function removeChild(id) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.remove();
+  }
 }
 
 window.onload = loadIndiaData;
