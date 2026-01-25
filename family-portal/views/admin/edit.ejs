@@ -16,63 +16,63 @@
 
 
 
-  <form class="card p-3" method="POST" action="/update-family/<%= family.id %>">
+  <form class="card p-3" method="POST" action="/admin/edit/<%= member.id %>">
     <div class="mb-2">
       <label class="form-label">Name</label>
-      <input class="form-control" name="name" value="<%= family.name %>" required>
+      <input class="form-control" name="name" value="<%= member.name %>" required>
     </div>
 
     <div class="mb-2">
       <label class="form-label">Mobile</label>
-      <input class="form-control" name="mobile" value="<%= family.mobile %>" required>
+      <input class="form-control" name="mobile" value="<%= member.mobile %>" required>
     </div>
 
     <div class="mb-2">
       <label class="form-label">Email</label>
-      <input class="form-control" name="email" value="<%= family.email %>" required>
+      <input class="form-control" name="email" value="<%= member.email %>" required>
     </div>
 
     <div class="mb-2">
       <label class="form-label">Occupation</label>
-      <input class="form-control" name="occupation" value="<%= family.occupation %>">
+      <input class="form-control" name="occupation" value="<%= member.occupation %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">Door No</label>
-      <input class="form-control" name="door_no" value="<%= family.door_no %>">
+      <input class="form-control" name="door_no" value="<%= member.door_no %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">Street</label>
-      <input class="form-control" name="street" value="<%= family.street %>">
+      <input class="form-control" name="street" value="<%= member.street %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">District</label>
-      <input class="form-control" name="district" value="<%= family.district %>">
+      <input class="form-control" name="district" value="<%= member.district %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">State</label>
-      <input class="form-control" name="state" value="<%= family.state %>">
+      <input class="form-control" name="state" value="<%= member.state %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">Pincode</label>
-      <input class="form-control" name="pincode" value="<%= family.pincode %>">
+      <input class="form-control" name="pincode" value="<%= member.pincode %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">Date of Birth</label>
-      <input type="date" class="form-control" name="dob" value="<%= family.dob.toISOString().split('T')[0] %>">
+      <input type="date" class="form-control" name="dob" value="<%= member.dob ? member.dob.toISOString().split('T')[0] : '' %>">
     </div>
 
     <div class="mb-2">
       <label class="form-label">Gender</label>
       <select class="form-control" name="gender">
-        <option value="Male" <%= family.gender === 'Male' ? 'selected' : '' %>>Male</option>
-        <option value="Female" <%= family.gender === 'Female' ? 'selected' : '' %>>Female</option>
-        <option value="Other" <%= family.gender === 'Other' ? 'selected' : '' %>>Other</option>
+        <option value="Male" <%= member.gender === 'Male' ? 'selected' : '' %>>Male</option>
+        <option value="Female" <%= member.gender === 'Female' ? 'selected' : '' %>>Female</option>
+        <option value="Other" <%= member.gender === 'Other' ? 'selected' : '' %>>Other</option>
       </select>
     </div>
 
