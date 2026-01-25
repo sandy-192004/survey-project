@@ -9,12 +9,16 @@ const db = mysql.createPool({
   port:'3306'
 });
 
+
+db.getConnection((err, connection) => {
+  if (err) {
+    console.log("DB Connection Failed:", err);
+  } else {
+    console.log("MySQL Connected Successfully");
+    connection.release(); // release back to pool
+  }
+});
+
+
 module.exports = db;
 
-// connection.connect(err => {
-//   if (err) {
-//     console.error(err);
-//     return;
-//   }
-//   console.log('MySQL connected via socket!');
-// });
