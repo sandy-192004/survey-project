@@ -10,29 +10,25 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
   let sql = `
     SELECT id, name, mobile, email, occupation, door_no, street, district, state,
-           pincode, dob, gender, parent_id
+           pincode, parent_id
     FROM parents
     WHERE 1=1
   `;
 
   const isNumber = /^\d+$/.test(input || "");
-  const isDate = /^\d{4}-\d{2}-\d{2}$/.test(input || "");
 
   if (input) {
     if (isNumber) {
       sql += " AND (mobile LIKE ? OR door_no LIKE ? OR pincode LIKE ?)";
       const like = `%${input}%`;
       params.push(like, like, like);
-    } else if (isDate) {
-      sql += " AND DATE_FORMAT(dob, '%Y-%m-%d') = ?";
-      params.push(input);
     } else {
       const like = `%${input}%`;
       sql += `
         AND (name LIKE ? OR email LIKE ? OR occupation LIKE ? OR
-             district LIKE ? OR state LIKE ? OR gender LIKE ?)
+             district LIKE ? OR state LIKE ?)
       `;
-      params.push(like, like, like, like, like, like);
+      params.push(like, like, like, like, like);
     }
   }
 

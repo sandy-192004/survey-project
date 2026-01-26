@@ -11,6 +11,12 @@
 
 <div class="container py-4">
 
+                </div>
+            </form>
+>>>>>>> 413091c11c9c467b8190837abbbfc5fbc938a8cd
+        </div>
+    </form>
+=======
     <!-- Search & Filter Section -->
     <form action="/admin/search" method="GET" class="card mb-4 shadow-sm">
         <div class="card-body">
@@ -49,6 +55,12 @@
             </div>
         </div>
     </form>
+=======
+                </div>
+            </form>
+>>>>>>> 413091c11c9c467b8190837abbbfc5fbc938a8cd
+        </div>
+    </form>
 
     <!-- Cards Grid -->
     <div class="row g-4">
@@ -61,10 +73,11 @@
                         <p class="card-text text-muted">
                             <%= member.district %>, <%= member.state %>
                         </p>
-                        <div class="card-footer bg-white border-0 d-flex justify-content-between">
-                            <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
-                            <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
-                        </div>
+
+                    </div>
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
+                        <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
                     </div>
                 </div>
             </div>
