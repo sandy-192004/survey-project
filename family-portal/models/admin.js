@@ -1,4 +1,6 @@
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 
 exports.searchMembers = (filters, page, limit, callback) => {
@@ -58,12 +60,17 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
 
 exports.getDropdownOptions = (callback) => {
-  db.query("SELECT DISTINCT district FROM parents ORDER BY district ASC", (err1, districts) => {
-    if (err1) return callback(err1);
-    db.query("SELECT DISTINCT state FROM parents ORDER BY state ASC", (err2, states) => {
-      if (err2) return callback(err2);
-      callback(null, { districts, states });
+  const filePath = path.join(__dirname, "../public/data/india-states-districts.json");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return callback(err);
+    const statesData = JSON.parse(data);
+    const states = Object.keys(statesData).sort();
+    const districts = [];
+    states.forEach(state => {
+      districts.push(...statesData[state]);
     });
+    const uniqueDistricts = [...new Set(districts)].sort();
+    callback(null, { districts: uniqueDistricts, states });
   });
 };
 
