@@ -1,9 +1,9 @@
 const mysql = require("mysql2");
 
-const db = mysql.createPool({
-  host: "127.0.0.1",
+const db = mysql.createConnection({
+  host: "localhost",
   user: "root",
-  password: "disneyTorn@123",
+  password: "DisneyTron@2345",
   database: "family_portal",
   // socketPath: '/tmp/mysql.sock',
   port:'3306'

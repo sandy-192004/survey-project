@@ -35,6 +35,10 @@ exports.dashboard = (req, res) => {
 };
 
 
+exports.dashboard = (req, res) => {
+  res.render("admin/dashboard");
+};
+
 exports.search = (req, res) => {
   const input = req.query.q ? req.query.q.trim() : "";
   const selectedDistrict = req.query.district || "";

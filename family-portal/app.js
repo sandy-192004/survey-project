@@ -1,17 +1,25 @@
 const express = require("express");
 const session = require("express-session");
-const bodyParser = require("body-parser");
-
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const familyRoutes = require("./routes/familyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
+const db = require("./config/db");
 const app = express();
+
+// Initialize database tables
+
+
 
 
 
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({ extended: true }));
+
+// Middleware setup - IMPORTANT ORDER
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
 
 app.use(session({
@@ -19,6 +27,8 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
+
+
 
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
