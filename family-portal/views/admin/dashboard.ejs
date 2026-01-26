@@ -59,6 +59,22 @@
                         <p class="card-text text-muted">
                             <%= member.district %>, <%= member.state %>
                         </p>
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
+                        <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <%= message || 'No results found.' %>
+
+                </div>
+            </div>
+        <% } %>
+
                     </div>
 
                     <div class="card-footer bg-white border-0 d-flex justify-content-between">
@@ -72,6 +88,22 @@
             <div class="col-12">
                 <div class="alert alert-info text-center">
                     <%= message || 'No results found.' %>
+                </div>
+            </div>
+        <% } %>
+
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
+                        <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <%= message || 'No results found.' %>
+
                 </div>
             </div>
         <% } %>

@@ -1,8 +1,9 @@
 const db = require("../config/db");
 
 exports.create = (childData, callback) => {
-  const sql = "INSERT INTO children SET ?";
-  db.query(sql, childData, callback);
+  const sql = "INSERT INTO children (parent_id, name, occupation, dob, gender, photo) VALUES (?, ?, ?, ?, ?, ?)";
+  const values = [childData.parent_id, childData.name, childData.occupation, childData.dob, childData.gender, childData.photo];
+  db.query(sql, values, callback);
 };
 
 exports.deleteByParent = (parentId, callback) => {

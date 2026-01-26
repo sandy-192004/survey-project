@@ -1,6 +1,7 @@
 const Admin = require("../models/admin");
 
 
+
 exports.dashboard = (req, res) => {
   Admin.getDropdownOptions((err, data) => {
     if (err) {
@@ -34,6 +35,10 @@ exports.dashboard = (req, res) => {
   });
 };
 
+
+exports.dashboard = (req, res) => {
+  res.render("admin/dashboard");
+};
 
 exports.search = (req, res) => {
   const input = req.query.q ? req.query.q.trim() : "";

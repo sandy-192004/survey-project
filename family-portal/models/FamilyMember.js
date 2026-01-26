@@ -41,7 +41,7 @@ exports.getById = (id, cb) => {
 };
 
 exports.update = (id, data, cb) => {
-  db.query("UPDATE family_members SET ? WHERE id = ?", [data, id], cb);
+  db.query("UPDATE parents SET ? WHERE id = ?", [data, id], cb);
 };
 
 exports.delete = (id, cb) => {
