@@ -18,7 +18,7 @@ async function loadIndiaData() {
     const selectedState = this.value;
     const districtSelect = document.getElementById("district");
     districtSelect.innerHTML = '<option value="">Select District</option>';
-    
+
     if (selectedState && indiaData[selectedState]) {
       indiaData[selectedState].forEach(district => {
         const option = document.createElement("option");
@@ -52,4 +52,11 @@ function removeChild(id) {
   }
 }
 
-window.onload = loadIndiaData;
+// Attach addChild function to the button
+window.addEventListener("DOMContentLoaded", function() {
+  loadIndiaData();
+  const addChildBtn = document.querySelector("button[type='button']");
+  if (addChildBtn && addChildBtn.textContent.includes("Add Child")) {
+    addChildBtn.onclick = addChild;
+  }
+});

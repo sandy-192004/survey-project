@@ -9,7 +9,7 @@ exports.searchMembers = (filters, page, limit, callback) => {
   let sql = `
     SELECT id, name, mobile, email, occupation, door_no, street, district, state,
            pincode, dob, gender, parent_id
-    FROM family_members
+    FROM parents
     WHERE 1=1
   `;
 
@@ -73,7 +73,7 @@ exports.getDropdownOptions = (callback) => {
 
 
 exports.getMemberById = (id, callback) => {
-  db.query("SELECT * FROM family_members WHERE id = ?", [id], (err, rows) => {
+  db.query("SELECT * FROM parents WHERE id = ?", [id], (err, rows) => {
     if (err) return callback(err);
     callback(null, rows[0]);
   });
@@ -81,5 +81,5 @@ exports.getMemberById = (id, callback) => {
 
 
 exports.updateMember = (id, data, callback) => {
-  db.query("UPDATE family_members SET ? WHERE id = ?", [data, id], callback);
+  db.query("UPDATE parents SET ? WHERE id = ?", [data, id], callback);
 };
