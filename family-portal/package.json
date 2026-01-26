@@ -5,14 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-<<<<<<< HEAD
-  "start": "node app.js",
-  "dev": "nodemon app.js"
-
-=======
     "start": "node app.js",
     "dev": "nodemon app.js"
->>>>>>> ce6011ebf002cf65618122d4d4b00655267b95fd
   },
   "keywords": [],
   "author": "",
