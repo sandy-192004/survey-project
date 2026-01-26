@@ -20,7 +20,17 @@ exports.getById = (parentId, callback) => {
   db.query(sql, [parentId], callback);
 };
 
+exports.getByMobile = (mobile, callback) => {
+  const sql = "SELECT * FROM parents WHERE mobile = ?";
+  db.query(sql, [mobile], callback);
+};
+
 exports.getAll = (callback) => {
   const sql = "SELECT * FROM parents ORDER BY created_at DESC";
   db.query(sql, callback);
+};
+
+exports.getByEmail = (email, callback) => {
+  const sql = "SELECT * FROM parents WHERE email = ?";
+  db.query(sql, [email], callback);
 };

@@ -1,12 +1,16 @@
 const express = require("express");
 const session = require("express-session");
 const multer = require("multer");
-
+const fs = require("fs");
+const path = require("path");
 
 const familyRoutes = require("./routes/familyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
+const db = require("./config/db");
 const app = express();
+
+// Initialize database tables
+
 
 
 
@@ -24,7 +28,8 @@ app.use(session({
   saveUninitialized: true
 }));
 
-app.use("/admin", adminRoutes);
+
+
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 
