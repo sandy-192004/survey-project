@@ -1,0 +1,3 @@
+- [x] Edit views/admin/dashboard.ejs: Change dummy loop to loop over results, update links to /admin/view and /admin/edit, update card content
+- [ ] Edit views/admin/view.ejs: Replace 'family' with 'member', update back link
+- [ ] Edit views/admin/edit.ejs: Replace 'family' with 'member', update form action

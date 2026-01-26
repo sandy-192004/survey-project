@@ -4,7 +4,7 @@ async function loadIndiaData() {
   const res = await fetch("/data/india-states-districts.json");
   indiaData = await res.json();
 
-  // Populate state dropdown
+  // Populate State dropdown
   const stateSelect = document.getElementById("state");
   Object.keys(indiaData).forEach(state => {
     const option = document.createElement("option");
@@ -13,12 +13,12 @@ async function loadIndiaData() {
     stateSelect.appendChild(option);
   });
 
-  // Handle state change to populate districts
+  // Update District dropdown when state changes
   stateSelect.addEventListener("change", function() {
     const selectedState = this.value;
     const districtSelect = document.getElementById("district");
     districtSelect.innerHTML = '<option value="">Select District</option>';
-    
+
     if (selectedState && indiaData[selectedState]) {
       indiaData[selectedState].forEach(district => {
         const option = document.createElement("option");
@@ -30,37 +30,26 @@ async function loadIndiaData() {
   });
 }
 
+let childCount = 0;
+
 function addChild() {
-  document.getElementById("children").insertAdjacentHTML(
-    "beforeend",
-    `
-    <div class="border p-3 mb-3 rounded bg-light">
-      <input class="form-control mb-2" name="children[][name]" placeholder="Child Name" required>
-      <input class="form-control mb-2" name="children[][occupation]" placeholder="Occupation">
-      <input class="form-control mb-2" name="children[][dob]" placeholder="Date of Birth" type="date">
-      <select class="form-control mb-2" name="children[][gender]">
-        <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
-      <div class="mb-2">
-        <label class="form-label small">Child Photo</label>
-        <div class="d-flex gap-2 mb-2">
-          <button type="button" class="btn btn-info btn-sm flex-fill" onclick="openFileDialog('child_' + Date.now())">
-            📁 Choose Photo
-          </button>
-          <button type="button" class="btn btn-info btn-sm flex-fill" onclick="openCameraModal('child_' + Date.now())">
-            📷 Take Photo
-          </button>
-        </div>
-        <input type="file" name="children[][photo]" accept="image/*" style="display:none;" onchange="handlePhotoSelect(this, 'child_preview_' + Date.now())">
-        <img id="child_preview_${Date.now()}" class="img-thumbnail w-100" style="display:none; max-height: 150px; object-fit: cover;">
-      </div>
-      <button type="button" class="btn btn-danger btn-sm w-100" onclick="this.parentElement.remove()">Remove</button>
+  const id = `child_${childCount++}`;
+  const html = `
+    <div class="border p-2 mb-2" id="${id}">
+      <input class="form-control mb-1" name="children[][name]" placeholder="Child Name" required>
+      <input class="form-control mb-1" name="children[][dob]" type="date" placeholder="Date of Birth">
+      <input class="form-control mb-1" name="children[][occupation]" placeholder="Occupation">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeChild('${id}')">Remove</button>
     </div>
-    `
-  );
+  `;
+  document.getElementById("children").insertAdjacentHTML("beforeend", html);
+}
+
+function removeChild(id) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.remove();
+  }
 }
 
 // Attach addChild function to the button

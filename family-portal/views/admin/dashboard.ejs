@@ -46,22 +46,62 @@
 
     <!-- Cards Grid -->
     <div class="row g-4">
-        <% for(let i = 1; i <= 9; i++) { %>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Family <%= i %></h5>
-                    <p class="card-text text-muted">
-                        Family details preview goes here
-                    </p>
-                </div>
-
-                <div class="card-footer bg-white border-0 d-flex justify-content-between">
-                    <a href="/admin/view/<%= i %>" class="btn btn-sm btn-info text-white">View</a>
-                    <a href="/admin/edit/<%= i %>" class="btn btn-sm btn-warning">Edit</a>
+        <% if (results && results.length > 0) { %>
+            <% results.forEach(member => { %>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= member.name %></h5>
+                        <p class="card-text text-muted">
+                            <%= member.district %>, <%= member.state %>
+                        </p>
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
+                        <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
                 </div>
             </div>
-        </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <%= message || 'No results found.' %>
+
+                </div>
+            </div>
+        <% } %>
+
+                    </div>
+
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
+                        <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <%= message || 'No results found.' %>
+                </div>
+            </div>
+        <% } %>
+
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                        <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
+                        <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <%= message || 'No results found.' %>
+
+                </div>
+            </div>
         <% } %>
     </div>
 

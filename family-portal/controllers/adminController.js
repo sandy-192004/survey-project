@@ -2,10 +2,25 @@ const Admin = require("../models/admin");
 
 
 exports.dashboard = (req, res) => {
-  Admin.getDropdownOptions((err, { districts, states }) => {
-    if (err) throw err;
+  Admin.getDropdownOptions((err, data) => {
+    if (err) {
+      console.error("Error fetching dropdown options:", err);
+      return res.render("admin/dashboard", {
+        results: [],
+        message: "Error loading data. Please try again.",
+        districtOptions: [],
+        stateOptions: [],
+        selectedDistrict: "",
+        selectedState: "",
+        searchValue: "",
+        currentPage: 1,
+        totalPages: 0
+      });
+    }
 
-    res.render("admin/search", {
+    const { districts = [], states = [] } = data || {};
+
+    res.render("admin/dashboard", {
       results: [],
       message: "Please enter or select something to search.",
       districtOptions: districts,
@@ -32,9 +47,25 @@ exports.search = (req, res) => {
   const limit = 9;
 
   if (!input && !selectedDistrict && !selectedState) {
-    Admin.getDropdownOptions((err, { districts, states }) => {
-      if (err) throw err;
-      return res.render("admin/search", {
+    Admin.getDropdownOptions((err, data) => {
+      if (err) {
+        console.error("Error fetching dropdown options:", err);
+        return res.render("admin/dashboard", {
+          results: [],
+          message: "Error loading data. Please try again.",
+          districtOptions: [],
+          stateOptions: [],
+          selectedDistrict,
+          selectedState,
+          searchValue: "",
+          currentPage: 1,
+          totalPages: 0
+        });
+      }
+
+      const { districts = [], states = [] } = data || {};
+
+      return res.render("admin/dashboard", {
         results: [],
         message: "Please enter or select something to search.",
         districtOptions: districts,
@@ -50,17 +81,42 @@ exports.search = (req, res) => {
   }
 
   Admin.searchMembers({ input, selectedDistrict, selectedState }, page, limit, (err, data) => {
-    if (err) throw err;
+    if (err) {
+      console.error("Error searching members:", err);
+      return res.render("admin/dashboard", {
+        results: [],
+        message: "Error searching. Please try again.",
+        districtOptions: [],
+        stateOptions: [],
+        selectedDistrict,
+        selectedState,
+        searchValue: input,
+        currentPage: 1,
+        totalPages: 0
+      });
+    }
 
-    Admin.getDropdownOptions((err2, { districts, states }) => {
-      if (err2) throw err2;
+    Admin.getDropdownOptions((err2, dropdownData) => {
+      if (err2) {
+        console.error("Error fetching dropdown options:", err2);
+        return res.render("admin/dashboard", {
+          results: data.results,
+          message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
+          districtOptions: [],
+          stateOptions: [],
+          selectedDistrict,
+          selectedState,
+          searchValue: input,
+          currentPage: page,
+          totalPages: data.totalPages
+        });
+      }
 
-      res.render("admin/search", {
+      const { districts = [], states = [] } = dropdownData || {};
+
+      res.render("admin/dashboard", {
         results: data.results,
-        message:
-          data.results.length === 0
-            ? `No data found for "${input || "filters"}".`
-            : null,
+        message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
         districtOptions: districts,
         stateOptions: states,
         selectedDistrict,

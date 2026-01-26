@@ -9,7 +9,7 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body class="container-fluid mt-4">
-  
+
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
   <h3 class="mb-3 mb-md-0">Add Family</h3>
@@ -29,7 +29,7 @@
           <input class="form-control mb-2 small" name="parent[mobile]" placeholder="Mobile" type="tel">
           <input class="form-control mb-2 small" name="parent[occupation]" placeholder="Occupation">
         </div>
-        
+
 
         <div class="col-12 col-md-6">
           <h5 class="mb-3 small">Photos</h5>
@@ -109,7 +109,7 @@
         <button type="button" class="btn btn-success" onclick="capturePhoto()">📸 Capture</button>
         <button type="button" class="btn btn-secondary" onclick="closeCameraModal()">❌ Close</button>
       </div>
-      
+
     </div>
   </div>
 </div>
@@ -137,9 +137,9 @@ function closeCameraModal() {
 
 function startCamera() {
   const video = document.getElementById('videoElement');
-  navigator.mediaDevices.getUserMedia({ 
+  navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'user' },
-    audio: false 
+    audio: false
   }).then(stream => {
     cameraStream = stream;
     video.srcObject = stream;
@@ -160,17 +160,17 @@ function capturePhoto() {
   const video = document.getElementById('videoElement');
   const canvas = document.getElementById('canvasElement');
   const context = canvas.getContext('2d');
-  
+
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   context.drawImage(video, 0, 0);
-  
+
   canvas.toBlob(blob => {
     const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     document.getElementById(currentPhotoType + '_photo').files = dataTransfer.files;
-    
+
     // Show preview
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -179,7 +179,7 @@ function capturePhoto() {
       preview.style.display = 'block';
     };
     reader.readAsDataURL(blob);
-    
+
     closeCameraModal();
   }, 'image/jpeg', 0.95);
 }
