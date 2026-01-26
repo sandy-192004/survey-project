@@ -1,6 +1,7 @@
 const Admin = require("../models/admin");
 
 
+
 exports.dashboard = (req, res) => {
   Admin.getDropdownOptions((err, { districts, states }) => {
     if (err) throw err;
