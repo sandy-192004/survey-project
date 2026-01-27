@@ -162,6 +162,22 @@ exports.updateMember = (req, res) => {
 };
 
 
+exports.addChild = (req, res) => {
+  const childData = {
+    parent_id: req.body.parent_id,
+    name: req.body.name,
+    dob: req.body.dob,
+    gender: req.body.gender,
+     occupation: req.body.occupation
+  };
+  const Child = require("../models/Child");
+  Child.create(childData, (err) => {
+    if (err) throw err;
+    res.redirect(`/admin/edit/${req.body.parent_id}`);
+  });
+};
+
+
 
 function loadDropdownOptions() {
   try {
