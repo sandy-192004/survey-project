@@ -10,7 +10,7 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
   let sql = `
     SELECT id, name, mobile, email, occupation, door_no, street, district, state,
-           pincode, parent_id
+           pincode
     FROM parents
     WHERE 1=1
   `;
@@ -85,4 +85,27 @@ exports.getMemberById = (id, callback) => {
 
 exports.updateMember = (id, data, callback) => {
   db.query("UPDATE parents SET ? WHERE id = ?", [data, id], callback);
+};
+
+exports.getAll = (page, limit, callback) => {
+  const offset = (page - 1) * limit;
+  const sql = `
+    SELECT id, name, mobile, email, occupation, door_no, street, district, state,
+           pincode
+    FROM parents
+    ORDER BY name ASC
+    LIMIT ? OFFSET ?
+  `;
+  const countSql = "SELECT COUNT(*) AS total FROM parents";
+
+  db.query(countSql, (err, countResult) => {
+    if (err) return callback(err);
+    const totalRecords = countResult[0].total;
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    db.query(sql, [limit, offset], (err2, results) => {
+      if (err2) return callback(err2);
+      callback(null, { results, totalPages });
+    });
+  });
 };

@@ -1,43 +1,46 @@
 const Admin = require("../models/admin");
+const fs = require("fs");
+const path = require("path");
 
 
 
 exports.dashboard = (req, res) => {
-  Admin.getDropdownOptions((err, data) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 9;
+
+  Admin.getAll(page, limit, (err, data) => {
     if (err) {
-      console.error("Error fetching dropdown options:", err);
+      console.error("Error fetching all members:", err);
+      const { states, districts } = loadDropdownOptions();
       return res.render("admin/dashboard", {
         results: [],
         message: "Error loading data. Please try again.",
-        districtOptions: [],
-        stateOptions: [],
+        districtOptions: districts,
+        stateOptions: states,
         selectedDistrict: "",
         selectedState: "",
         searchValue: "",
         currentPage: 1,
-        totalPages: 0
+        totalPages: 0,
+        user: req.user
       });
     }
 
-    const { districts = [], states = [] } = data || {};
+    const { states, districts } = loadDropdownOptions();
 
     res.render("admin/dashboard", {
-      results: [],
-      message: "Please enter or select something to search.",
+      results: data.results,
+      message: data.results.length === 0 ? "No data found." : null,
       districtOptions: districts,
       stateOptions: states,
       selectedDistrict: "",
       selectedState: "",
       searchValue: "",
-      currentPage: 1,
-      totalPages: 0
+      currentPage: page,
+      totalPages: data.totalPages,
+      user: req.user
     });
   });
-};
-
-
-exports.dashboard = (req, res) => {
-  res.render("admin/dashboard");
 };
 
 exports.search = (req, res) => {
@@ -48,37 +51,19 @@ exports.search = (req, res) => {
   const limit = 9;
 
   if (!input && !selectedDistrict && !selectedState) {
-    Admin.getDropdownOptions((err, data) => {
-      if (err) {
-        console.error("Error fetching dropdown options:", err);
-        return res.render("admin/dashboard", {
-          results: [],
-          message: "Error loading data. Please try again.",
-          districtOptions: [],
-          stateOptions: [],
-          selectedDistrict,
-          selectedState,
-          searchValue: "",
-          currentPage: 1,
-          totalPages: 0
-        });
-      }
+    const { states, districts } = loadDropdownOptions();
 
-      const { districts = [], states = [] } = data || {};
-
-      return res.render("admin/dashboard", {
-        results: [],
-        message: "Please enter or select something to search.",
-        districtOptions: districts,
-        stateOptions: states,
-        selectedDistrict,
-        selectedState,
-        searchValue: "",
-        currentPage: 1,
-        totalPages: 0
-      });
+    return res.render("admin/dashboard", {
+      results: [],
+      message: "Please enter or select something to search.",
+      districtOptions: districts,
+      stateOptions: states,
+      selectedDistrict,
+      selectedState,
+      searchValue: "",
+      currentPage: 1,
+      totalPages: 0
     });
-    return;
   }
 
   Admin.searchMembers({ input, selectedDistrict, selectedState }, page, limit, (err, data) => {
@@ -145,7 +130,24 @@ exports.editMember = (req, res) => {
   const id = req.params.id;
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
-    res.render("admin/edit", { member, message: null });
+    if (!member) return res.send("No member found with that ID.");
+
+    // For the sample data structure, wife info is in the same record
+    // Create a wife object from the member data
+    const wife = member.wife_name ? {
+      id: member.id + '_wife', // Temporary ID for wife
+      name: member.wife_name,
+      mobile: member.mobile,
+      email: member.email,
+      occupation: '',
+      door_no: member.door_no,
+      street: member.street,
+      district: member.district,
+      state: member.state,
+      pincode: member.pincode
+    } : null;
+
+    res.render("admin/edit", { parent: member, wife, children: [], message: null });
   });
 };
 
@@ -155,9 +157,29 @@ exports.updateMember = (req, res) => {
   const updatedData = req.body;
   Admin.updateMember(id, updatedData, (err) => {
     if (err) throw err;
-    res.render("admin/edit", {
-      member: { id, ...updatedData },
-      message: "Details updated successfully!"
-    });
+    res.redirect("/admin/dashboard");
   });
 };
+
+
+
+function loadDropdownOptions() {
+  try {
+    const filePath = path.join(__dirname, "../public/data/india-states-districts.json");
+    const data = fs.readFileSync(filePath, "utf8");
+    const jsonData = JSON.parse(data);
+
+    const states = Object.keys(jsonData).map(state => ({ state }));
+    const districts = [];
+    Object.keys(jsonData).forEach(state => {
+      jsonData[state].forEach(district => {
+        districts.push({ district });
+      });
+    });
+
+    return { states, districts };
+  } catch (error) {
+    console.error("Error loading dropdown options from JSON:", error);
+    return { states: [], districts: [] };
+  }
+}
