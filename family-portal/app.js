@@ -9,7 +9,6 @@ const adminRoutes = require("./routes/adminRoutes");
 const db = require("./config/db");
 const app = express();
 
-// Initialize database tables
 
 
 
@@ -17,7 +16,7 @@ const app = express();
 
 app.set("view engine", "ejs");
 
-// Middleware setup - IMPORTANT ORDER
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
