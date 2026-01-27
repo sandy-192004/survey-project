@@ -4,7 +4,7 @@ const db = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "disneyTorn@123",
-  database: "family_portal",
+  database: "admin_db",
   // socketPath: '/tmp/mysql.sock',
   port:'3306'
 });

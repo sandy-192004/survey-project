@@ -62,55 +62,42 @@ exports.search = (req, res) => {
       selectedState,
       searchValue: "",
       currentPage: 1,
-      totalPages: 0
+      totalPages: 0,
+      user: req.user
     });
   }
 
   Admin.searchMembers({ input, selectedDistrict, selectedState }, page, limit, (err, data) => {
     if (err) {
       console.error("Error searching members:", err);
+      const { states, districts } = loadDropdownOptions();
       return res.render("admin/dashboard", {
         results: [],
         message: "Error searching. Please try again.",
-        districtOptions: [],
-        stateOptions: [],
-        selectedDistrict,
-        selectedState,
-        searchValue: input,
-        currentPage: 1,
-        totalPages: 0
-      });
-    }
-
-    Admin.getDropdownOptions((err2, dropdownData) => {
-      if (err2) {
-        console.error("Error fetching dropdown options:", err2);
-        return res.render("admin/dashboard", {
-          results: data.results,
-          message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
-          districtOptions: [],
-          stateOptions: [],
-          selectedDistrict,
-          selectedState,
-          searchValue: input,
-          currentPage: page,
-          totalPages: data.totalPages
-        });
-      }
-
-      const { districts = [], states = [] } = dropdownData || {};
-
-      res.render("admin/dashboard", {
-        results: data.results,
-        message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
         districtOptions: districts,
         stateOptions: states,
         selectedDistrict,
         selectedState,
         searchValue: input,
-        currentPage: page,
-        totalPages: data.totalPages
+        currentPage: 1,
+        totalPages: 0,
+        user: req.user
       });
+    }
+
+    const { states, districts } = loadDropdownOptions();
+
+    res.render("admin/dashboard", {
+      results: data.results,
+      message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
+      districtOptions: districts,
+      stateOptions: states,
+      selectedDistrict,
+      selectedState,
+      searchValue: input,
+      currentPage: page,
+      totalPages: data.totalPages,
+      user: req.user
     });
   });
 };
@@ -161,6 +148,19 @@ exports.updateMember = (req, res) => {
   });
 };
 
+exports.addChild = (req, res) => {
+  const childData = req.body;
+  const Child = require("../models/Child");
+
+  Child.create(childData, (err, result) => {
+    if (err) {
+      console.error("Error adding child:", err);
+      return res.status(500).send("Error adding child");
+    }
+    res.redirect("/admin/edit/" + childData.parent_id);
+  });
+};
+
 
 
 function loadDropdownOptions() {
@@ -169,15 +169,17 @@ function loadDropdownOptions() {
     const data = fs.readFileSync(filePath, "utf8");
     const jsonData = JSON.parse(data);
 
-    const states = Object.keys(jsonData).map(state => ({ state }));
+    const states = Object.keys(jsonData);
     const districts = [];
     Object.keys(jsonData).forEach(state => {
-      jsonData[state].forEach(district => {
-        districts.push({ district });
-      });
+      districts.push(...jsonData[state]);
     });
+    const uniqueDistricts = [...new Set(districts)];
 
-    return { states, districts };
+    console.log("States loaded:", states.slice(0, 5)); // Log first 5 states
+    console.log("Districts loaded:", uniqueDistricts.slice(0, 5)); // Log first 5 districts
+
+    return { states, districts: uniqueDistricts };
   } catch (error) {
     console.error("Error loading dropdown options from JSON:", error);
     return { states: [], districts: [] };
