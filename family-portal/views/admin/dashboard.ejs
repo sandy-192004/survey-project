@@ -77,28 +77,37 @@
     </div>
 
     <!-- Pagination -->
+    <% if (totalPages > 1) { %>
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
+            <% if (currentPage > 1) { %>
             <li class="page-item">
-                <a class="page-link" href="#">&laquo;</a>
+                <a class="page-link" href="?q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>&page=<%= currentPage - 1 %>">&laquo;</a>
             </li>
-            <li class="page-item active">
-                <a class="page-link" href="#">1</a>
+            <% } else { %>
+            <li class="page-item disabled">
+                <span class="page-link">&laquo;</span>
             </li>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                <a class="page-link" href="?q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>&page=<%= i %>"><%= i %></a>
+            </li>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
             <li class="page-item">
-                <a class="page-link" href="#">2</a>
+                <a class="page-link" href="?q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>&page=<%= currentPage + 1 %>">&raquo;</a>
             </li>
-            <li class="page-item">
-                <a class="page-link" href="#">3</a>
+            <% } else { %>
+            <li class="page-item disabled">
+                <span class="page-link">&raquo;</span>
             </li>
-            <li class="page-item">
-                <a class="page-link" href="#">4</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="#">&raquo;</a>
-            </li>
+            <% } %>
         </ul>
     </nav>
+    <% } %>
 
 </div>
 
