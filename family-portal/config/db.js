@@ -4,7 +4,7 @@ const db = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "disneyTorn@123",
-  database: "survey_app",
+  database: "family_portal",
   // socketPath: '/tmp/mysql.sock',
   port:'3306'
 });
@@ -20,5 +20,5 @@ db.getConnection((err, connection) => {
 });
 
 
-module.exports = db;
 
+module.exports = db;

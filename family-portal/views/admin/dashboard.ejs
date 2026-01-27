@@ -11,42 +11,56 @@
 
 <div class="container py-4">
 
-    <!-- Search & Filter Section -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <form method="GET" action="/admin/search">
-                <div class="row g-2 align-items-center">
-
-                    <div class="col-md-4">
-                        <input type="text" name="q" class="form-control" placeholder="Search family..." value="<%= searchValue %>">
-                    </div>
-
-                    <div class="col-md-3">
-                        <select name="state" class="form-select">
-                            <option value="">State</option>
-                            <% stateOptions.forEach(state => { %>
-                                <option value="<%= state.state %>" <%= selectedState === state.state ? 'selected' : '' %>><%= state.state %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <select name="district" class="form-select">
-                            <option value="">District</option>
-                            <% districtOptions.forEach(district => { %>
-                                <option value="<%= district.district %>" <%= selectedDistrict === district.district ? 'selected' : '' %>><%= district.district %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-
-                    <div class="col-md-2 d-grid">
-                        <button type="submit" class="btn btn-primary">Filter</button>
-                    </div>
-
                 </div>
             </form>
+>>>>>>> 413091c11c9c467b8190837abbbfc5fbc938a8cd
         </div>
-    </div>
+    </form>
+=======
+    <!-- Search & Filter Section -->
+    <form action="/admin/search" method="GET" class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+
+                <div class="col-md-4">
+                    <input type="text" name="q" class="form-control" placeholder="Search family..." value="<%= searchValue || '' %>">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="state" class="form-select">
+                        <option value="">State</option>
+                        <% if (stateOptions) { %>
+                            <% stateOptions.forEach(state => { %>
+                                <option value="<%= state %>" <%= selectedState === state ? 'selected' : '' %>><%= state %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <select name="district" class="form-select">
+                        <option value="">District</option>
+                        <% if (districtOptions) { %>
+                            <% districtOptions.forEach(district => { %>
+                                <option value="<%= district %>" <%= selectedDistrict === district ? 'selected' : '' %>><%= district %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+=======
+                </div>
+            </form>
+>>>>>>> 413091c11c9c467b8190837abbbfc5fbc938a8cd
+        </div>
+    </form>
 
     <!-- Cards Grid -->
     <div class="row g-4">
@@ -59,6 +73,7 @@
                         <p class="card-text text-muted">
                             <%= member.district %>, <%= member.state %>
                         </p>
+
                     </div>
                     <div class="card-footer bg-white border-0 d-flex justify-content-between">
                         <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
