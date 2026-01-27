@@ -9,27 +9,16 @@ exports.searchMembers = (filters, page, limit, callback) => {
   const params = [];
 
   let sql = `
-    SELECT id, name, mobile, email, occupation, door_no, street, district, state,
+    SELECT parent_id as id, name, wife_name, mobile, occupation, door_no, street, district, state,
            pincode
-    FROM parents
+    FROM family
     WHERE 1=1
   `;
 
-  const isNumber = /^\d+$/.test(input || "");
-
   if (input) {
-    if (isNumber) {
-      sql += " AND (mobile LIKE ? OR door_no LIKE ? OR pincode LIKE ?)";
-      const like = `%${input}%`;
-      params.push(like, like, like);
-    } else {
-      const like = `%${input}%`;
-      sql += `
-        AND (name LIKE ? OR email LIKE ? OR occupation LIKE ? OR
-             district LIKE ? OR state LIKE ?)
-      `;
-      params.push(like, like, like, like, like);
-    }
+    sql += " AND (name LIKE ? OR wife_name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
+    const like = `%${input}%`;
+    params.push(like, like, like, like);
   }
 
   if (selectedDistrict) {
@@ -76,7 +65,7 @@ exports.getDropdownOptions = (callback) => {
 
 
 exports.getMemberById = (id, callback) => {
-  db.query("SELECT * FROM parents WHERE id = ?", [id], (err, rows) => {
+  db.query("SELECT * FROM family WHERE parent_id = ?", [id], (err, rows) => {
     if (err) return callback(err);
     callback(null, rows[0]);
   });
@@ -84,19 +73,19 @@ exports.getMemberById = (id, callback) => {
 
 
 exports.updateMember = (id, data, callback) => {
-  db.query("UPDATE parents SET ? WHERE id = ?", [data, id], callback);
+  db.query("UPDATE family SET ? WHERE parent_id = ?", [data, id], callback);
 };
 
 exports.getAll = (page, limit, callback) => {
   const offset = (page - 1) * limit;
   const sql = `
-    SELECT id, name, mobile, email, occupation, door_no, street, district, state,
+    SELECT parent_id as id, name, wife_name, mobile, email, occupation, door_no, street, district, state,
            pincode
-    FROM parents
+    FROM family
     ORDER BY name ASC
     LIMIT ? OFFSET ?
   `;
-  const countSql = "SELECT COUNT(*) AS total FROM parents";
+  const countSql = "SELECT COUNT(*) AS total FROM family";
 
   db.query(countSql, (err, countResult) => {
     if (err) return callback(err);
