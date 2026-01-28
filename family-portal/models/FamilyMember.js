@@ -1,73 +1,41 @@
 const db = require("../config/db");
 
-exports.create = (data, callback) => {
-  db.query("INSERT INTO parents SET ?", data, callback);
+exports.create = (memberData, callback) => {
+  const sql = "INSERT INTO family_members SET ?";
+  db.query(sql, memberData, callback);
 };
 
-
-exports.getPaginated = (filters, page = 1, limit = 10, cb) => {
-  const offset = (page - 1) * limit;
-  let sql = `
-    SELECT p.*, GROUP_CONCAT(c.name SEPARATOR ', ') AS children
-    FROM parents p
-    LEFT JOIN parents c ON c.parent_id = p.id
-    WHERE p.parent_id IS NULL
-  `;
-  const params = [];
-
-  if (filters.name) {
-    sql += " AND p.name LIKE ?";
-    params.push(`%${filters.name}%`);
-  }
-
-  if (filters.mobile) {
-    sql += " AND p.mobile LIKE ?";
-    params.push(`%${filters.mobile}%`);
-  }
-
-  if (filters.district) {
-    sql += " AND p.district = ?";
-    params.push(filters.district);
-  }
-
-  sql += " GROUP BY p.id LIMIT ? OFFSET ?";
-  params.push(limit, offset);
-
-  db.query(sql, params, cb);
+exports.update = (memberId, memberData, callback) => {
+  const sql = "UPDATE family_members SET ? WHERE id = ?";
+  db.query(sql, [memberData, memberId], callback);
 };
 
-exports.getById = (id, cb) => {
-  db.query("SELECT * FROM parents WHERE id = ?", [id], cb);
+exports.delete = (memberId, callback) => {
+  const sql = "DELETE FROM family_members WHERE id = ?";
+  db.query(sql, [memberId], callback);
 };
 
-exports.update = (id, data, cb) => {
-  db.query("UPDATE parents SET ? WHERE id = ?", [data, id], cb);
+exports.getById = (memberId, callback) => {
+  const sql = "SELECT * FROM family_members WHERE id = ?";
+  db.query(sql, [memberId], callback);
 };
 
-exports.delete = (id, cb) => {
-  db.query(
-    "DELETE FROM parents WHERE id = ? OR parent_id = ?",
-    [id, id],
-    cb
-  );
+exports.getByUserId = (userId, callback) => {
+  const sql = "SELECT * FROM family_members WHERE user_id = ? ORDER BY member_type, created_at";
+  db.query(sql, [userId], callback);
 };
 
-exports.getFamilyWithChildren = (parentId, cb) => {
-  db.query(
-    `
-    SELECT * FROM parents
-    WHERE id = ? OR parent_id = ?
-    ORDER BY parent_id IS NOT NULL
-    `,
-    [parentId, parentId],
-    cb
-  );
+exports.getAllByUserId = (userId, callback) => {
+  const sql = "SELECT * FROM family_members WHERE user_id = ? ORDER BY member_type, created_at";
+  db.query(sql, [userId], callback);
 };
 
-exports.deleteChildren = (parentId, cb) => {
-  db.query(
-    "DELETE FROM parents WHERE parent_id = ?",
-    [parentId],
-    cb
-  );
+exports.deleteByUserId = (userId, callback) => {
+  const sql = "DELETE FROM family_members WHERE user_id = ?";
+  db.query(sql, [userId], callback);
+};
+
+exports.getAll = (callback) => {
+  const sql = "SELECT fm.*, u.email as user_email FROM family_members fm JOIN users u ON fm.user_id = u.id ORDER BY fm.created_at DESC";
+  db.query(sql, callback);
 };

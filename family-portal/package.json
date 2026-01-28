@@ -20,6 +20,7 @@
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-session": "^1.18.2",
+    "multer": "^2.0.2",
     "mysql2": "^3.16.0",
     "pdfkit": "^0.17.2"
   },

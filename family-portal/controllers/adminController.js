@@ -1,4 +1,5 @@
 const Admin = require("../models/admin");
+const Child = require("../models/Child");
 const fs = require("fs");
 const path = require("path");
 
@@ -166,7 +167,16 @@ exports.updateMember = (req, res) => {
   });
 };
 
-
+exports.addChild = (req, res) => {
+  const childData = req.body;
+  Child.create(childData, (err, result) => {
+    if (err) {
+      console.error("Error adding child:", err);
+      return res.status(500).send("Error adding child");
+    }
+    res.redirect("/admin/edit/" + childData.parent_id);
+  });
+};
 
 function loadDropdownOptions() {
   try {

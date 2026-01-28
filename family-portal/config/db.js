@@ -3,20 +3,21 @@ const mysql = require("mysql2");
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "DisneyTron@2345",
-  database: "family_portal",
+  password: "sandhiya@sowmiya2004",
+  database: "survey_app",
   // socketPath: '/tmp/mysql.sock',
   port:'3306'
 });
 
-
-db.connect((err) => {
+db.getConnection((err, connection) => {
   if (err) {
-    console.log("DB Connection Failed:", err);
+    console.error("Error connecting to the database:", err);
   } else {
-    console.log("MySQL Connected Successfully");
+    console.log("Connected to the database as id " + connection.threadId);
   }
 });
+
+
 
 
 
