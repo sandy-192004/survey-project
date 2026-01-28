@@ -12,7 +12,7 @@ const controller = require("../controllers/adminController");
 router.get("/dashboard", controller.dashboard);
 
 
-router.get("/search", controller.search);
+// router.get("/search", controller.search);
 
 
 router.get("/view/:id", controller.viewMember);
