@@ -1,4 +1,4 @@
-saUSE survey_app;
+USE survey_app;
 
 -- Create family_members table that combines parents and children
 CREATE TABLE IF NOT EXISTS family_members (

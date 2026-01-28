@@ -2,20 +2,26 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-const uploadDir = "public/uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure directories exist
+const parentsDir = "uploads/parents";
+const childrenDir = "uploads/children";
+if (!fs.existsSync(parentsDir)) {
+  fs.mkdirSync(parentsDir, { recursive: true });
+}
+if (!fs.existsSync(childrenDir)) {
+  fs.mkdirSync(childrenDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    if (file.fieldname.includes("parent")) {
+      cb(null, parentsDir);
+    } else {
+      cb(null, childrenDir);
+    }
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const unique =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, unique + ext);
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
 

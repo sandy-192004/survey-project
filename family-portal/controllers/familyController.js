@@ -177,8 +177,8 @@ exports.saveFamily = async (req, res) => {
     // Insert husband
     await conn.query(
       `INSERT INTO family_members
-       (user_id, member_type, name, relationship, mobile, occupation, door_no, street, district, state, pincode, photo)
-       VALUES (?, 'parent', ?, 'husband', ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (user_id, member_type, relationship, name, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photo)
+       VALUES (?, 'parent', 'husband', ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         p.name,
@@ -197,8 +197,8 @@ exports.saveFamily = async (req, res) => {
     if (p.wife_name) {
       await conn.query(
         `INSERT INTO family_members
-         (user_id, member_type, name, relationship, door_no, street, district, state, pincode, photo)
-         VALUES (?, 'parent', ?, 'wife', ?, ?, ?, ?, ?, ?)`,
+         (user_id, member_type, relationship, name, door_no, street, district, state, pincode, photo)
+         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           p.wife_name,
@@ -221,12 +221,12 @@ exports.saveFamily = async (req, res) => {
 
       await conn.query(
         `INSERT INTO family_members
-         (user_id, member_type, name, relationship, dob, gender, occupation, photo)
+         (user_id, member_type, relationship, name, dob, gender, occupation, photo)
          VALUES (?, 'child', ?, ?, ?, ?, ?, ?)`,
         [
           userId,
-          c.name,
           c.relationship,
+          c.name,
           c.dob || null,
           c.gender || null,
           c.occupation || null,
