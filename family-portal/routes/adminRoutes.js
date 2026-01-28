@@ -21,6 +21,9 @@ router.get("/dashboard", controller.dashboard);
 // Search
 router.get("/search", controller.search);
 
+
+// router.get("/search", controller.search);
+
 // View and Edit routes
 router.get("/view/:id", controller.viewMember);
 router.get("/edit/:id", controller.editMember);
