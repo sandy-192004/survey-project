@@ -13,7 +13,7 @@ exports.excel = async (req, res) => {
   ];
 
   const [rows] = await db.promise().query(
-    "SELECT name,mobile,district FROM family_members WHERE parent_id IS NULL"
+    "SELECT name,mobile,district FROM parents"
   );
 
   ws.addRows(rows);
@@ -29,7 +29,7 @@ exports.pdf = async (req, res) => {
   doc.pipe(res);
 
   const [rows] = await db.promise().query(
-    "SELECT name,mobile,district FROM family_members WHERE parent_id IS NULL"
+    "SELECT name,mobile,district FROM parents"
   );
 
   rows.forEach(r => doc.text(`${r.name} | ${r.mobile} | ${r.district}`));

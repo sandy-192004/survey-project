@@ -1,4 +1,6 @@
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 
 exports.searchMembers = (filters, page, limit, callback) => {
@@ -8,29 +10,25 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
   let sql = `
     SELECT id, name, mobile, email, occupation, door_no, street, district, state,
-           pincode, dob, gender, parent_id
+           pincode
     FROM parents
     WHERE 1=1
   `;
 
   const isNumber = /^\d+$/.test(input || "");
-  const isDate = /^\d{4}-\d{2}-\d{2}$/.test(input || "");
 
   if (input) {
     if (isNumber) {
       sql += " AND (mobile LIKE ? OR door_no LIKE ? OR pincode LIKE ?)";
       const like = `%${input}%`;
       params.push(like, like, like);
-    } else if (isDate) {
-      sql += " AND DATE_FORMAT(dob, '%Y-%m-%d') = ?";
-      params.push(input);
     } else {
       const like = `%${input}%`;
       sql += `
         AND (name LIKE ? OR email LIKE ? OR occupation LIKE ? OR
-             district LIKE ? OR state LIKE ? OR gender LIKE ?)
+             district LIKE ? OR state LIKE ?)
       `;
-      params.push(like, like, like, like, like, like);
+      params.push(like, like, like, like, like);
     }
   }
 
@@ -62,12 +60,17 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
 
 exports.getDropdownOptions = (callback) => {
-  db.query("SELECT DISTINCT district FROM family_members ORDER BY district ASC", (err1, districts) => {
-    if (err1) return callback(err1);
-    db.query("SELECT DISTINCT state FROM family_members ORDER BY state ASC", (err2, states) => {
-      if (err2) return callback(err2);
-      callback(null, { districts, states });
+  const filePath = path.join(__dirname, "../public/data/india-states-districts.json");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return callback(err);
+    const statesData = JSON.parse(data);
+    const states = Object.keys(statesData).sort();
+    const districts = [];
+    states.forEach(state => {
+      districts.push(...statesData[state]);
     });
+    const uniqueDistricts = [...new Set(districts)].sort();
+    callback(null, { districts: uniqueDistricts, states });
   });
 };
 
@@ -82,4 +85,27 @@ exports.getMemberById = (id, callback) => {
 
 exports.updateMember = (id, data, callback) => {
   db.query("UPDATE parents SET ? WHERE id = ?", [data, id], callback);
+};
+
+exports.getAll = (page, limit, callback) => {
+  const offset = (page - 1) * limit;
+  const sql = `
+    SELECT id, name, mobile, email, occupation, door_no, street, district, state,
+           pincode
+    FROM parents
+    ORDER BY name ASC
+    LIMIT ? OFFSET ?
+  `;
+  const countSql = "SELECT COUNT(*) AS total FROM parents";
+
+  db.query(countSql, (err, countResult) => {
+    if (err) return callback(err);
+    const totalRecords = countResult[0].total;
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    db.query(sql, [limit, offset], (err2, results) => {
+      if (err2) return callback(err2);
+      callback(null, { results, totalPages });
+    });
+  });
 };
