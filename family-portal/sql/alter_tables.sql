@@ -1,4 +1,4 @@
-USE survey_app;
+USE admin_db;
 
 -- Add missing columns to parents table
 ALTER TABLE parents

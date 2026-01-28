@@ -1,4 +1,4 @@
-USE survey_app;
+USE admin_db;
 
 -- Create parents table first
 CREATE TABLE IF NOT EXISTS parents (
@@ -35,7 +35,6 @@ CREATE TABLE IF NOT EXISTS children (
   name VARCHAR(255) NOT NULL,
   occupation VARCHAR(255),
   dob DATE,
-  gender ENUM('Male', 'Female', 'Other'),
   photo VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE
