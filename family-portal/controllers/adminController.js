@@ -43,65 +43,6 @@ exports.dashboard = (req, res) => {
   });
 };
 
-exports.search = (req, res) => {
-  const input = req.query.q ? req.query.q.trim() : "";
-  const selectedDistrict = req.query.district || "";
-  const selectedState = req.query.state || "";
-  const page = parseInt(req.query.page) || 1;
-  const limit = 9;
-
-  if (!input && !selectedDistrict && !selectedState) {
-    const { states, districts } = loadDropdownOptions();
-
-    return res.render("admin/dashboard", {
-      results: [],
-      message: "Please enter or select something to search.",
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict,
-      selectedState,
-      searchValue: "",
-      currentPage: 1,
-      totalPages: 0,
-      user: req.user
-    });
-  }
-
-  Admin.searchMembers({ input, selectedDistrict, selectedState }, page, limit, (err, data) => {
-    if (err) {
-      console.error("Error searching members:", err);
-      const { states, districts } = loadDropdownOptions();
-      return res.render("admin/dashboard", {
-        results: [],
-        message: "Error searching. Please try again.",
-        districtOptions: districts,
-        stateOptions: states,
-        selectedDistrict,
-        selectedState,
-        searchValue: input,
-        currentPage: 1,
-        totalPages: 0,
-        user: req.user
-      });
-    }
-
-    const { states, districts } = loadDropdownOptions();
-
-    res.render("admin/dashboard", {
-      results: data.results,
-      message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict,
-      selectedState,
-      searchValue: input,
-      currentPage: page,
-      totalPages: data.totalPages,
-      user: req.user
-    });
-  });
-};
-
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
