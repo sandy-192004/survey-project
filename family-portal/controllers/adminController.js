@@ -1,48 +1,53 @@
 const Admin = require("../models/admin");
-const fs = require("fs");
-const path = require("path");
-
-
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
 
   Admin.getAll(page, limit, (err, data) => {
-    if (err) {
-      console.error("Error fetching all members:", err);
-      const { states, districts } = loadDropdownOptions();
-      return res.render("admin/dashboard", {
-        results: [],
-        message: "Error loading data. Please try again.",
-        districtOptions: districts,
-        stateOptions: states,
-        selectedDistrict: "",
-        selectedState: "",
-        searchValue: "",
-        currentPage: 1,
-        totalPages: 0,
-        user: req.user
-      });
-    }
-
-    const { states, districts } = loadDropdownOptions();
+    if (err) return res.status(500).send("Server Error");
 
     res.render("admin/dashboard", {
       results: data.results,
-      message: data.results.length === 0 ? "No data found." : null,
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict: "",
-      selectedState: "",
-      searchValue: "",
-      currentPage: page,
       totalPages: data.totalPages,
-      user: req.user
+      currentPage: page,
+      searchValue: "",
+      selectedState: "",
+      selectedDistrict: "",
+      states: [],
+      districts: []
     });
   });
 };
+exports.search = (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 9;
 
+  const filters = {
+    input: req.query.q || "",
+    selectedState: req.query.state || "",
+    selectedDistrict: req.query.district || ""
+  };
+
+  Admin.searchMembers(filters, page, limit, (err, data) => {
+    if (err) return res.status(500).send("Server Error");
+
+    Admin.getDropdownOptions((err2, dropdowns) => {
+      if (err2) return res.status(500).send("Server Error");
+
+      res.render("admin/dashboard", {
+        results: data.results,
+        totalPages: data.totalPages,
+        currentPage: page,
+        searchValue: filters.input,
+        selectedState: filters.selectedState,
+        selectedDistrict: filters.selectedDistrict,
+        states: dropdowns.states,
+        districts: dropdowns.districts
+      });
+    });
+  });
+};
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
