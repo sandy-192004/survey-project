@@ -7,15 +7,19 @@ exports.dashboard = (req, res) => {
   Admin.getAll(page, limit, (err, data) => {
     if (err) return res.status(500).send("Server Error");
 
-    res.render("admin/dashboard", {
-      results: data.results,
-      totalPages: data.totalPages,
-      currentPage: page,
-      searchValue: "",
-      selectedState: "",
-      selectedDistrict: "",
-      states: [],
-      districts: []
+    Admin.getDropdownOptions((err2, dropdowns) => {
+      if (err2) return res.status(500).send("Server Error");
+
+      res.render("admin/dashboard", {
+        results: data.results,
+        totalPages: data.totalPages,
+        currentPage: page,
+        searchValue: "",
+        selectedState: "",
+        selectedDistrict: "",
+        states: dropdowns.states,
+        districts: dropdowns.districts
+      });
     });
   });
 };
@@ -147,3 +151,5 @@ function loadDropdownOptions() {
     return { states: [], districts: [] };
   }
 }
+
+

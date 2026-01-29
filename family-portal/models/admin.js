@@ -6,10 +6,10 @@ exports.getAll = (page, limit, callback) => {
   const offset = (page - 1) * limit;
 
   const sql = `
-    SELECT parent_id AS id, name, wife_name, mobile, occupation,
+    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
            district, state
     FROM family
-    ORDER BY name ASC
+    ORDER BY husband_name ASC
     LIMIT ? OFFSET ?
   `;
 
@@ -33,14 +33,14 @@ exports.searchMembers = (filters, page, limit, callback) => {
   const params = [];
 
   let sql = `
-    SELECT parent_id AS id, name, wife_name, mobile, occupation,
+    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
            district, state
     FROM family
     WHERE 1=1
   `;
 
   if (input) {
-    sql += " AND (name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
+    sql += " AND (husband_name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
     const like = `%${input}%`;
     params.push(like, like, like);
   }
@@ -62,7 +62,7 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
     const totalPages = Math.ceil(countResult[0].total / limit);
 
-    sql += " ORDER BY name ASC LIMIT ? OFFSET ?";
+    sql += " ORDER BY husband_name ASC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     db.query(sql, params, (err2, results) => {
@@ -82,3 +82,5 @@ exports.getDropdownOptions = (callback) => {
     callback(null, { states, districts });
   });
 };
+
+
