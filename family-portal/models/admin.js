@@ -6,10 +6,10 @@ exports.getAll = (page, limit, callback) => {
   const offset = (page - 1) * limit;
 
   const sql = `
-    SELECT parent_id AS id, name, wife_name, mobile, occupation,
+    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
            district, state
     FROM family
-    ORDER BY name ASC
+    ORDER BY husband_name ASC
     LIMIT ? OFFSET ?
   `;
 
@@ -33,14 +33,14 @@ exports.searchMembers = (filters, page, limit, callback) => {
   const params = [];
 
   let sql = `
-    SELECT parent_id AS id, name, wife_name, mobile, occupation,
+    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
            district, state
     FROM family
     WHERE 1=1
   `;
 
   if (input) {
-    sql += " AND (name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
+    sql += " AND (husband_name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
     const like = `%${input}%`;
     params.push(like, like, like);
   }
@@ -62,7 +62,7 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
     const totalPages = Math.ceil(countResult[0].total / limit);
 
-    sql += " ORDER BY name ASC LIMIT ? OFFSET ?";
+    sql += " ORDER BY husband_name ASC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     db.query(sql, params, (err2, results) => {
@@ -81,4 +81,24 @@ exports.getDropdownOptions = (callback) => {
     const districts = [...new Set(states.flatMap(s => json[s]))].sort();
     callback(null, { states, districts });
   });
+};
+
+exports.getMemberById = (id, callback) => {
+  const sql = 'SELECT * FROM family WHERE family_id = ?';
+  db.query(sql, [id], (err, results) => {
+    if (err) return callback(err);
+    if (results.length === 0) return callback(null, null);
+    callback(null, results[0]);
+  });
+};
+
+exports.updateMember = (id, data, callback) => {
+  const sql = 'UPDATE family SET husband_name = ?, wife_name = ?, mobile = ?, email = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, husband_photo = ?, wife_photo = ? WHERE family_id = ?';
+  const params = [data.name, data.wife_name, data.mobile, data.email, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, data.wife_photo, id];
+  db.query(sql, params, callback);
+};
+
+exports.getChildrenByParentId = (parentId, callback) => {
+  const sql = 'SELECT * FROM children WHERE family_id = ?';
+  db.query(sql, [parentId], callback);
 };

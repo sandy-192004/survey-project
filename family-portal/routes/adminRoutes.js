@@ -5,13 +5,13 @@ const db = require("../config/db"); // Make sure this is your db connection
 
 // Get all families as JSON
 router.get('/families', (req, res) => {
-    const query = 'SELECT * FROM family_table'; 
+    const query = 'SELECT * FROM family';
     db.query(query, (err, results) => {
         if (err) {
             console.log(err);
             return res.status(500).send('Error loading data');
         }
-        res.json(results); 
+        res.json(results);
     });
 });
 
