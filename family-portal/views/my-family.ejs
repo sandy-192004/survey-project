@@ -49,43 +49,72 @@
             <div class="col-12">
                 <h1 class="mb-4">My Family Details</h1>
                 <% if (hasData) { %>
+                    <%
+                    let members = [];
+                    // Add husband
+                    members.push({
+                        name: parent.name,
+                        relation: 'Husband',
+                        occupation: parent.occupation,
+                        mobile: parent.mobile,
+                        email: parent.email,
+                        address: `${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}`
+                    });
+                    // Add wife if exists
+                    if (parent.wife_name) {
+                        members.push({
+                            name: parent.wife_name,
+                            relation: 'Wife',
+                            occupation: 'N/A',
+                            mobile: parent.mobile,
+                            email: parent.email,
+                            address: `${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}`
+                        });
+                    }
+                    // Add children
+                    if (children && children.length > 0) {
+                        children.forEach(child => {
+                            members.push({
+                                name: child.name,
+                                relation: 'Child',
+                                occupation: child.occupation,
+                                dob: child.dob,
+                                gender: child.gender
+                            });
+                        });
+                    }
+                    %>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Parent Details</h5>
-                                </div>
-                                <div class="card-body">
-                                    <p><strong>Name:</strong> <%= parent.name %></p>
-                                    <p><strong>Wife Name:</strong> <%= parent.wife_name || 'N/A' %></p>
-                                    <p><strong>Mobile:</strong> <%= parent.mobile %></p>
-                                    <p><strong>Email:</strong> <%= parent.email %></p>
-                                    <p><strong>Occupation:</strong> <%= parent.occupation %></p>
-                                    <p><strong>Address:</strong> <%= parent.door_no %>, <%= parent.street %>, <%= parent.district %>, <%= parent.state %> - <%= parent.pincode %></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Children Details</h5>
-                                </div>
-                                <div class="card-body">
-                                    <% if (children && children.length > 0) { %>
-                                        <% children.forEach(child => { %>
-                                            <div class="mb-3 p-3 border rounded">
-                                                <p><strong>Name:</strong> <%= child.name %></p>
-                                                <p><strong>Occupation:</strong> <%= child.occupation %></p>
-                                                <p><strong>Date of Birth:</strong> <%= child.dob %></p>
-                                                <p><strong>Gender:</strong> <%= child.gender %></p>
-                                            </div>
-                                        <% }); %>
-                                    <% } else { %>
-                                        <p>No children details available.</p>
-                                    <% } %>
+                        <% members.forEach(member => { %>
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0"><%= member.relation %></h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Name:</strong> <%= member.name %></p>
+                                        <% if (member.occupation) { %>
+                                            <p><strong>Occupation:</strong> <%= member.occupation %></p>
+                                        <% } %>
+                                        <% if (member.mobile) { %>
+                                            <p><strong>Mobile:</strong> <%= member.mobile %></p>
+                                        <% } %>
+                                        <% if (member.email) { %>
+                                            <p><strong>Email:</strong> <%= member.email %></p>
+                                        <% } %>
+                                        <% if (member.address) { %>
+                                            <p><strong>Address:</strong> <%= member.address %></p>
+                                        <% } %>
+                                        <% if (member.dob) { %>
+                                            <p><strong>Date of Birth:</strong> <%= member.dob %></p>
+                                        <% } %>
+                                        <% if (member.gender) { %>
+                                            <p><strong>Gender:</strong> <%= member.gender %></p>
+                                        <% } %>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        <% }); %>
                     </div>
                     <div class="text-center">
                         <a href="/family/edit/<%= parent.id %>" class="btn btn-primary">Edit Family Details</a>
@@ -126,10 +155,10 @@
     <script>
         // Show modal if no data
         document.addEventListener('DOMContentLoaded', function() {
-            <% if (!hasData) { %>
+             if (!hasData) { 
                 const addFamilyModal = new bootstrap.Modal(document.getElementById('addFamilyModal'));
                 addFamilyModal.show();
-            <% } %>
+             } 
         });
     </script>
 </body>

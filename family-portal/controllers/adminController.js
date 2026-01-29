@@ -1,55 +1,68 @@
 const Admin = require("../models/admin");
-const fs = require("fs");
-const path = require("path");
-
-
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
 
   Admin.getAll(page, limit, (err, data) => {
-    if (err) {
-      console.error("Error fetching all members:", err);
-      const { states, districts } = loadDropdownOptions();
-      return res.render("admin/dashboard", {
-        results: [],
-        message: "Error loading data. Please try again.",
-        districtOptions: districts,
-        stateOptions: states,
-        selectedDistrict: "",
-        selectedState: "",
+    if (err) return res.status(500).send("Server Error");
+
+    Admin.getDropdownOptions((err2, dropdowns) => {
+      if (err2) return res.status(500).send("Server Error");
+
+      res.render("admin/dashboard", {
+        results: data.results,
+        totalPages: data.totalPages,
+        currentPage: page,
         searchValue: "",
-        currentPage: 1,
-        totalPages: 0,
-        user: req.user
+        selectedState: "",
+        selectedDistrict: "",
+        states: dropdowns.states,
+        districts: dropdowns.districts
       });
-    }
-
-    const { states, districts } = loadDropdownOptions();
-
-    res.render("admin/dashboard", {
-      results: data.results,
-      message: data.results.length === 0 ? "No data found." : null,
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict: "",
-      selectedState: "",
-      searchValue: "",
-      currentPage: page,
-      totalPages: data.totalPages,
-      user: req.user
     });
   });
 };
+exports.search = (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 9;
 
+  const filters = {
+    input: req.query.q || "",
+    selectedState: req.query.state || "",
+    selectedDistrict: req.query.district || ""
+  };
+
+  Admin.searchMembers(filters, page, limit, (err, data) => {
+    if (err) return res.status(500).send("Server Error");
+
+    Admin.getDropdownOptions((err2, dropdowns) => {
+      if (err2) return res.status(500).send("Server Error");
+
+      res.render("admin/dashboard", {
+        results: data.results,
+        totalPages: data.totalPages,
+        currentPage: page,
+        searchValue: filters.input,
+        selectedState: filters.selectedState,
+        selectedDistrict: filters.selectedDistrict,
+        states: dropdowns.states,
+        districts: dropdowns.districts
+      });
+    });
+  });
+};
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
-    res.render("admin/view", { member });
+
+    Admin.getChildrenByParentId(id, (err2, children) => {
+      if (err2) throw err2;
+      res.render("admin/view", { member, children: children || [] });
+    });
   });
 };
 
@@ -60,32 +73,78 @@ exports.editMember = (req, res) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
 
-    // For the sample data structure, wife info is in the same record
-    // Create a wife object from the member data
-    const wife = member.wife_name ? {
-      id: member.id + '_wife', // Temporary ID for wife
-      name: member.wife_name,
-      mobile: member.mobile,
-      email: member.email,
-      occupation: '',
-      door_no: member.door_no,
-      street: member.street,
-      district: member.district,
-      state: member.state,
-      pincode: member.pincode
-    } : null;
+    Admin.getChildrenByParentId(id, (err2, children) => {
+      if (err2) throw err2;
 
-    res.render("admin/edit", { parent: member, wife, children: [], message: null });
+      // For the sample data structure, wife info is in the same record
+      // Create a wife object from the member data
+      const wife = member.wife_name ? {
+        id: member.id + '_wife', // Temporary ID for wife
+        name: member.wife_name,
+        mobile: member.mobile,
+        email: member.email,
+        occupation: '',
+        door_no: member.door_no,
+        street: member.street,
+        district: member.district,
+        state: member.state,
+        pincode: member.pincode
+      } : null;
+
+      res.render("admin/edit", { parent: member, wife, children: children || [], message: null });
+    });
   });
 };
 
 
 exports.updateMember = (req, res) => {
   const id = req.params.id;
-  const updatedData = req.body;
-  Admin.updateMember(id, updatedData, (err) => {
-    if (err) throw err;
-    res.redirect("/admin/dashboard");
+
+  // Handle photo uploads
+  const husbandPhoto = req.files ? req.files.find(file => file.fieldname === 'husband_photo') : null;
+  const wifePhoto = req.files ? req.files.find(file => file.fieldname === 'wife_photo') : null;
+  const childPhotos = req.files ? req.files.filter(file => file.fieldname.startsWith('children[') && file.fieldname.endsWith('][photo]')) : [];
+
+  const parentData = { ...req.body };
+
+  // Update photo filenames if new photos uploaded
+  if (husbandPhoto) {
+    parentData.husband_photo = husbandPhoto.filename;
+  }
+  if (wifePhoto) {
+    parentData.wife_photo = wifePhoto.filename;
+  }
+
+  Admin.updateMember(id, parentData, err => {
+    if (err) {
+      console.log("DB Error:", err.message);
+      return res.redirect("/admin/dashboard");
+    }
+
+    const Child = require("../models/Child");
+
+    Child.deleteByParent(id, err => {
+      if (err) {
+        console.log("DB Error:", err.message);
+        return res.redirect("/admin/dashboard");
+      }
+
+      (req.body.children || []).forEach((child, index) => {
+        const childPhoto = childPhotos.find(photo => {
+          const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
+          return match && parseInt(match[1]) === index;
+        });
+        const childData = {
+          parent_id: id,
+          name: child.name,
+          occupation: child.occupation,
+          photo: childPhoto ? childPhoto.filename : null
+        };
+        Child.create(childData, () => {});
+      });
+
+      res.redirect("/admin/view/" + id);
+    });
   });
 };
 

@@ -10,8 +10,8 @@
             <div class="col-md-3">
                 <select name="state" class="form-select">
                     <option value="">All States</option>
-                    <% if (stateOptions && stateOptions.length > 0) { %>
-                        <% stateOptions.forEach(state => { %>
+                    <% if (states && states.length > 0) { %>
+                        <% states.forEach(state => { %>
                             <option value="<%= state %>" <%= selectedState === state ? 'selected' : '' %>><%= state %></option>
                         <% }); %>
                     <% } %>
@@ -21,8 +21,8 @@
             <div class="col-md-3">
                 <select name="district" class="form-select">
                     <option value="">All Districts</option>
-                    <% if (districtOptions && districtOptions.length > 0) { %>
-                        <% districtOptions.forEach(district => { %>
+                    <% if (districts && districts.length > 0) { %>
+                        <% districts.forEach(district => { %>
                             <option value="<%= district %>" <%= selectedDistrict === district ? 'selected' : '' %>><%= district %></option>
                         <% }); %>
                     <% } %>
