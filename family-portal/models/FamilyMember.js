@@ -1,41 +1,69 @@
 const db = require("../config/db");
 
+/**
+ * Create a family member (parent or child)
+ */
 exports.create = (memberData, callback) => {
   const sql = "INSERT INTO family_members SET ?";
   db.query(sql, memberData, callback);
 };
 
+/**
+ * Update a family member by ID
+ */
 exports.update = (memberId, memberData, callback) => {
   const sql = "UPDATE family_members SET ? WHERE id = ?";
   db.query(sql, [memberData, memberId], callback);
 };
 
-exports.delete = (memberId, callback) => {
+/**
+ * Delete a family member by ID
+ */
+exports.deleteById = (memberId, callback) => {
   const sql = "DELETE FROM family_members WHERE id = ?";
   db.query(sql, [memberId], callback);
 };
 
+/**
+ * Get a single member by ID
+ */
 exports.getById = (memberId, callback) => {
   const sql = "SELECT * FROM family_members WHERE id = ?";
   db.query(sql, [memberId], callback);
 };
 
-exports.getByUserId = (userId, callback) => {
-  const sql = "SELECT * FROM family_members WHERE user_id = ? ORDER BY member_type, created_at";
-  db.query(sql, [userId], callback);
+/**
+ * Get ALL members of ONE family
+ * (husband + wife + all children)
+ */
+exports.getByFamilyId = (familyId, callback) => {
+  const sql = `
+    SELECT *
+    FROM family_members
+    WHERE family_id = ?
+    ORDER BY
+      FIELD(member_type, 'parent', 'child'),
+      created_at
+  `;
+  db.query(sql, [familyId], callback);
 };
 
-exports.getAllByUserId = (userId, callback) => {
-  const sql = "SELECT * FROM family_members WHERE user_id = ? ORDER BY member_type, created_at";
-  db.query(sql, [userId], callback);
+/**
+ * Delete an entire family (all members)
+ */
+exports.deleteByFamilyId = (familyId, callback) => {
+  const sql = "DELETE FROM family_members WHERE family_id = ?";
+  db.query(sql, [familyId], callback);
 };
 
-exports.deleteByUserId = (userId, callback) => {
-  const sql = "DELETE FROM family_members WHERE user_id = ?";
-  db.query(sql, [userId], callback);
-};
-
+/**
+ * Get ALL families (admin view)
+ */
 exports.getAll = (callback) => {
-  const sql = "SELECT fm.*, u.email as user_email FROM family_members fm JOIN users u ON fm.user_id = u.id ORDER BY fm.created_at DESC";
+  const sql = `
+    SELECT *
+    FROM family_members
+    ORDER BY user_id, created_at
+  `;
   db.query(sql, callback);
 };

@@ -1,5 +1,3 @@
-const Parent = require("../models/Parent");
-const Child = require("../models/Child");
 const User = require("../models/User");
 const FamilyMember = require("../models/FamilyMember");
 const bcrypt = require("bcryptjs");
@@ -50,9 +48,7 @@ exports.login = (req, res) => {
       // Set session
       req.session.user = {
         id: user.id,
-        email: user.email,
-        parent_id: user.parent_id,
-        loginTime: new Date()
+        email: user.email
       };
       res.redirect("/dashboard");
     });
@@ -148,190 +144,209 @@ exports.showForm = (req, res) => {
   res.render("family-form");
 };
 
+exports.viewFamily = (req, res) => {
+  const familyId = req.params.familyId;
 
-exports.saveFamily = async (req, res) => {
-  try {
-    if (!req.session.user) {
-      return res.redirect("/login");
+  FamilyMember.getByFamilyId(familyId, (err, members) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("DB Error");
     }
 
-    const userId = req.session.user.id;
-    const p = req.body.parent || {};
-    const children = req.body.children || {};
-    const files = req.files || [];
+    res.render("family-view", {
+      members,
+      familyId
+    });
+  });
+};
 
-    const getFile = (field) => {
-      const f = files.find(file => file.fieldname === field);
-      return f ? f.filename : null;
-    };
+exports.myFamily = async (req, res) => {
+  try {
 
-    const husbandPhoto = getFile("parent[husband_photo]");
-    const wifePhoto = getFile("parent[wife_photo]");
+    if (!req.session.user || !req.session.user.email) {
+      return res.redirect('/login');
+    }
 
-    const conn = await db.promise().getConnection();
-    await conn.beginTransaction();
+    const email = req.session.user.email;
 
-    // Delete existing family (overwrite)
-    await conn.query("DELETE FROM family_members WHERE user_id = ?", [userId]);
-
-    // Insert husband
-    await conn.query(
-      `INSERT INTO family_members
-       (user_id, member_type, relationship, name, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photo)
-       VALUES (?, 'parent', 'husband', ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
-      [
-        userId,
-        p.name,
-        p.mobile,
-        p.occupation,
-        p.door_no,
-        p.street,
-        p.district,
-        p.state,
-        p.pincode,
-        husbandPhoto
-      ]
+    // 🔎 Find family_id linked to this email
+    const [familyRows] = await db.query(
+      `SELECT id FROM families WHERE email = ?`,
+      [email]
     );
 
-    // Insert wife
-    if (p.wife_name) {
-      await conn.query(
-        `INSERT INTO family_members
-         (user_id, member_type, relationship, name, door_no, street, district, state, pincode, photo)
-         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          userId,
-          p.wife_name,
-          p.door_no,
-          p.street,
-          p.district,
-          p.state,
-          p.pincode,
-          wifePhoto
-        ]
-      );
+    // ❌ No family found
+    if (familyRows.length === 0) {
+      return res.render('my-family', {
+        hasData: false,
+        parent: null,
+        children: []
+      });
     }
 
-    // Insert children
-    for (const key of Object.keys(children)) {
-      const c = children[key];
-      if (!c || !c.name) continue;
+    const familyId = familyRows[0].id;
 
-      const childPhoto = getFile(`children[${key}][photo]`);
+    // 👨‍👩‍👧 Parent details
+    const [parents] = await db.query(
+      `SELECT * FROM family_members
+       WHERE family_id = ? AND member_type = 'parent'`,
+      [familyId]
+    );
 
-      await conn.query(
-        `INSERT INTO family_members
-         (user_id, member_type, relationship, name, dob, gender, occupation, photo)
-         VALUES (?, 'child', ?, ?, ?, ?, ?, ?)`,
-        [
-          userId,
-          c.relationship,
-          c.name,
-          c.dob || null,
-          c.gender || null,
-          c.occupation || null,
-          childPhoto
-        ]
-      );
+    // 👶 Children details
+    const [children] = await db.query(
+      `SELECT * FROM family_members
+       WHERE family_id = ? AND member_type = 'child'`,
+      [familyId]
+    );
+
+    if (parents.length === 0) {
+      return res.render('my-family', {
+        hasData: false,
+        parent: null,
+        children: []
+      });
     }
 
-    await conn.commit();
-    conn.release();
+    res.render('my-family', {
+      hasData: true,
+      parent: parents[0],
+      children
+    });
 
-    // Success popup + redirect
-    res.send(`
-      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-      <script>
-        Swal.fire({
-          icon: "success",
-          title: "Saved!",
-          text: "Family saved successfully",
-          confirmButtonText: "OK"
-        }).then(() => {
-          window.location.href = "/dashboard";
-        });
-      </script>
-    `);
-
-  } catch (err) {
-    console.error("Save family error:", err);
-
-    res.send(`
-      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-      <script>
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to save family",
-          confirmButtonText: "OK"
-        }).then(() => {
-          window.location.href = "/family-form";
-        });
-      </script>
-    `);
+  } catch (error) {
+    console.error('Family fetch error:', error);
+    res.status(500).render('my-family', {
+      hasData: false,
+      parent: null,
+      children: []
+    });
   }
 };
 
 
-exports.dashboard = (req, res) => {
-  const page = parseInt(req.query.page || 1); // default page = 1
+exports.saveFamily = async (req, res) => {
+  try {
+    // 🔐 Auth check
+    if (!req.session.user || !req.session.user.email) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-  // Check if user is logged in and fetch their family data
-  let userFamily = null;
-  if (req.session.user) {
-    FamilyMember.getByUserId(req.session.user.id, (err, members) => {
-      if (err) {
-        console.log("DB Error:", err.message);
-        members = [];
-      }
+    const email = req.session.user.email;
 
-      // Separate parents and children
-      const parents = members.filter(m => m.member_type === 'parent');
-      const children = members.filter(m => m.member_type === 'child');
+    const {
+      husband_name,
+      wife_name,
+      mobile,
+      occupation,
+      door_no,
+      street,
+      district,
+      state,
+      pincode,
+      child_name,
+      child_dob,
+      child_gender
+    } = req.body;
 
-      userFamily = {
-        parents: parents || [],
-        children: children || []
-      };
-      renderDashboard();
-    });
-  } else {
-    renderDashboard();
+    // 1️⃣ Create family (or reuse)
+    let familyId;
+    const [existing] = await db.query(
+      'SELECT id FROM families WHERE email = ?',
+      [email]
+    );
+
+    if (existing.length > 0) {
+      familyId = existing[0].id;
+    } else {
+      const [result] = await db.query(
+        'INSERT INTO families (email) VALUES (?)',
+        [email]
+      );
+      familyId = result.insertId;
+    }
+
+    // 2️⃣ Parent photo
+    const parentPhoto = req.files?.parent_photo
+      ? req.files.parent_photo[0].filename
+      : null;
+
+    // 3️⃣ Insert husband
+    await db.query(
+      `INSERT INTO family_members
+       (family_id, member_type, relationship, name, mobile, occupation,
+        door_no, street, district, state, pincode, photo)
+       VALUES (?, 'parent', 'husband', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        familyId,
+        husband_name,
+        mobile,
+        occupation,
+        door_no,
+        street,
+        district,
+        state,
+        pincode,
+        parentPhoto
+      ]
+    );
+
+    // 4️⃣ Insert wife
+    await db.query(
+      `INSERT INTO family_members
+       (family_id, member_type, relationship, name, door_no, street,
+        district, state, pincode, photo)
+       VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        familyId,
+        wife_name,
+        door_no,
+        street,
+        district,
+        state,
+        pincode,
+        parentPhoto
+      ]
+    );
+
+    // 5️⃣ Insert child (if exists)
+    if (child_name) {
+      const childPhoto = req.files?.child_photo
+        ? req.files.child_photo[0].filename
+        : null;
+
+      await db.query(
+        `INSERT INTO family_members
+         (family_id, member_type, relationship, name, dob, gender, photo)
+         VALUES (?, 'child', 'son', ?, ?, ?, ?)`,
+        [familyId, child_name, child_dob, child_gender, childPhoto]
+      );
+    }
+
+    // ✅ Success
+    res.redirect('/dashboard');
+
+  } catch (err) {
+    console.error('Save family error:', err);
+    res.status(500).json({ message: 'Failed to save family data' });
   }
+};
 
-  function renderDashboard() {
-    FamilyMember.getAll((err, allMembers) => {
-      if (err) {
-        // If database error, still render dashboard with empty data
-        console.log("DB Error:", err.message);
-        return res.render("dashboard", { families: [], page, userFamily });
-      }
 
-      if (!allMembers || allMembers.length === 0) {
-        return res.render("dashboard", { families: [], page, userFamily });
-      }
+exports.dashboard = async (req, res) => {
+  const userId = req.session.user?.id;
 
-      // Group members by user_id
-      const familiesMap = {};
-      allMembers.forEach(member => {
-        if (!familiesMap[member.user_id]) {
-          familiesMap[member.user_id] = {
-            user_email: member.user_email,
-            parents: [],
-            children: []
-          };
-        }
+  try {
+    const [rows] = await db.promise().query(
+      "SELECT DISTINCT family_id FROM family_members WHERE family_id = ?",
+      [userId]
+    );
 
-        if (member.member_type === 'parent') {
-          familiesMap[member.user_id].parents.push(member);
-        } else if (member.member_type === 'child') {
-          familiesMap[member.user_id].children.push(member);
-        }
-      });
-
-      const families = Object.values(familiesMap);
-      res.render("dashboard", { families, page, userFamily });
-    });
+    const hasFamily = rows.length > 0;
+    return res.render('dashboard', { hasFamily });
+  } catch (err) {
+    console.error("Dashboard check error:", err);
+    return res.render('dashboard', { hasFamily: false });
   }
 };
 
@@ -435,7 +450,7 @@ exports.deleteFamily = (req, res) => {
 
 exports.getMyFamily = (req, res) => {
   // Check if user is logged in
-  if (!req.session.user) {
+  if (!req.session.user?.id) {
     return res.redirect("/login");
   }
 
@@ -464,12 +479,12 @@ exports.getMyFamily = (req, res) => {
 
 exports.getMyFamilyJson = (req, res) => {
   // Check if user is logged in
-  if (!req.session.user) {
+  if (!req.session.userId) {
     return res.json({ success: false, message: "Not logged in" });
   }
 
   // Get family members for the logged-in user
-  FamilyMember.getByUserId(req.session.user.id, (err, members) => {
+  FamilyMember.getByFamilyId(req.session.userId, (err, members) => {
     if (err) {
       console.log("DB Error:", err.message);
       return res.json({ success: false, message: "Database error" });

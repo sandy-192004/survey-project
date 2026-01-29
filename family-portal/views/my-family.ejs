@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Family - Family Portal</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
-<body>
+<body data-has-data="<%= hasData %>">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container-fluid">
@@ -48,7 +49,7 @@
         <div class="row">
             <div class="col-12">
                 <h1 class="mb-4">My Family Details</h1>
-                <% if (hasData) { %>
+                <% if (hasData && parent) { %>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card mb-4">
@@ -56,10 +57,17 @@
                                     <h5 class="card-title mb-0">Parent Details</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p><strong>Name:</strong> <%= parent.name %></p>
+                                    <% if (parent.photo) { %>
+                                        <div class="text-center mb-3">
+                                            <img src="/uploads/<%= parent.photo %>"
+                                                 class="rounded-circle border"
+                                                 style="width:120px;height:120px;object-fit:cover;">
+                                        </div>
+                                    <% } %>
+                                    <p><strong>Name:</strong> <%= parent.husband_name %></p>
                                     <p><strong>Wife Name:</strong> <%= parent.wife_name || 'N/A' %></p>
                                     <p><strong>Mobile:</strong> <%= parent.mobile %></p>
-                                    <p><strong>Email:</strong> <%= parent.email %></p>
+                                    <p><strong>Email:</strong> <%= parent.email || 'N/A' %></p>
                                     <p><strong>Occupation:</strong> <%= parent.occupation %></p>
                                     <p><strong>Address:</strong> <%= parent.door_no %>, <%= parent.street %>, <%= parent.district %>, <%= parent.state %> - <%= parent.pincode %></p>
                                 </div>
@@ -74,9 +82,13 @@
                                     <% if (children && children.length > 0) { %>
                                         <% children.forEach(child => { %>
                                             <div class="mb-3 p-3 border rounded">
+                                                <% if (child.photo) { %>
+                                                    <div class="text-center mb-2">
+                                                        <img src="/uploads/<%= child.photo %>" alt="Child Photo" class="img-fluid rounded" style="max-width: 100px; max-height: 100px;">
+                                                    </div>
+                                                <% } %>
                                                 <p><strong>Name:</strong> <%= child.name %></p>
-                                                <p><strong>Occupation:</strong> <%= child.occupation %></p>
-                                                <p><strong>Date of Birth:</strong> <%= child.dob %></p>
+                                                <p><strong>Date of Birth:</strong> <%= new Date(child.dob).toLocaleDateString('en-GB') %></p>
                                                 <p><strong>Gender:</strong> <%= child.gender %></p>
                                             </div>
                                         <% }); %>
@@ -125,11 +137,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
         // Show modal if no data
+        const hasFamilyData = document.body.dataset.hasData === 'true';
         document.addEventListener('DOMContentLoaded', function() {
-            <% if (!hasData) { %>
+            if (!hasFamilyData) {
                 const addFamilyModal = new bootstrap.Modal(document.getElementById('addFamilyModal'));
                 addFamilyModal.show();
-            <% } %>
+            }
         });
     </script>
 </body>

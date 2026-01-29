@@ -1,0 +1,12 @@
+- [x] Fix session inconsistency in login function: Change req.session.userId to req.session.user = { id: user.id, email: user.email }
+- [x] Test login functionality after fix
+- [x] Update dashboard to show dashboard page instead of redirecting to my-family
+- [x] Add "View My Family" button on dashboard for users with family data
+- [x] Add photo display in my-family.ejs for both parent and children
+- [x] Fix /family route to properly fetch and display family data
+- [x] Ensure backend sends correct variables (hasData, parent, children) to EJS
+- [x] Add Bootstrap Icons CDN to my-family.ejs
+- [x] Fix email display by JOINing users table in family query
+- [x] Format child DOB to readable date format
+- [x] Remove occupation from child display
+- [x] Improve photo styling for parent (circular, centered) and children (smaller, circular)

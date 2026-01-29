@@ -23,9 +23,12 @@ app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
 app.use(session({
-  secret: "secret",
+  secret: "family-secret-key",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true
+  }
 }));
 
 
