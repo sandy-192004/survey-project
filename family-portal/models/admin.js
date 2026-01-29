@@ -83,4 +83,22 @@ exports.getDropdownOptions = (callback) => {
   });
 };
 
+exports.getMemberById = (id, callback) => {
+  const sql = 'SELECT * FROM family WHERE family_id = ?';
+  db.query(sql, [id], (err, results) => {
+    if (err) return callback(err);
+    if (results.length === 0) return callback(null, null);
+    callback(null, results[0]);
+  });
+};
 
+exports.updateMember = (id, data, callback) => {
+  const sql = 'UPDATE family SET husband_name = ?, wife_name = ?, mobile = ?, email = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, husband_photo = ?, wife_photo = ? WHERE family_id = ?';
+  const params = [data.name, data.wife_name, data.mobile, data.email, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, data.wife_photo, id];
+  db.query(sql, params, callback);
+};
+
+exports.getChildrenByParentId = (parentId, callback) => {
+  const sql = 'SELECT * FROM children WHERE family_id = ?';
+  db.query(sql, [parentId], callback);
+};

@@ -1,8 +1,14 @@
-# TODO: Display Family Details in 3x3 Grid
+# TODO: Implement Admin Portal Features with Sample Data
 
-## Tasks
-- [x] Modify my-family.ejs to display family members in a grid layout with 3 cards per row
-- [x] Collect family members (husband, wife, children) into an array
-- [x] Create individual cards for each member with relevant details
-- [x] Use Bootstrap col-md-4 for 3 columns per row
-- [x] Test the updated view
+## Completed
+- [x] Analyze sample data and current code
+- [x] Create plan to align code with data
+
+## Pending Tasks
+- [ ] Update models/admin.js: change 'husband_name' to 'name', add getMemberById, add updateMember
+- [ ] Update models/Child.js: adjust create to match children table (child_name, date_of_birth, occupation)
+- [ ] Update controllers/adminController.js: adjust getMemberById to fetch family and children, update updateMember
+- [ ] Update views/admin/view.ejs: adjust to show family details, wife, children
+- [ ] Update views/admin/edit.ejs: remove extra fields (dob, gender), adjust for available data
+- [ ] Update views/admin/dashboard.ejs: add links to view/edit family
+- [ ] Test the application with sample data

@@ -58,7 +58,11 @@ exports.viewMember = (req, res) => {
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
-    res.render("admin/view", { member });
+
+    Admin.getChildrenByParentId(id, (err2, children) => {
+      if (err2) throw err2;
+      res.render("admin/view", { member, children: children || [] });
+    });
   });
 };
 
@@ -69,32 +73,78 @@ exports.editMember = (req, res) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
 
-    // For the sample data structure, wife info is in the same record
-    // Create a wife object from the member data
-    const wife = member.wife_name ? {
-      id: member.id + '_wife', // Temporary ID for wife
-      name: member.wife_name,
-      mobile: member.mobile,
-      email: member.email,
-      occupation: '',
-      door_no: member.door_no,
-      street: member.street,
-      district: member.district,
-      state: member.state,
-      pincode: member.pincode
-    } : null;
+    Admin.getChildrenByParentId(id, (err2, children) => {
+      if (err2) throw err2;
 
-    res.render("admin/edit", { parent: member, wife, children: [], message: null });
+      // For the sample data structure, wife info is in the same record
+      // Create a wife object from the member data
+      const wife = member.wife_name ? {
+        id: member.id + '_wife', // Temporary ID for wife
+        name: member.wife_name,
+        mobile: member.mobile,
+        email: member.email,
+        occupation: '',
+        door_no: member.door_no,
+        street: member.street,
+        district: member.district,
+        state: member.state,
+        pincode: member.pincode
+      } : null;
+
+      res.render("admin/edit", { parent: member, wife, children: children || [], message: null });
+    });
   });
 };
 
 
 exports.updateMember = (req, res) => {
   const id = req.params.id;
-  const updatedData = req.body;
-  Admin.updateMember(id, updatedData, (err) => {
-    if (err) throw err;
-    res.redirect("/admin/dashboard");
+
+  // Handle photo uploads
+  const husbandPhoto = req.files ? req.files.find(file => file.fieldname === 'husband_photo') : null;
+  const wifePhoto = req.files ? req.files.find(file => file.fieldname === 'wife_photo') : null;
+  const childPhotos = req.files ? req.files.filter(file => file.fieldname.startsWith('children[') && file.fieldname.endsWith('][photo]')) : [];
+
+  const parentData = { ...req.body };
+
+  // Update photo filenames if new photos uploaded
+  if (husbandPhoto) {
+    parentData.husband_photo = husbandPhoto.filename;
+  }
+  if (wifePhoto) {
+    parentData.wife_photo = wifePhoto.filename;
+  }
+
+  Admin.updateMember(id, parentData, err => {
+    if (err) {
+      console.log("DB Error:", err.message);
+      return res.redirect("/admin/dashboard");
+    }
+
+    const Child = require("../models/Child");
+
+    Child.deleteByParent(id, err => {
+      if (err) {
+        console.log("DB Error:", err.message);
+        return res.redirect("/admin/dashboard");
+      }
+
+      (req.body.children || []).forEach((child, index) => {
+        const childPhoto = childPhotos.find(photo => {
+          const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
+          return match && parseInt(match[1]) === index;
+        });
+        const childData = {
+          parent_id: id,
+          name: child.name,
+          occupation: child.occupation,
+          photo: childPhoto ? childPhoto.filename : null
+        };
+        Child.create(childData, () => {});
+      });
+
+      res.redirect("/admin/view/" + id);
+    });
   });
 };
 
