@@ -78,42 +78,7 @@ function removeChildRow(index) {
   }
 }
 
-async function saveFamily() {
-  const form = document.querySelector('form');
-  const formData = new FormData(form);
 
-  Swal.fire({
-    title: "Saving...",
-    text: "Please wait",
-    allowOutsideClick: false,
-    didOpen: () => Swal.showLoading()
-  });
-
-  try {
-    const response = await fetch('/save-family', {
-      method: 'POST',
-      body: formData
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Family Saved',
-        text: 'Your family details have been saved successfully',
-        confirmButtonText: 'OK'
-      }).then(() => {
-        window.location.href = '/dashboard';
-      });
-    } else {
-      Swal.fire("Error", result.message, "error");
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    Swal.fire('Error', 'Something went wrong', 'error');
-  }
-}
 
 // Load India data on DOM load
 window.addEventListener("DOMContentLoaded", loadIndiaData);

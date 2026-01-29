@@ -3,6 +3,15 @@ const FamilyMember = require("../models/FamilyMember");
 const bcrypt = require("bcryptjs");
 const db = require("../config/db");
 
+// Helper function to get familyId from user email
+async function getFamilyId(email) {
+  const [rows] = await db.promise().query(
+    'SELECT id FROM families WHERE email = ?',
+    [email]
+  );
+  return rows.length > 0 ? rows[0].id : null;
+}
+
 // Show login page
 exports.showLogin = (req, res) => {
   res.render("family-login");
@@ -46,10 +55,7 @@ exports.login = (req, res) => {
       }
 
       // Set session
-      req.session.user = {
-        id: user.id,
-        email: user.email
-      };
+      req.session.user = { id: user.id, email: user.email };
       res.redirect("/dashboard");
     });
   });
@@ -116,28 +122,59 @@ exports.logout = (req, res) => {
   });
 };
 
-exports.checkFamily = (req, res) => {
-  const { mobile } = req.query;
+exports.checkFamily = async (req, res) => {
+  try {
+    const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
 
-  if (!mobile) {
-    return res.json({ success: false, message: "Mobile number is required" });
+    if (!familyId) {
+      return res.render('dashboard', { hasFamily: false });
+    }
+
+    // Check if user has family data
+    const [rows] = await db.promise().query(
+      "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
+      [familyId]
+    );
+
+    if (rows.length > 0) {
+      return res.render('dashboard', { hasFamily: true });
+    } else {
+      return res.render('dashboard', { hasFamily: false });
+    }
+  } catch (err) {
+    console.error("Check family error:", err);
+    return res.render('dashboard', { hasFamily: false });
   }
+};
 
-  // Check if any family member has this mobile number
-  const sql = "SELECT fm.*, u.email FROM family_members fm JOIN users u ON fm.user_id = u.id WHERE fm.mobile = ?";
-  db.query(sql, [mobile], (err, results) => {
-    if (err) {
-      console.log("DB Error:", err.message);
-      return res.json({ success: false, message: "Database error" });
+// Logic route for /family - checks if user has family and redirects accordingly
+exports.familyLogic = async (req, res) => {
+  try {
+    const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
+
+    if (!familyId) {
+      return res.render('dashboard', { noFamily: true });
     }
 
-    if (!results || results.length === 0) {
-      return res.json({ success: false, message: "No data found" });
-    }
+    // Check if user has family data
+    const [rows] = await db.promise().query(
+      "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
+      [familyId]
+    );
 
-    // Family found
-    res.json({ success: true, message: "Family found", data: results[0] });
-  });
+    if (rows.length > 0) {
+      // Family exists - redirect to my-family
+      return res.redirect('/my-family');
+    } else {
+      // No family - redirect to dashboard with noFamily flag
+      return res.render('dashboard', { noFamily: true });
+    }
+  } catch (err) {
+    console.error("Family logic error:", err);
+    return res.render('dashboard', { noFamily: true });
+  }
 };
 
 exports.showForm = (req, res) => {
@@ -162,80 +199,62 @@ exports.viewFamily = (req, res) => {
 
 exports.myFamily = async (req, res) => {
   try {
-
-    if (!req.session.user || !req.session.user.email) {
-      return res.redirect('/login');
-    }
-
     const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
 
-    // 🔎 Find family_id linked to this email
-    const [familyRows] = await db.query(
-      `SELECT id FROM families WHERE email = ?`,
-      [email]
-    );
-
-    // ❌ No family found
-    if (familyRows.length === 0) {
-      return res.render('my-family', {
-        hasData: false,
-        parent: null,
-        children: []
-      });
+    if (!familyId) {
+      return res.render('dashboard', { hasFamily: false });
     }
 
-    const familyId = familyRows[0].id;
-
-    // 👨‍👩‍👧 Parent details
-    const [parents] = await db.query(
-      `SELECT * FROM family_members
-       WHERE family_id = ? AND member_type = 'parent'`,
+    // Get family members for the logged-in user
+    const [members] = await db.promise().query(
+      `SELECT * FROM family_members WHERE family_id = ? ORDER BY member_type, created_at`,
       [familyId]
     );
 
-    // 👶 Children details
-    const [children] = await db.query(
-      `SELECT * FROM family_members
-       WHERE family_id = ? AND member_type = 'child'`,
-      [familyId]
-    );
-
-    if (parents.length === 0) {
-      return res.render('my-family', {
-        hasData: false,
-        parent: null,
-        children: []
-      });
+    if (members.length === 0) {
+      return res.render('dashboard', { hasFamily: false });
     }
 
-    res.render('my-family', {
-      hasData: true,
-      parent: parents[0],
-      children
-    });
+    res.render('my-family', { members });
 
   } catch (error) {
     console.error('Family fetch error:', error);
-    res.status(500).render('my-family', {
-      hasData: false,
-      parent: null,
-      children: []
-    });
+    res.status(500).render('dashboard', { hasFamily: false });
   }
 };
 
 
 exports.saveFamily = async (req, res) => {
   try {
-    // 🔐 Auth check
-    if (!req.session.user || !req.session.user.email) {
-      return res.status(401).json({ message: 'Unauthorized' });
+    // ✅ STEP 1: GUARANTEE USER ID (NO MORE CRASHES)
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      console.error("USER SESSION MISSING");
+      return res.status(401).json({ success: false, message: "User not logged in" });
     }
 
+    // DEBUG: Log received data
+    console.log('=== SAVE FAMILY DEBUG ===');
+    console.log('USER ID:', userId);
+    console.log('FILES COUNT:', req.files?.length || 0);
+    console.log('BODY OK:', !!req.body.parent);
+    console.log('req.body:', JSON.stringify(req.body, null, 2));
+    console.log('req.files:', req.files ? req.files.map(f => ({
+      fieldname: f.fieldname,
+      filename: f.filename
+    })) : 'undefined');
+    console.log('========================');
+
+    // Get user email from session
     const email = req.session.user.email;
 
+    // Extract form data (nested structure from form)
+    const parent = req.body.parent || {};
+    const children = req.body.children || [];
+
     const {
-      husband_name,
+      name: husband_name,
       wife_name,
       mobile,
       occupation,
@@ -243,15 +262,12 @@ exports.saveFamily = async (req, res) => {
       street,
       district,
       state,
-      pincode,
-      child_name,
-      child_dob,
-      child_gender
-    } = req.body;
+      pincode
+    } = parent;
 
     // 1️⃣ Create family (or reuse)
     let familyId;
-    const [existing] = await db.query(
+    const [existing] = await db.promise().query(
       'SELECT id FROM families WHERE email = ?',
       [email]
     );
@@ -259,20 +275,19 @@ exports.saveFamily = async (req, res) => {
     if (existing.length > 0) {
       familyId = existing[0].id;
     } else {
-      const [result] = await db.query(
+      const [result] = await db.promise().query(
         'INSERT INTO families (email) VALUES (?)',
         [email]
       );
       familyId = result.insertId;
     }
 
-    // 2️⃣ Parent photo
-    const parentPhoto = req.files?.parent_photo
-      ? req.files.parent_photo[0].filename
-      : null;
+    // 2️⃣ Get parent photos (multer.any() creates array structure)
+    const husbandPhoto = req.files?.find(f => f.fieldname === 'parent[husband_photo]')?.filename || null;
+    const wifePhoto = req.files?.find(f => f.fieldname === 'parent[wife_photo]')?.filename || null;
 
     // 3️⃣ Insert husband
-    await db.query(
+    await db.promise().query(
       `INSERT INTO family_members
        (family_id, member_type, relationship, name, mobile, occupation,
         door_no, street, district, state, pincode, photo)
@@ -287,63 +302,85 @@ exports.saveFamily = async (req, res) => {
         district,
         state,
         pincode,
-        parentPhoto
+        husbandPhoto
       ]
     );
 
-    // 4️⃣ Insert wife
-    await db.query(
-      `INSERT INTO family_members
-       (family_id, member_type, relationship, name, door_no, street,
-        district, state, pincode, photo)
-       VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        familyId,
-        wife_name,
-        door_no,
-        street,
-        district,
-        state,
-        pincode,
-        parentPhoto
-      ]
-    );
-
-    // 5️⃣ Insert child (if exists)
-    if (child_name) {
-      const childPhoto = req.files?.child_photo
-        ? req.files.child_photo[0].filename
-        : null;
-
-      await db.query(
+    // 4️⃣ Insert wife (if provided)
+    if (wife_name) {
+      await db.promise().query(
         `INSERT INTO family_members
-         (family_id, member_type, relationship, name, dob, gender, photo)
-         VALUES (?, 'child', 'son', ?, ?, ?, ?)`,
-        [familyId, child_name, child_dob, child_gender, childPhoto]
+         (family_id, member_type, relationship, name, door_no, street,
+          district, state, pincode, photo)
+         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          familyId,
+          wife_name,
+          door_no,
+          street,
+          district,
+          state,
+          pincode,
+          wifePhoto ? wifePhoto.filename : null
+        ]
       );
     }
 
+    // 5️⃣ Insert children
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child.name) {
+        const childPhoto = req.files?.find(f => f.fieldname === `children[${i}][photo]`)?.filename || null;
+
+        await db.promise().query(
+          `INSERT INTO family_members
+           (family_id, member_type, relationship, name, dob, gender, occupation, mobile, photo)
+           VALUES (?, 'child', ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            familyId,
+            child.relationship || 'son',
+            child.name,
+            child.dob,
+            child.gender,
+            child.occupation,
+            child.mobile,
+            childPhoto
+          ]
+        );
+      }
+    }
+
     // ✅ Success
-    res.redirect('/dashboard');
+    res.redirect('/dashboard?success=true');
 
   } catch (err) {
-    console.error('Save family error:', err);
-    res.status(500).json({ message: 'Failed to save family data' });
+    console.error('=== SAVE FAMILY ERROR ===');
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
+    console.error('Error code:', err.code);
+    console.error('=======================');
+    res.status(500).json({
+      message: 'Failed to save family data',
+      error: err.message,
+      code: err.code,
+      stack: err.stack
+    });
   }
 };
 
 
 exports.dashboard = async (req, res) => {
-  const userId = req.session.user?.id;
-
   try {
+    // Check if there's any family data in the database
     const [rows] = await db.promise().query(
-      "SELECT DISTINCT family_id FROM family_members WHERE family_id = ?",
-      [userId]
+      "SELECT id FROM family_members LIMIT 1"
     );
 
-    const hasFamily = rows.length > 0;
-    return res.render('dashboard', { hasFamily });
+    if (rows.length > 0) {
+      return res.redirect('/my-family');
+    } else {
+      return res.render('dashboard', { hasFamily: false });
+    }
   } catch (err) {
     console.error("Dashboard check error:", err);
     return res.render('dashboard', { hasFamily: false });
@@ -448,60 +485,64 @@ exports.deleteFamily = (req, res) => {
   });
 };
 
-exports.getMyFamily = (req, res) => {
-  // Check if user is logged in
-  if (!req.session.user?.id) {
-    return res.redirect("/login");
-  }
+exports.getMyFamily = async (req, res) => {
+  try {
+    // Get all family members from the database
+    const [members] = await db.promise().query(
+      `SELECT * FROM family_members ORDER BY member_type, created_at`
+    );
 
-  // Get family members for the logged-in user
-  FamilyMember.getByUserId(req.session.user.id, (err, members) => {
-    if (err) {
-      console.log("DB Error:", err.message);
-      return res.render("my-family", { parents: [], children: [], hasData: false });
+    if (members.length === 0) {
+      return res.render("my-family", { members: [], hasData: false });
     }
-
-    if (!members || members.length === 0) {
-      return res.render("my-family", { parents: [], children: [], hasData: false });
-    }
-
-    // Separate parents and children
-    const parents = members.filter(m => m.member_type === 'parent');
-    const children = members.filter(m => m.member_type === 'child');
 
     res.render("my-family", {
-      parents: parents || [],
-      children: children || [],
+      members: members || [],
       hasData: true
     });
-  });
+  } catch (error) {
+    console.error('Get my family error:', error);
+    return res.render("my-family", { members: [], hasData: false });
+  }
 };
 
-exports.getMyFamilyJson = (req, res) => {
-  // Check if user is logged in
-  if (!req.session.userId) {
-    return res.json({ success: false, message: "Not logged in" });
-  }
-
-  // Get family members for the logged-in user
-  FamilyMember.getByFamilyId(req.session.userId, (err, members) => {
-    if (err) {
-      console.log("DB Error:", err.message);
-      return res.json({ success: false, message: "Database error" });
+exports.getMyFamilyJson = async (req, res) => {
+  try {
+    // Check if user is logged in
+    if (!req.session.user || !req.session.user.email) {
+      return res.json({ success: false, message: "Not logged in" });
     }
 
-    if (!members || members.length === 0) {
+    const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
+
+    if (!familyId) {
       return res.json({ success: false, message: "No family data found" });
     }
 
-    // Separate parents and children
-    const parents = members.filter(m => m.member_type === 'parent');
-    const children = members.filter(m => m.member_type === 'child');
+    // Get family members for the logged-in user
+    FamilyMember.getByFamilyId(familyId, (err, members) => {
+      if (err) {
+        console.log("DB Error:", err.message);
+        return res.json({ success: false, message: "Database error" });
+      }
 
-    res.json({
-      success: true,
-      parents: parents || [],
-      children: children || []
+      if (!members || members.length === 0) {
+        return res.json({ success: false, message: "No family data found" });
+      }
+
+      // Separate parents and children
+      const parents = members.filter(m => m.member_type === 'parent');
+      const children = members.filter(m => m.member_type === 'child');
+
+      res.json({
+        success: true,
+        parents: parents || [],
+        children: children || []
+      });
     });
-  });
+  } catch (error) {
+    console.error('Get my family JSON error:', error);
+    res.json({ success: false, message: "Database error" });
+  }
 };

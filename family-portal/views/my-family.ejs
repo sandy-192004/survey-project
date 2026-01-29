@@ -1,149 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Family - Family Portal</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <title>My Family</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body data-has-data="<%= hasData %>">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold fs-5" href="/dashboard">
-                <i class="bi bi-house-heart"></i> Family Portal
+<body class="bg-light">
+
+<div class="container mt-4">
+  <h3 class="mb-4">My Family</h3>
+
+  <div class="row">
+    <% members.forEach(m => { %>
+      <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+          <img src="/<%= m.photo %>" class="card-img-top" style="height:200px;object-fit:cover">
+          <div class="card-body">
+            <h5 class="card-title"><%= m.name %></h5>
+            <p class="card-text">
+              <strong>Role:</strong> <%= m.relationship %><br>
+              <strong>Occupation:</strong> <%= m.occupation || '-' %><br>
+              <strong>Mobile:</strong> <%= m.mobile || '-' %>
+            </p>
+
+            <a href="/family/edit/<%= m.id %>" class="btn btn-primary btn-sm">
+              Edit
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/dashboard">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/pooja-booking">
-                            <i class="bi bi-calendar-heart"></i> Pooja Booking
-                        </a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/profile">
-                            <i class="bi bi-person-circle"></i> Profile
-                        </a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/logout">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
+          </div>
         </div>
-    </nav>
+      </div>
+    <% }) %>
+  </div>
+</div>
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="mb-4">My Family Details</h1>
-                <% if (hasData && parent) { %>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Parent Details</h5>
-                                </div>
-                                <div class="card-body">
-                                    <% if (parent.photo) { %>
-                                        <div class="text-center mb-3">
-                                            <img src="/uploads/<%= parent.photo %>"
-                                                 class="rounded-circle border"
-                                                 style="width:120px;height:120px;object-fit:cover;">
-                                        </div>
-                                    <% } %>
-                                    <p><strong>Name:</strong> <%= parent.husband_name %></p>
-                                    <p><strong>Wife Name:</strong> <%= parent.wife_name || 'N/A' %></p>
-                                    <p><strong>Mobile:</strong> <%= parent.mobile %></p>
-                                    <p><strong>Email:</strong> <%= parent.email || 'N/A' %></p>
-                                    <p><strong>Occupation:</strong> <%= parent.occupation %></p>
-                                    <p><strong>Address:</strong> <%= parent.door_no %>, <%= parent.street %>, <%= parent.district %>, <%= parent.state %> - <%= parent.pincode %></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Children Details</h5>
-                                </div>
-                                <div class="card-body">
-                                    <% if (children && children.length > 0) { %>
-                                        <% children.forEach(child => { %>
-                                            <div class="mb-3 p-3 border rounded">
-                                                <% if (child.photo) { %>
-                                                    <div class="text-center mb-2">
-                                                        <img src="/uploads/<%= child.photo %>" alt="Child Photo" class="img-fluid rounded" style="max-width: 100px; max-height: 100px;">
-                                                    </div>
-                                                <% } %>
-                                                <p><strong>Name:</strong> <%= child.name %></p>
-                                                <p><strong>Date of Birth:</strong> <%= new Date(child.dob).toLocaleDateString('en-GB') %></p>
-                                                <p><strong>Gender:</strong> <%= child.gender %></p>
-                                            </div>
-                                        <% }); %>
-                                    <% } else { %>
-                                        <p>No children details available.</p>
-                                    <% } %>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <a href="/family/edit/<%= parent.id %>" class="btn btn-primary">Edit Family Details</a>
-                    </div>
-                <% } else { %>
-                    <div class="text-center">
-                        <div class="alert alert-warning">
-                            <h5>No Family Details Available</h5>
-                            <p>You haven't added your family details yet.</p>
-                            <a href="/family-form" class="btn btn-primary">Add Family Details</a>
-                        </div>
-                    </div>
-                <% } %>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Family Modal -->
-    <div class="modal fade" id="addFamilyModal" tabindex="-1" aria-labelledby="addFamilyModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addFamilyModalLabel">Add Family Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You haven't added your family details yet. Would you like to add them now?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="/family-form" class="btn btn-primary">Add Details</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Show modal if no data
-        const hasFamilyData = document.body.dataset.hasData === 'true';
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!hasFamilyData) {
-                const addFamilyModal = new bootstrap.Modal(document.getElementById('addFamilyModal'));
-                addFamilyModal.show();
-            }
-        });
-    </script>
 </body>
 </html>

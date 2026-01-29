@@ -63,7 +63,7 @@ exports.getAll = (callback) => {
   const sql = `
     SELECT *
     FROM family_members
-    ORDER BY user_id, created_at
+    ORDER BY family_id, created_at
   `;
   db.query(sql, callback);
 };
