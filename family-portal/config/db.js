@@ -15,7 +15,7 @@ db.getConnection((err, connection) => {
     console.log("DB Connection Failed:", err);
   } else {
     console.log("MySQL Connected Successfully");
-    connection.release(); // release back to pool
+    connection.release(); 
   }
 });
 
