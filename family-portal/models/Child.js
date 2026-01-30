@@ -1,27 +1,27 @@
 const db = require("../config/db");
 
 exports.create = (childData, callback) => {
-  const sql = "INSERT INTO children (family_id, child_name, occupation, date_of_birth, gender, photo) VALUES (?, ?, ?, ?, ?, ?)";
-  const values = [childData.parent_id, childData.name, childData.occupation, childData.dob, childData.gender, childData.photo];
+  const sql = "INSERT INTO children (family_id, child_name, occupation, photo) VALUES (?, ?, ?, ?)";
+  const values = [childData.parent_id, childData.name, childData.occupation, childData.photo];
   db.query(sql, values, callback);
 };
 
 exports.deleteByParent = (parentId, callback) => {
-  const sql = "DELETE FROM children WHERE family_id = ?";
+  const sql = "DELETE FROM children WHERE parent_id = ?";
   db.query(sql, [parentId], callback);
 };
 
 exports.getByParent = (parentId, callback) => {
-  const sql = "SELECT child_id, family_id as parent_id, child_name as name, occupation, date_of_birth as dob, photo FROM children WHERE family_id = ?";
+  const sql = "SELECT * FROM children WHERE parent_id = ?";
   db.query(sql, [parentId], callback);
 };
 
 exports.update = (childId, childData, callback) => {
-  let sql = "UPDATE children SET child_name = ?, occupation = ?, date_of_birth = ?, gender = ? WHERE child_id = ?";
-  let values = [childData.name, childData.occupation, childData.dob, childData.gender, childId];
+  let sql = "UPDATE children SET child_name = ?, occupation = ? WHERE child_id = ?";
+  let values = [childData.name, childData.occupation, childId];
   if (childData.photo !== undefined && childData.photo !== null) {
-    sql = "UPDATE children SET child_name = ?, occupation = ?, date_of_birth = ?, gender = ?, photo = ? WHERE child_id = ?";
-    values = [childData.name, childData.occupation, childData.dob, childData.gender, childData.photo, childId];
+    sql = "UPDATE children SET child_name = ?, occupation = ?, photo = ? WHERE child_id = ?";
+    values = [childData.name, childData.occupation, childData.photo, childId];
   }
   db.query(sql, values, callback);
 };

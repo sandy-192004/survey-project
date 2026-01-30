@@ -33,13 +33,10 @@ const createTables = () => {
 
   const childrenTable = `
     CREATE TABLE IF NOT EXISTS children (
-      child_id INT AUTO_INCREMENT PRIMARY KEY,
       family_id INT,
       child_name VARCHAR(255),
-      occupation VARCHAR(255),
       date_of_birth DATE,
-      gender VARCHAR(10),
-      photo VARCHAR(255),
+      occupation VARCHAR(255),
       FOREIGN KEY (family_id) REFERENCES family(family_id)
     )
   `;
@@ -63,15 +60,19 @@ createTables();
 
 app.set("view engine", "ejs");
 
-// Middleware setup - IMPORTANT ORDER
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
 
 app.use(session({
-  secret: "secret",
+  secret: "family-secret-key",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true
+  }
 }));
 
 
@@ -79,6 +80,9 @@ app.use(session({
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
+
+app.use("/admin",adminRoutes)
+
 
 
 app.listen(3000, () => {

@@ -1,5 +1,8 @@
 const Admin = require("../models/admin");
-const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
+
+
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -24,6 +27,7 @@ exports.dashboard = (req, res) => {
     });
   });
 };
+
 exports.search = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
@@ -79,6 +83,7 @@ exports.editMember = (req, res) => {
     Admin.getChildrenByParentId(id, (err2, children) => {
       if (err2) throw err2;
 
+
       // For the sample data structure, wife info is in the same record
       // Create a wife object from the member data
       const wife = member.wife_name ? {
@@ -94,7 +99,7 @@ exports.editMember = (req, res) => {
         pincode: member.pincode
       } : null;
 
-      res.render("admin/edit", { parent: member, wife, children: children || [], message });
+      res.render("admin/edit", { parent: member, wife, children: children || [], message: null });
     });
   });
 };
@@ -226,18 +231,20 @@ exports.addChild = (req, res) => {
 };
 
 
-
-function deleteRemoved(ids, callback) {
-  if (ids.length === 0) return callback();
-  let deleted = 0;
-  ids.forEach(id => {
-    db.query("DELETE FROM children WHERE child_id = ?", [id], (err) => {
-      if (err) console.error("Delete child error:", err);
-      deleted++;
-      if (deleted === ids.length) callback();
-    });
+exports.addChild = (req, res) => {
+  const childData = req.body;
+  if (req.files && req.files.photo) {
+    childData.photo = req.files.photo[0].filename;
+  }
+  Child.create(childData, (err, result) => {
+    if (err) {
+      console.error("Error adding child:", err);
+      return res.status(500).send("Error adding child");
+    }
+    res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
   });
-}
+};
+
 
 function loadDropdownOptions() {
   try {
