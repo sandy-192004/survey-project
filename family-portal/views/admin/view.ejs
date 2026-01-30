@@ -6,6 +6,13 @@
 </head>
 <body class="container mt-4">
 
+<% if (updated) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Member details have been updated successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
 <h3>Family Member Details</h3>
 
 <% if (!member) { %>
@@ -18,7 +25,6 @@
     <p><strong>Husband Name:</strong> <%= member.husband_name %></p>
     <p><strong>Wife Name:</strong> <%= member.wife_name %></p>
     <p><strong>Mobile:</strong> <%= member.mobile %></p>
-    <p><strong>Email:</strong> <%= member.email %></p>
     <p><strong>Occupation:</strong> <%= member.occupation %></p>
 
     <h6>Photos</h6>
@@ -46,7 +52,14 @@
       <div class="border p-2 mb-2">
         <p><strong>Name:</strong> <%= child.child_name %></p>
         <p><strong>Occupation:</strong> <%= child.occupation %></p>
-        <p><strong>Date of Birth:</strong> <%= child.date_of_birth %></p>
+<p><strong>Date of Birth:</strong>
+  <%= new Date(child.date_of_birth).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }) %>
+</p>
+
         <p><strong>Gender:</strong> <%= child.gender %></p>
         <% if (child.photo) { %>
           <p><strong>Photo:</strong> <img src="/uploads/<%= child.photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
