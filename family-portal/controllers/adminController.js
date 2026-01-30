@@ -82,6 +82,7 @@ exports.editMember = (req, res) => {
     Admin.getChildrenByParentId(id, (err2, children) => {
       if (err2) throw err2;
 
+<<<<<<< HEAD
       // For the sample data structure, wife info is in the same record
       // Create a wife object from the member data
       const wife = member.wife_name ? {
@@ -98,6 +99,16 @@ exports.editMember = (req, res) => {
       } : null;
 
       res.render("admin/edit", { parent: member, wife, children: children || [], message: null });
+=======
+    // Fetch children
+    Child.getByParentId(id, (err, children) => {
+      if (err) {
+        console.error("Error fetching children:", err);
+        children = [];
+      }
+      const message = req.query.message || null;
+      res.render("admin/edit", { parent: member, wife, children, message });
+>>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
     });
   });
 };
@@ -239,7 +250,23 @@ exports.addChild = (req, res) => {
   });
 };
 
+<<<<<<< HEAD
 
+=======
+exports.addChild = (req, res) => {
+  const childData = req.body;
+  if (req.files && req.files.photo) {
+    childData.photo = req.files.photo[0].filename;
+  }
+  Child.create(childData, (err, result) => {
+    if (err) {
+      console.error("Error adding child:", err);
+      return res.status(500).send("Error adding child");
+    }
+    res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
+  });
+};
+>>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
 
 function loadDropdownOptions() {
   try {

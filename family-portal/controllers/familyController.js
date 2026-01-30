@@ -6,7 +6,7 @@ const db = require("../config/db");
 // Helper function to get familyId from user email
 async function getFamilyId(email) {
   const [rows] = await db.promise().query(
-    'SELECT id FROM families WHERE email = ?',
+    'SELECT id FROM users WHERE email = ?',
     [email]
   );
   return rows.length > 0 ? rows[0].id : null;
@@ -108,8 +108,9 @@ exports.register = (req, res) => {
           return res.status(500).send("Error registering user");
         }
 
-        // Redirect to login page after successful registration
-        res.redirect("/login");
+        // Set session and redirect to family form for new users
+        req.session.user = { id: result.insertId, email: userData.email };
+        res.redirect("/family-form");
       });
     });
   });
@@ -178,7 +179,7 @@ exports.familyLogic = async (req, res) => {
 };
 
 exports.showForm = (req, res) => {
-  res.render("family-form");
+  res.render("family-form", { addChildMode: false });
 };
 
 exports.viewFamily = (req, res) => {
@@ -256,8 +257,10 @@ exports.saveFamily = async (req, res) => {
     const {
       name: husband_name,
       wife_name,
-      mobile,
-      occupation,
+      mobile: husband_mobile,
+      occupation: husband_occupation,
+      mobile_wife: wife_mobile,
+      occupation_wife: wife_occupation,
       door_no,
       street,
       district,
@@ -265,22 +268,8 @@ exports.saveFamily = async (req, res) => {
       pincode
     } = parent;
 
-    // 1️⃣ Create family (or reuse)
-    let familyId;
-    const [existing] = await db.promise().query(
-      'SELECT id FROM families WHERE email = ?',
-      [email]
-    );
-
-    if (existing.length > 0) {
-      familyId = existing[0].id;
-    } else {
-      const [result] = await db.promise().query(
-        'INSERT INTO families (email) VALUES (?)',
-        [email]
-      );
-      familyId = result.insertId;
-    }
+    // 1️⃣ Use user ID as family ID
+    const familyId = userId;
 
     // 2️⃣ Get parent photos (multer.any() creates array structure)
     const husbandPhoto = req.files?.find(f => f.fieldname === 'parent[husband_photo]')?.filename || null;
@@ -295,8 +284,8 @@ exports.saveFamily = async (req, res) => {
       [
         familyId,
         husband_name,
-        mobile,
-        occupation,
+        husband_mobile,
+        husband_occupation,
         door_no,
         street,
         district,
@@ -310,12 +299,14 @@ exports.saveFamily = async (req, res) => {
     if (wife_name) {
       await db.promise().query(
         `INSERT INTO family_members
-         (family_id, member_type, relationship, name, door_no, street,
+         (family_id, member_type, relationship, name, mobile, occupation, door_no, street,
           district, state, pincode, photo)
-         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           familyId,
           wife_name,
+          wife_mobile,
+          wife_occupation,
           door_no,
           street,
           district,
@@ -351,7 +342,7 @@ exports.saveFamily = async (req, res) => {
     }
 
     // ✅ Success
-    res.redirect('/dashboard?success=true');
+    res.redirect('/my-family');
 
   } catch (err) {
     console.error('=== SAVE FAMILY ERROR ===');
@@ -389,100 +380,141 @@ exports.dashboard = async (req, res) => {
 
 
 
-exports.editForm = (req, res) => {
-  const parentId = req.params.id;
+exports.editForm = async (req, res) => {
+  try {
+    const memberId = req.params.id;
 
-  Parent.getById(parentId, (err, parentRows) => {
-    if (err) {
-      console.log("DB Error:", err.message);
-      return res.render("family-edit", { parent: null, children: [] });
+    // Get the member to edit
+    const [memberRows] = await db.promise().query(
+      'SELECT * FROM family_members WHERE id = ?',
+      [memberId]
+    );
+
+    if (!memberRows || memberRows.length === 0) {
+      return res.status(404).send("Family member not found");
     }
 
-    if (!parentRows || parentRows.length === 0) {
-      return res.status(404).send("Parent not found");
+    const member = memberRows[0];
+
+    // Check if user owns this family member
+    const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
+
+    if (member.family_id !== familyId) {
+      return res.status(403).send("You don't have permission to edit this member");
     }
 
-    const parent = parentRows[0];
-
-    Child.getByParent(parentId, (err, children) => {
-      if (err) {
-        console.log("DB Error:", err.message);
-        children = [];
-      }
-
-      res.render("family-edit", {
-        parent,
-        children: children || []
-      });
+    res.render("family-edit", {
+      member,
+      memberId
     });
-  });
+
+  } catch (error) {
+    console.error('Edit form error:', error);
+    res.status(500).send("Database error");
+  }
 };
 
 
-exports.updateFamily = (req, res) => {
-  const parentId = req.params.id;
+exports.updateFamily = async (req, res) => {
+  try {
+    const memberId = req.params.id;
 
-  // Handle photo uploads
-  const husbandPhoto = req.files ? req.files.find(file => file.fieldname === 'husband_photo') : null;
-  const wifePhoto = req.files ? req.files.find(file => file.fieldname === 'wife_photo') : null;
-  const childPhotos = req.files ? req.files.filter(file => file.fieldname.startsWith('children[') && file.fieldname.endsWith('][photo]')) : [];
+    // Check if user owns this family member
+    const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
 
-  const parentData = { ...req.body.parent };
+    const [memberCheck] = await db.promise().query(
+      'SELECT family_id FROM family_members WHERE id = ?',
+      [memberId]
+    );
 
-  // Update photo filenames if new photos uploaded
-  if (husbandPhoto) {
-    parentData.husband_photo = husbandPhoto.filename;
-  }
-  if (wifePhoto) {
-    parentData.wife_photo = wifePhoto.filename;
-  }
-
-  Parent.update(parentId, parentData, err => {
-    if (err) {
-      console.log("DB Error:", err.message);
-      return res.redirect("/dashboard");
+    if (!memberCheck || memberCheck[0].family_id !== familyId) {
+      return res.status(403).send("You don't have permission to edit this member");
     }
 
+    // Handle photo upload
+    const photoFile = req.files?.find(f => f.fieldname === 'photo');
+    const photo = photoFile ? photoFile.filename : req.body.current_photo;
 
-    Child.deleteByParent(parentId, err => {
-      if (err) {
-        console.log("DB Error:", err.message);
-        return res.redirect("/dashboard");
-      }
+    // Prepare update data
+    const updateData = {
+      name: req.body.name,
+      mobile: req.body.mobile || null,
+      occupation: req.body.occupation || null,
+      door_no: req.body.door_no || null,
+      street: req.body.street || null,
+      district: req.body.district || null,
+      state: req.body.state || null,
+      pincode: req.body.pincode || null,
+      photo: photo || null
+    };
 
+    // Add child-specific fields if it's a child
+    if (req.body.dob) {
+      updateData.dob = req.body.dob;
+    }
+    if (req.body.gender) {
+      updateData.gender = req.body.gender;
+    }
+    if (req.body.relationship) {
+      updateData.relationship = req.body.relationship;
+    }
 
-      (req.body.children || []).forEach((child, index) => {
-        const childPhoto = childPhotos.find(photo => {
-          const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
-          return match && parseInt(match[1]) === index;
-        });
-        const childData = {
-          parent_id: parentId,
-          name: child.name,
-          occupation: child.occupation,
-          dob: child.dob,
-          gender: child.gender,
-          photo: childPhoto ? childPhoto.filename : null
-        };
-        Child.create(childData, () => {});
-      });
+    // Update the member
+    await db.promise().query(
+      'UPDATE family_members SET ? WHERE id = ?',
+      [updateData, memberId]
+    );
 
-      res.redirect("/dashboard");
-    });
-  });
+    res.redirect('/my-family');
+
+  } catch (error) {
+    console.error('Update family error:', error);
+    res.status(500).send("Database error");
+  }
 };
 
 
-exports.deleteFamily = (req, res) => {
-  const parentId = req.params.id;
+exports.deleteFamily = async (req, res) => {
+  try {
+    const memberId = req.params.id;
 
+    // Check if user owns this family member
+    const email = req.session.user.email;
+    const familyId = await getFamilyId(email);
 
-  Parent.delete(parentId, (err) => {
-    if (err) {
-      console.log("DB Error:", err.message);
+    const [memberCheck] = await db.promise().query(
+      'SELECT family_id, photo FROM family_members WHERE id = ?',
+      [memberId]
+    );
+
+    if (!memberCheck || memberCheck[0].family_id !== familyId) {
+      return res.status(403).send("You don't have permission to delete this member");
     }
-    res.redirect("/dashboard");
-  });
+
+    // Delete the member
+    await db.promise().query(
+      'DELETE FROM family_members WHERE id = ?',
+      [memberId]
+    );
+
+    // Optionally delete the photo file if it exists
+    if (memberCheck[0].photo) {
+      const fs = require('fs');
+      const path = require('path');
+      const photoPath = path.join(__dirname, '../public/uploads', memberCheck[0].photo);
+      if (fs.existsSync(photoPath)) {
+        fs.unlinkSync(photoPath);
+      }
+    }
+
+    res.redirect('/my-family');
+
+  } catch (error) {
+    console.error('Delete family error:', error);
+    res.status(500).send("Database error");
+  }
 };
 
 exports.getMyFamily = async (req, res) => {
@@ -544,5 +576,57 @@ exports.getMyFamilyJson = async (req, res) => {
   } catch (error) {
     console.error('Get my family JSON error:', error);
     res.json({ success: false, message: "Database error" });
+  }
+};
+
+exports.showAddChild = (req, res) => {
+  res.render("family-form", { addChildMode: true });
+};
+
+exports.addChild = async (req, res) => {
+  try {
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      console.error("USER SESSION MISSING");
+      return res.status(401).json({ success: false, message: "User not logged in" });
+    }
+
+    const {
+      name,
+      dob,
+      gender,
+      occupation
+    } = req.body;
+
+    // Get photo
+    const childPhoto = req.files?.find(f => f.fieldname === 'photo')?.filename || null;
+
+    // Use user ID as family ID
+    const familyId = userId;
+
+    await db.promise().query(
+      `INSERT INTO family_members
+       (family_id, member_type, relationship, name, dob, gender, occupation, mobile, photo)
+       VALUES (?, 'child', 'child', ?, ?, ?, ?, null, ?)`,
+      [
+        familyId,
+        name,
+        dob || null,
+        gender || null,
+        occupation || null,
+        childPhoto
+      ]
+    );
+
+    res.redirect('/my-family');
+
+  } catch (err) {
+    console.error('=== ADD CHILD ERROR ===');
+    console.error('Error message:', err.message);
+    console.error('=======================');
+    res.status(500).json({
+      message: 'Failed to add child',
+      error: err.message
+    });
   }
 };

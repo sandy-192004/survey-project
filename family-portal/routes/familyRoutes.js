@@ -28,6 +28,8 @@ router.get("/family/delete/:id", controller.deleteFamily);
 router.get("/family", controller.myFamily);
 router.get("/my-family", controller.myFamily);
 router.get("/my-family-json", controller.getMyFamilyJson);
+router.get("/add-child", controller.showAddChild);
+router.post("/add-child", upload.any(), controller.addChild);
 
 // Placeholder routes for future features
 router.get("/pooja-booking", (req, res) => {
