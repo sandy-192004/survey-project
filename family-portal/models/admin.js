@@ -93,8 +93,8 @@ exports.getMemberById = (id, callback) => {
 };
 
 exports.updateMember = (id, data, callback) => {
-  const sql = 'UPDATE family SET husband_name = ?, wife_name = ?, mobile = ?, email = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, husband_photo = ?, wife_photo = ? WHERE family_id = ?';
-  const params = [data.name, data.wife_name, data.mobile, data.email, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, data.wife_photo, id];
+  const sql = 'UPDATE family SET husband_name = ?, wife_name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, husband_photo = ?, wife_photo = ? WHERE family_id = ?';
+  const params = [data.name, data.wife_name, data.mobile, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, data.wife_photo, id];
   db.query(sql, params, callback);
 };
 

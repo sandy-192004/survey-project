@@ -9,10 +9,10 @@ exports.searchFamilies = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
 
-  // ✅ ALWAYS load dropdown data
+  // ALWAYS load dropdown data
   const { states, districts } = loadDropdownOptions();
 
-  // ✅ Case 1: No search, no filter
+  // Case 1: No search, no filter
   if (!q && !state && !district) {
     return res.render("admin/dashboard", {
       results: [],
@@ -28,7 +28,7 @@ exports.searchFamilies = (req, res) => {
     });
   }
 
-  // ✅ Case 2: Search / filter applied
+  // Case 2: Search / filter applied
   Admin.searchMembers(
     { input: q, selectedDistrict: district, selectedState: state },
     page,
