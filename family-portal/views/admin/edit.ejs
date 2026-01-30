@@ -9,6 +9,13 @@
 
 <h3>Edit Family Member</h3>
 
+<% if (message) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= message %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
 <% if (!parent) { %>
     <div class="alert alert-danger">Parent record missing</div>
   <% } else { %>
@@ -53,6 +60,8 @@
         <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
         <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
         <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
+        <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>" placeholder="Date of Birth">
+        
         <div class="mb-1">
           <label>Photo</label>
           <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
@@ -83,6 +92,7 @@
         <div class="border p-2 mb-2 child">
           <input class="form-control mb-1" name="children[` + index + `][name]" placeholder="Child Name">
           <input class="form-control mb-1" name="children[` + index + `][occupation]" placeholder="Occupation">
+          <input type="date" class="form-control mb-1" name="children[` + index + `][dob]" placeholder="Date of Birth"
           <div class="mb-1">
             <label>Photo</label>
             <input type="file" class="form-control" name="children[` + index + `][photo]" accept="image/*">

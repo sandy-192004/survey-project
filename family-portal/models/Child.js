@@ -1,8 +1,8 @@
 const db = require("../config/db");
 
 exports.create = (childData, callback) => {
-  const sql = "INSERT INTO children (family_id, child_name, occupation, photo) VALUES (?, ?, ?, ?)";
-  const values = [childData.parent_id, childData.name, childData.occupation, childData.photo];
+  const sql = "INSERT INTO children (family_id, child_name, occupation, date_of_birth, gender, photo) VALUES (?, ?, ?, ?, ?, ?)";
+  const values = [childData.parent_id, childData.name, childData.occupation, childData.dob, childData.gender, childData.photo];
   db.query(sql, values, callback);
 };
 
@@ -17,11 +17,11 @@ exports.getByParent = (parentId, callback) => {
 };
 
 exports.update = (childId, childData, callback) => {
-  let sql = "UPDATE children SET child_name = ?, occupation = ? WHERE child_id = ?";
-  let values = [childData.name, childData.occupation, childId];
+  let sql = "UPDATE children SET child_name = ?, occupation = ?, date_of_birth = ?, gender = ? WHERE child_id = ?";
+  let values = [childData.name, childData.occupation, childData.dob, childData.gender, childId];
   if (childData.photo !== undefined && childData.photo !== null) {
-    sql = "UPDATE children SET child_name = ?, occupation = ?, photo = ? WHERE child_id = ?";
-    values = [childData.name, childData.occupation, childData.photo, childId];
+    sql = "UPDATE children SET child_name = ?, occupation = ?, date_of_birth = ?, gender = ?, photo = ? WHERE child_id = ?";
+    values = [childData.name, childData.occupation, childData.dob, childData.gender, childData.photo, childId];
   }
   db.query(sql, values, callback);
 };

@@ -33,10 +33,13 @@ const createTables = () => {
 
   const childrenTable = `
     CREATE TABLE IF NOT EXISTS children (
+      child_id INT AUTO_INCREMENT PRIMARY KEY,
       family_id INT,
       child_name VARCHAR(255),
-      date_of_birth DATE,
       occupation VARCHAR(255),
+      date_of_birth DATE,
+      gender VARCHAR(10),
+      photo VARCHAR(255),
       FOREIGN KEY (family_id) REFERENCES family(family_id)
     )
   `;

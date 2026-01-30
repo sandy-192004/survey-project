@@ -1,3 +1,8 @@
 - [x] Add update and deleteById methods to Child.js
 - [x] Modify edit.ejs to include hidden child_id for existing children
 - [x] Update updateMember in adminController.js to handle updates, inserts, and selective deletes
+- [x] Update Child.js create and update methods to include date_of_birth and gender
+- [x] Modify edit.ejs to add date_of_birth and gender input fields for children
+- [x] Update adminController.js updateMember to collect and pass dob and gender when updating children
+- [x] Modify admin.js getAll and searchMembers to include children count in the query results
+- [x] Update dashboard.ejs to display the number of children for each family

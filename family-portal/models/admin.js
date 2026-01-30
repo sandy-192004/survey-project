@@ -6,10 +6,12 @@ exports.getAll = (page, limit, callback) => {
   const offset = (page - 1) * limit;
 
   const sql = `
-    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
-           district, state
-    FROM family
-    ORDER BY husband_name ASC
+    SELECT f.family_id AS id, f.husband_name AS name, f.wife_name, f.mobile, f.occupation,
+           f.district, f.state, COUNT(c.child_id) AS children_count
+    FROM family f
+    LEFT JOIN children c ON f.family_id = c.family_id
+    GROUP BY f.family_id, f.husband_name, f.wife_name, f.mobile, f.occupation, f.district, f.state
+    ORDER BY f.husband_name ASC
     LIMIT ? OFFSET ?
   `;
 
@@ -33,27 +35,30 @@ exports.searchMembers = (filters, page, limit, callback) => {
   const params = [];
 
   let sql = `
-    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
-           district, state
-    FROM family
+    SELECT f.family_id AS id, f.husband_name AS name, f.wife_name, f.mobile, f.occupation,
+           f.district, f.state, COUNT(c.child_id) AS children_count
+    FROM family f
+    LEFT JOIN children c ON f.family_id = c.family_id
     WHERE 1=1
   `;
 
   if (input) {
-    sql += " AND (husband_name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
+    sql += " AND (f.husband_name LIKE ? OR f.mobile LIKE ? OR f.occupation LIKE ?)";
     const like = `%${input}%`;
     params.push(like, like, like);
   }
 
   if (selectedState) {
-    sql += " AND state = ?";
+    sql += " AND f.state = ?";
     params.push(selectedState);
   }
 
   if (selectedDistrict) {
-    sql += " AND district = ?";
+    sql += " AND f.district = ?";
     params.push(selectedDistrict);
   }
+
+  sql += " GROUP BY f.family_id, f.husband_name, f.wife_name, f.mobile, f.occupation, f.district, f.state";
 
   const countSql = `SELECT COUNT(*) AS total FROM (${sql}) x`;
 
@@ -62,7 +67,7 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
     const totalPages = Math.ceil(countResult[0].total / limit);
 
-    sql += " ORDER BY husband_name ASC LIMIT ? OFFSET ?";
+    sql += " ORDER BY f.husband_name ASC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     db.query(sql, params, (err2, results) => {
