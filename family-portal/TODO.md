@@ -1,3 +1,0 @@
-- [x] Add update and deleteById methods to Child.js
-- [x] Modify edit.ejs to include hidden child_id for existing children
-- [x] Update updateMember in adminController.js to handle updates, inserts, and selective deletes

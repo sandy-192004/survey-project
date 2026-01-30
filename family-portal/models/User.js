@@ -10,7 +10,12 @@ exports.getByEmail = (email, callback) => {
   db.query(sql, [email], callback);
 };
 
-exports.updateParentId = (userId, parentId, callback) => {
-  const sql = "UPDATE users SET parent_id = ? WHERE id = ?";
-  db.query(sql, [parentId, userId], callback);
+exports.getById = (id, callback) => {
+  const sql = "SELECT id, email, created_at FROM users WHERE id = ?";
+  db.query(sql, [id], callback);
+};
+
+exports.deleteById = (id, callback) => {
+  const sql = "DELETE FROM users WHERE id = ?";
+  db.query(sql, [id], callback);
 };

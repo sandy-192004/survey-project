@@ -32,9 +32,9 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item mx-2">
-                        <button class="btn btn-link nav-link fw-500" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+                        <a class="nav-link fw-500" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
                             <i class="bi bi-people-fill"></i> Family
-                        </button>
+                        </a>
                     </li>
                     <li class="nav-item mx-2">
                         <a class="nav-link fw-500" href="/pooja-booking">
@@ -118,61 +118,49 @@
                 if (data.success) {
                     const parent = data.parent;
                     const children = data.children;
-
-                    let html = `<div class="row g-3">`;
-
-                    // Parent Card
-                    html += `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 shadow-sm">
-                                <img src="${parent.husband_photo || 'https://via.placeholder.com/150'}" class="card-img-top" alt="Husband Photo">
-                                <div class="card-body">
-                                    <h5 class="card-title">${parent.name}</h5>
-                                    <p class="card-text"><strong>Wife:</strong> ${parent.wife_name || 'N/A'}</p>
-                                    <p class="card-text"><strong>Mobile:</strong> ${parent.mobile}</p>
-                                    <p class="card-text"><strong>Email:</strong> ${parent.email}</p>
-                                    <p class="card-text"><strong>Occupation:</strong> ${parent.occupation}</p>
-                                    <p class="card-text"><strong>Address:</strong> ${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}</p>
-                                </div>
+                    let html = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Parent Details</h5>
+                                <p><strong>Name:</strong> ${parent.name}</p>
+                                <p><strong>Wife Name:</strong> ${parent.wife_name || 'N/A'}</p>
+                                <p><strong>Mobile:</strong> ${parent.mobile}</p>
+                                <p><strong>Email:</strong> ${parent.email}</p>
+                                <p><strong>Occupation:</strong> ${parent.occupation}</p>
+                                <p><strong>Address:</strong> ${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}</p>
                             </div>
-                        </div>
+                            <div class="col-md-6">
+                                <h5>Children Details</h5>
                     `;
-
-                    // Children Cards
                     if (children.length > 0) {
                         children.forEach(child => {
                             html += `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card h-100 shadow-sm">
-                                        <img src="${child.photo || 'https://via.placeholder.com/150'}" class="card-img-top" alt="Child Photo">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${child.name}</h5>
-                                            <p class="card-text"><strong>Occupation:</strong> ${child.occupation}</p>
-                                            <p class="card-text"><strong>Date of Birth:</strong> ${child.dob}</p>
-                                            <p class="card-text"><strong>Gender:</strong> ${child.gender}</p>
-                                        </div>
-                                    </div>
+                                <div class="mb-3 p-2 border rounded">
+                                    <p><strong>Name:</strong> ${child.name}</p>
+                                    <p><strong>Occupation:</strong> ${child.occupation}</p>
+                                    <p><strong>Date of Birth:</strong> ${child.dob}</p>
+                                    <p><strong>Gender:</strong> ${child.gender}</p>
                                 </div>
                             `;
                         });
+                    } else {
+                        html += '<p>No children details available.</p>';
                     }
-
-                    html += `</div>`; // close row
-
                     html += `
+                            </div>
+                        </div>
                         <div class="text-center mt-3">
                             <a href="/my-family" class="btn btn-primary">Edit Family Details</a>
                         </div>
                     `;
-
                     familyContent.innerHTML = html;
                 } else {
                     familyContent.innerHTML = `
                         <div class="text-center">
                             <div class="alert alert-warning">
-                                <h5>No Family Details Available</h5>
+                                <h5>No family details found</h5>
                                 <p>You haven't added your family details yet.</p>
-                                <a href="/family-form" class="btn btn-primary">Add Family Details</a>
+                                <button type="button" class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
                             </div>
                         </div>
                     `;
