@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 const controller = require("../controllers/adminController");
-const db = require("../config/db"); // Make sure this is your db connection
+const db = require("../config/db");
+
+const upload = multer({ dest: 'public/uploads/' });
 
 // Get all families as JSON
 router.get('/families', (req, res) => {
@@ -27,6 +30,7 @@ router.get("/search", controller.search);
 // View and Edit routes
 router.get("/view/:id", controller.viewMember);
 router.get("/edit/:id", controller.editMember);
-router.post("/edit/:id", controller.updateMember);
+router.post("/edit/:id", upload.any(), controller.updateMember);
+
 
 module.exports = router;

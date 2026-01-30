@@ -1,4 +1,5 @@
 const Admin = require("../models/admin");
+const db = require("../config/db");
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -55,13 +56,14 @@ exports.search = (req, res) => {
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
+  const updated = req.query.updated === 'true';
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
 
     Admin.getChildrenByParentId(id, (err2, children) => {
       if (err2) throw err2;
-      res.render("admin/view", { member, children: children || [] });
+      res.render("admin/view", { member, children: children || [], updated });
     });
   });
 };
@@ -117,33 +119,76 @@ exports.updateMember = (req, res) => {
 
   Admin.updateMember(id, parentData, err => {
     if (err) {
-      console.log("DB Error:", err.message);
+      console.error("DB Error updating parent:", err.message);
       return res.redirect("/admin/dashboard");
     }
 
     const Child = require("../models/Child");
 
-    Child.deleteByParent(id, err => {
+    // Get existing children to know which to delete
+    Child.getByParent(id, (err, existingChildren) => {
       if (err) {
-        console.log("DB Error:", err.message);
+        console.error("DB Error getting children:", err.message);
         return res.redirect("/admin/dashboard");
       }
 
-      (req.body.children || []).forEach((child, index) => {
-        const childPhoto = childPhotos.find(photo => {
-          const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
-          return match && parseInt(match[1]) === index;
-        });
-        const childData = {
-          parent_id: id,
-          name: child.name,
-          occupation: child.occupation,
-          photo: childPhoto ? childPhoto.filename : null
-        };
-        Child.create(childData, () => {});
-      });
+      const existingIds = existingChildren.map(c => c.id);
 
-      res.redirect("/admin/view/" + id);
+      const childrenData = req.body.children || {};
+      const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
+
+      let processed = 0;
+      const total = childKeys.length;
+
+      if (total === 0) {
+        // No children in form, delete all existing
+        deleteRemoved(existingIds, () => {
+          res.redirect("/admin/view/" + id + "?updated=true");
+        });
+      } else {
+        childKeys.forEach((key) => {
+          const child = childrenData[key];
+          const childId = child.id;
+          const childPhoto = childPhotos.find(photo => {
+            const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
+            return match && match[1] === key;
+          });
+          const childData = {
+            name: child.name,
+            occupation: child.occupation,
+            photo: childPhoto ? childPhoto.filename : null
+          };
+
+          if (childId) {
+            // Update existing child
+            Child.update(childId, childData, (err) => {
+              if (err) console.error("Update child error:", err);
+              processed++;
+              if (processed === total) {
+                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
+                const toDelete = existingIds.filter(id => !formIds.includes(id));
+                deleteRemoved(toDelete, () => {
+                  res.redirect("/admin/view/" + id + "?updated=true");
+                });
+              }
+            });
+          } else {
+            // Insert new child
+            childData.parent_id = id;
+            Child.create(childData, (err) => {
+              if (err) console.error("Create child error:", err);
+              processed++;
+              if (processed === total) {
+                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
+                const toDelete = existingIds.filter(id => !formIds.includes(id));
+                deleteRemoved(toDelete, () => {
+                  res.redirect("/admin/view/" + id + "?updated=true");
+                });
+              }
+            });
+          }
+        });
+      }
     });
   });
 };
@@ -178,6 +223,18 @@ exports.addChild = (req, res) => {
 };
 
 
+
+function deleteRemoved(ids, callback) {
+  if (ids.length === 0) return callback();
+  let deleted = 0;
+  ids.forEach(id => {
+    db.query("DELETE FROM children WHERE child_id = ?", [id], (err) => {
+      if (err) console.error("Delete child error:", err);
+      deleted++;
+      if (deleted === ids.length) callback();
+    });
+  });
+}
 
 function loadDropdownOptions() {
   try {
