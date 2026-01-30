@@ -35,6 +35,7 @@ app.use(session({
 
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
+app.use("/admin", adminSearchRoutes);
 
 
 app.listen(3000, () => {
