@@ -108,9 +108,9 @@ exports.register = (req, res) => {
           return res.status(500).send("Error registering user");
         }
 
-        // Set session and redirect to family form for new users
+        // Set session and redirect to dashboard for new users
         req.session.user = { id: result.insertId, email: userData.email };
-        res.redirect("/family-form");
+        res.redirect("/dashboard");
       });
     });
   });
@@ -204,7 +204,7 @@ exports.myFamily = async (req, res) => {
     const familyId = await getFamilyId(email);
 
     if (!familyId) {
-      return res.render('dashboard', { hasFamily: false });
+      return res.redirect('/family-form');
     }
 
     // Get family members for the logged-in user
@@ -214,14 +214,14 @@ exports.myFamily = async (req, res) => {
     );
 
     if (members.length === 0) {
-      return res.render('dashboard', { hasFamily: false });
+      return res.redirect('/family-form');
     }
 
     res.render('my-family', { members });
 
   } catch (error) {
     console.error('Family fetch error:', error);
-    res.status(500).render('dashboard', { hasFamily: false });
+    res.redirect('/family-form');
   }
 };
 
@@ -312,7 +312,7 @@ exports.saveFamily = async (req, res) => {
           district,
           state,
           pincode,
-          wifePhoto ? wifePhoto.filename : null
+          wifePhoto
         ]
       );
     }

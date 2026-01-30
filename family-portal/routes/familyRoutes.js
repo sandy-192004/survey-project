@@ -25,7 +25,7 @@ router.get("/dashboard", isLoggedIn, controller.checkFamily);
 router.get("/family/edit/:id", controller.editForm);
 router.post("/family/update/:id", upload.any(), controller.updateFamily);
 router.get("/family/delete/:id", controller.deleteFamily);
-router.get("/family", controller.myFamily);
+router.get("/family", controller.familyLogic);
 router.get("/my-family", controller.myFamily);
 router.get("/my-family-json", controller.getMyFamilyJson);
 router.get("/add-child", controller.showAddChild);
