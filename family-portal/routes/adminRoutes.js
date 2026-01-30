@@ -18,6 +18,7 @@ router.get("/search", controller.search);
 router.get("/view/:id", controller.viewMember);
 router.get("/edit/:id", controller.editMember);
 router.post("/edit/:id", controller.updateMember);
+router.post("/add-child", controller.addChild);
 
 module.exports = router;
 

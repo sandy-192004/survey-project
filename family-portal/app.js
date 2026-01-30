@@ -1,27 +1,40 @@
 const express = require("express");
 const session = require("express-session");
-const bodyParser = require("body-parser");
-
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const familyRoutes = require("./routes/familyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
+const adminSearchRoutes = require("./routes/adminSearchRoutes");
+const db = require("./config/db");
 const app = express();
 
 
 
+
+
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({ extended: true }));
+
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
 
 app.use(session({
-  secret: "secret",
+  secret: "family-secret-key",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true
+  }
 }));
 
+
+
 app.use("/", familyRoutes);
-app.use("/admin",adminRoutes)
+app.use("/admin", adminRoutes);
 
 
 app.listen(3000, () => {

@@ -1,79 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Portal - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="container mt-4">
+<body>
+    <!-- Success Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ✓ Family saved successfully!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
 
-<h3>Family Dashboard</h3>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold fs-5" href="/">
+                <i class="bi bi-house-heart"></i> Family Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item mx-2">
+                        <a class="nav-link fw-500" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+                            <i class="bi bi-people-fill"></i> Family
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link fw-500" href="/pooja-booking">
+                            <i class="bi bi-calendar-heart"></i> Pooja Booking
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link fw-500" href="/profile">
+                            <i class="bi bi-person-circle"></i> Profile
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link fw-500" href="/logout">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-<form class="row mb-3">
-  <div class="col">
-    <input class="form-control" name="name" placeholder="Name">
-  </div>
-  <div class="col">
-    <input class="form-control" name="mobile" placeholder="Mobile">
-  </div>
-  <div class="col">
-    <input class="form-control" name="district" placeholder="District">
-  </div>
-  <div class="col">
-    <button class="btn btn-primary">Search</button>
-  </div>
-</form>
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h1>Welcome to Family Portal</h1>
+                <p class="lead">Manage your family information and book pooja services.</p>
+            </div>
+    </div>
 
-<table class="table table-bordered table-striped">
-  <tr>
-    <th>Parent</th>
-    <th>Mobile</th>
-    <th>District</th>
-    <th>Children</th>
-    <th>Actions</th>
-  </tr>
+    <!-- Family Check Modal -->
+    <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="familyCheckModalLabel">My Family Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="familyContent">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <tbody>
-    <% families.forEach(f => { %>
-      <tr>
-        <td><%= f.name %></td>
-        <td><%= f.mobile %></td>
-        <td><%= f.district %></td>
-        <td><%= f.children || "-" %></td>
-        <td>
-          <a class="btn btn-sm btn-warning" href="/family/edit/<%= f.id %>">
-            Edit
-          </a>
-          <a class="btn btn-sm btn-danger"
-             href="/family/delete/<%= f.id %>"
-             onclick="return confirm('Delete family?')">
-            Delete
-          </a>
-        </td>
-      </tr>
-    <% }) %>
-  </tbody>
-  
-</table>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check for success parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            const toastElement = document.getElementById('successToast');
+            toastElement.style.display = 'flex';
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
 
-<a class="btn btn-success" href="/export/excel">Export Excel</a>
-<a class="btn btn-danger" href="/export/pdf">Export PDF</a>
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
-<nav>
-  <ul class="pagination mt-3">
-    <% if (page > 1) { %>
-      <li class="page-item">
-        <a class="page-link" href="?page=<%= page - 1 %>">Prev</a>
-      </li>
-    <% } %>
-    <li class="page-item active">
-      <span class="page-link"><%= page %></span>
-    </li>
-    <li class="page-item">
-      <a class="page-link" href="?page=<%= page + 1 %>">Next</a>
-    </li>
-  </ul>
-</nav>
+        // Handle family modal show
+        const familyModal = document.getElementById('familyCheckModal');
+        familyModal.addEventListener('show.bs.modal', function () {
+            const familyContent = document.getElementById('familyContent');
+            familyContent.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
 
-
+            fetch('/my-family-json')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to /my-family if record exists
+                    window.location.href = '/my-family';
+                } else {
+                    familyContent.innerHTML = `
+                        <div class="text-center">
+                            <div class="alert alert-warning">
+                                <h5>No family details found</h5>
+                                <p>You haven't added your family details yet.</p>
+                                <button type="button" class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                familyContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="alert alert-danger">
+                            <h5>Error Loading Family Details</h5>
+                            <p>An error occurred while loading your family details. Please try again.</p>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
 </body>
 </html>
