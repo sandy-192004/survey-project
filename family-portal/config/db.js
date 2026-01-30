@@ -13,7 +13,12 @@ db.getConnection((err, connection) => {
   if (err) {
     console.error("Error connecting to the database:", err);
   } else {
+
+    console.log("MySQL Connected Successfully");
+    connection.release(); 
+
     console.log("Connected to the database as id " + connection.threadId);
+
   }
 });
 
