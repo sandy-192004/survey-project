@@ -132,9 +132,22 @@ exports.updateMember = (req, res) => {
         return res.redirect("/admin/dashboard");
       }
 
-      const existingIds = existingChildren.map(c => c.id);
+      const existingIds = existingChildren.map(c => c.child_id);
 
-      const childrenData = req.body.children || {};
+      // Parse children data from flat req.body keys
+      const childrenData = {};
+      for (const key in req.body) {
+        if (key.startsWith('children[')) {
+          const match = key.match(/children\[(\d+)\]\[(\w+)\]/);
+          if (match) {
+            const index = match[1];
+            const field = match[2];
+            if (!childrenData[index]) childrenData[index] = {};
+            childrenData[index][field] = req.body[key];
+          }
+        }
+      }
+
       const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
 
       let processed = 0;

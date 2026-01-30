@@ -12,7 +12,7 @@ exports.deleteByParent = (parentId, callback) => {
 };
 
 exports.getByParent = (parentId, callback) => {
-  const sql = "SELECT child_id as id, family_id as parent_id, child_name as name, occupation, date_of_birth as dob, gender, photo FROM children WHERE family_id = ?";
+  const sql = "SELECT child_id, family_id as parent_id, child_name as name, occupation, date_of_birth as dob, photo FROM children WHERE family_id = ?";
   db.query(sql, [parentId], callback);
 };
 
