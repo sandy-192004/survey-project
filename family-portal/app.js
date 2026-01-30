@@ -37,6 +37,9 @@ app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
 
+app.use("/admin",adminRoutes)
+
+
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
