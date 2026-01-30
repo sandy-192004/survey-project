@@ -1,8 +1,7 @@
 const Admin = require("../models/admin");
+const Child = require("../models/Child");
 const fs = require("fs");
 const path = require("path");
-
-
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -72,13 +71,13 @@ exports.viewMember = (req, res) => {
   });
 };
 
-
 exports.editMember = (req, res) => {
   const id = req.params.id;
   const message = req.query.message;
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
+
 
     Admin.getChildrenByParentId(id, (err2, children) => {
       if (err2) throw err2;
@@ -100,10 +99,33 @@ exports.editMember = (req, res) => {
       } : null;
 
       res.render("admin/edit", { parent: member, wife, children: children || [], message: null });
+
+    // For the sample data structure, wife info is in the same record
+    // Create a wife object from the member data
+    const wife = member.wife_name ? {
+      id: member.id + '_wife', // Temporary ID for wife
+      name: member.wife_name,
+      mobile: member.mobile,
+      email: member.email,
+      occupation: '',
+      door_no: member.door_no,
+      street: member.street,
+      district: member.district,
+      state: member.state,
+      pincode: member.pincode
+    } : null;
+
+    Child.getByParent(id, (err, children) => {
+      if (err) {
+        console.error("Error fetching children:", err);
+        children = [];
+      }
+      const message = req.query.message || null;
+      res.render("admin/edit", { parent: member, wife, children, message });
+
     });
   });
 };
-
 
 exports.updateMember = (req, res) => {
   const id = req.params.id;
@@ -128,8 +150,6 @@ exports.updateMember = (req, res) => {
       console.error("DB Error updating parent:", err.message);
       return res.redirect("/admin/dashboard");
     }
-
-    const Child = require("../models/Child");
 
     // Get existing children to know which to delete
     Child.getByParent(id, (err, existingChildren) => {
@@ -203,6 +223,7 @@ exports.updateMember = (req, res) => {
 
 exports.addChild = (req, res) => {
   const childData = req.body;
+
   const Child = require("../models/Child");
 
   Child.create(childData, (err, result) => {
@@ -233,6 +254,7 @@ exports.addChild = (req, res) => {
 
 exports.addChild = (req, res) => {
   const childData = req.body;
+
   if (req.files && req.files.photo) {
     childData.photo = req.files.photo[0].filename;
   }
@@ -244,6 +266,19 @@ exports.addChild = (req, res) => {
     res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
   });
 };
+
+
+function deleteRemoved(ids, callback) {
+  if (ids.length === 0) return callback();
+  let deleted = 0;
+  ids.forEach(id => {
+    Child.delete(id, (err) => {
+      if (err) console.error("Delete child error:", err);
+      deleted++;
+      if (deleted === ids.length) callback();
+    });
+  });
+}
 
 
 function loadDropdownOptions() {
