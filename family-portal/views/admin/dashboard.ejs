@@ -11,38 +11,7 @@
 
 <div class="container py-4">
 
-    <!-- Search & Filter Section -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <div class="row g-2 align-items-center">
-
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Search family...">
-                </div>
-
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">State</option>
-                        <option>Tamil Nadu</option>
-                        <option>Kerala</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">District</option>
-                        <option>Chennai</option>
-                        <option>Madurai</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2 d-grid">
-                    <button class="btn btn-primary">Filter</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
+    <%- include('search-filter-form') %>
 
     <!-- Cards Grid -->
     <div class="row g-4">
@@ -55,8 +24,8 @@
                         <p class="card-text text-muted">
                             <%= member.district %>, <%= member.state %>
                         </p>
-                    </div>
 
+                    </div>
                     <div class="card-footer bg-white border-0 d-flex justify-content-between">
                         <a href="/admin/view/<%= member.id %>" class="btn btn-sm btn-info text-white">View</a>
                         <a href="/admin/edit/<%= member.id %>" class="btn btn-sm btn-warning">Edit</a>
@@ -74,28 +43,37 @@
     </div>
 
     <!-- Pagination -->
+    <% if (totalPages > 1) { %>
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
+            <% if (currentPage > 1) { %>
             <li class="page-item">
-                <a class="page-link" href="#">&laquo;</a>
+                <a class="page-link" href="?q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>&page=<%= currentPage - 1 %>">&laquo;</a>
             </li>
-            <li class="page-item active">
-                <a class="page-link" href="#">1</a>
+            <% } else { %>
+            <li class="page-item disabled">
+                <span class="page-link">&laquo;</span>
             </li>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                <a class="page-link" href="?q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>&page=<%= i %>"><%= i %></a>
+            </li>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
             <li class="page-item">
-                <a class="page-link" href="#">2</a>
+                <a class="page-link" href="?q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>&page=<%= currentPage + 1 %>">&raquo;</a>
             </li>
-            <li class="page-item">
-                <a class="page-link" href="#">3</a>
+            <% } else { %>
+            <li class="page-item disabled">
+                <span class="page-link">&raquo;</span>
             </li>
-            <li class="page-item">
-                <a class="page-link" href="#">4</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="#">&raquo;</a>
-            </li>
+            <% } %>
         </ul>
     </nav>
+    <% } %>
 
 </div>
 

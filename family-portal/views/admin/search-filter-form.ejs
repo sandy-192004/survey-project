@@ -1,0 +1,38 @@
+<!-- Search & Filter Section -->
+<form action="/admin/search" method="GET" class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <div class="row g-2 align-items-center">
+
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Search by husband name, wife name, or mobile..." value="<%= searchValue || '' %>">
+            </div>
+
+            <div class="col-md-3">
+                <select name="state" class="form-select">
+                    <option value="">All States</option>
+                    <% if (stateOptions && stateOptions.length > 0) { %>
+                        <% stateOptions.forEach(state => { %>
+                            <option value="<%= state %>" <%= selectedState === state ? 'selected' : '' %>><%= state %></option>
+                        <% }); %>
+                    <% } %>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select name="district" class="form-select">
+                    <option value="">All Districts</option>
+                    <% if (districtOptions && districtOptions.length > 0) { %>
+                        <% districtOptions.forEach(district => { %>
+                            <option value="<%= district %>" <%= selectedDistrict === district ? 'selected' : '' %>><%= district %></option>
+                        <% }); %>
+                    <% } %>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+
+        </div>
+    </div>
+</form>
