@@ -3,16 +3,16 @@
 <head>
   <title>Edit Family Member</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<<<<<<< HEAD
+
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-=======
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     function setParentId(id) {
       document.getElementById('grandchildParentId').value = id;
     }
   </script>
->>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
+
 </head>
 <body class="container mt-4" data-children-count="<%= children && children.length ? children.length : 0 %>">
 
@@ -54,7 +54,6 @@
   <input class="form-control mb-2" name="state" value="<%= parent.state %>" placeholder="State">
   <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>" placeholder="Pincode">
 
-<<<<<<< HEAD
   <!-- Children -->
   <h5 class="mt-4">Children</h5>
   <div id="children">
@@ -69,7 +68,7 @@
           <% if (c.photo) { %>
             <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width: 100px;">
           <% } %>
-=======
+
   <!-- Parent Details -->
   <div class="card mb-4">
     <div class="card-header">
@@ -311,14 +310,14 @@
             </div>
             <button class="btn btn-success">Add Child</button>
           </form>
->>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
+
         </div>
         <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
       </div>
     <% }) %>
   </div>
 
-<<<<<<< HEAD
+
   <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
 
   <div class="mt-3">
@@ -351,7 +350,7 @@
       $(this).closest(".child").remove();
     });
   </script>
-=======
+
   <!-- Add Grandchild Modal -->
   <div class="modal fade" id="addGrandChildModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -397,7 +396,7 @@
   </div>
 
 </div>
->>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
+
 
 </body>
 </html>
