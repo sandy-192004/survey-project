@@ -140,7 +140,15 @@ exports.editMember = (req, res) => {
       pincode: member.pincode
     } : null;
 
-    res.render("admin/edit", { parent: member, wife, children: [], message: null });
+    // Fetch children
+    Child.getByParentId(id, (err, children) => {
+      if (err) {
+        console.error("Error fetching children:", err);
+        children = [];
+      }
+      const message = req.query.message || null;
+      res.render("admin/edit", { parent: member, wife, children, message });
+    });
   });
 };
 
@@ -185,12 +193,15 @@ exports.addChild = (req, res) => {
 
 exports.addChild = (req, res) => {
   const childData = req.body;
+  if (req.files && req.files.photo) {
+    childData.photo = req.files.photo[0].filename;
+  }
   Child.create(childData, (err, result) => {
     if (err) {
       console.error("Error adding child:", err);
       return res.status(500).send("Error adding child");
     }
-    res.redirect("/admin/edit/" + childData.parent_id);
+    res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
   });
 };
 

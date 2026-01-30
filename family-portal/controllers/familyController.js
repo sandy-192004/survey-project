@@ -108,8 +108,9 @@ exports.register = (req, res) => {
           return res.status(500).send("Error registering user");
         }
 
-        // Redirect to login page after successful registration
-        res.redirect("/login");
+        // Set session and redirect to family form for new users
+        req.session.user = { id: result.insertId, email: userData.email };
+        res.redirect("/family-form");
       });
     });
   });
@@ -178,7 +179,7 @@ exports.familyLogic = async (req, res) => {
 };
 
 exports.showForm = (req, res) => {
-  res.render("family-form");
+  res.render("family-form", { addChildMode: false });
 };
 
 exports.viewFamily = (req, res) => {
@@ -256,8 +257,10 @@ exports.saveFamily = async (req, res) => {
     const {
       name: husband_name,
       wife_name,
-      mobile,
-      occupation,
+      mobile: husband_mobile,
+      occupation: husband_occupation,
+      mobile_wife: wife_mobile,
+      occupation_wife: wife_occupation,
       door_no,
       street,
       district,
@@ -281,8 +284,8 @@ exports.saveFamily = async (req, res) => {
       [
         familyId,
         husband_name,
-        mobile,
-        occupation,
+        husband_mobile,
+        husband_occupation,
         door_no,
         street,
         district,
@@ -296,12 +299,14 @@ exports.saveFamily = async (req, res) => {
     if (wife_name) {
       await db.promise().query(
         `INSERT INTO family_members
-         (family_id, member_type, relationship, name, door_no, street,
+         (family_id, member_type, relationship, name, mobile, occupation, door_no, street,
           district, state, pincode, photo)
-         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, 'parent', 'wife', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           familyId,
           wife_name,
+          wife_mobile,
+          wife_occupation,
           door_no,
           street,
           district,
@@ -337,7 +342,7 @@ exports.saveFamily = async (req, res) => {
     }
 
     // ✅ Success
-    res.redirect('/dashboard?success=true');
+    res.redirect('/my-family');
 
   } catch (err) {
     console.error('=== SAVE FAMILY ERROR ===');
@@ -571,5 +576,57 @@ exports.getMyFamilyJson = async (req, res) => {
   } catch (error) {
     console.error('Get my family JSON error:', error);
     res.json({ success: false, message: "Database error" });
+  }
+};
+
+exports.showAddChild = (req, res) => {
+  res.render("family-form", { addChildMode: true });
+};
+
+exports.addChild = async (req, res) => {
+  try {
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      console.error("USER SESSION MISSING");
+      return res.status(401).json({ success: false, message: "User not logged in" });
+    }
+
+    const {
+      name,
+      dob,
+      gender,
+      occupation
+    } = req.body;
+
+    // Get photo
+    const childPhoto = req.files?.find(f => f.fieldname === 'photo')?.filename || null;
+
+    // Use user ID as family ID
+    const familyId = userId;
+
+    await db.promise().query(
+      `INSERT INTO family_members
+       (family_id, member_type, relationship, name, dob, gender, occupation, mobile, photo)
+       VALUES (?, 'child', 'child', ?, ?, ?, ?, null, ?)`,
+      [
+        familyId,
+        name,
+        dob || null,
+        gender || null,
+        occupation || null,
+        childPhoto
+      ]
+    );
+
+    res.redirect('/my-family');
+
+  } catch (err) {
+    console.error('=== ADD CHILD ERROR ===');
+    console.error('Error message:', err.message);
+    console.error('=======================');
+    res.status(500).json({
+      message: 'Failed to add child',
+      error: err.message
+    });
   }
 };
