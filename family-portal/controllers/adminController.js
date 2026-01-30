@@ -3,121 +3,73 @@ const Child = require("../models/Child");
 const fs = require("fs");
 const path = require("path");
 
-
-
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
 
   Admin.getAll(page, limit, (err, data) => {
-    if (err) {
-      console.error("Error fetching all members:", err);
-      const { states, districts } = loadDropdownOptions();
-      return res.render("admin/dashboard", {
-        results: [],
-        message: "Error loading data. Please try again.",
-        districtOptions: districts,
-        stateOptions: states,
-        selectedDistrict: "",
-        selectedState: "",
+    if (err) return res.status(500).send("Server Error");
+
+    Admin.getDropdownOptions((err2, dropdowns) => {
+      if (err2) return res.status(500).send("Server Error");
+
+      res.render("admin/dashboard", {
+        results: data.results,
+        totalPages: data.totalPages,
+        currentPage: page,
         searchValue: "",
-        currentPage: 1,
-        totalPages: 0,
-        user: req.user
+        selectedState: "",
+        selectedDistrict: "",
+        states: dropdowns.states,
+        districts: dropdowns.districts
       });
-    }
-
-    const { states, districts } = loadDropdownOptions();
-
-    res.render("admin/dashboard", {
-      results: data.results,
-      message: data.results.length === 0 ? "No data found." : null,
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict: "",
-      selectedState: "",
-      searchValue: "",
-      currentPage: page,
-      totalPages: data.totalPages,
-      user: req.user
     });
   });
-};
-
-
-exports.dashboard = (req, res) => {
-  res.render("admin/dashboard");
 };
 
 exports.search = (req, res) => {
-  const input = req.query.q ? req.query.q.trim() : "";
-  const selectedDistrict = req.query.district || "";
-  const selectedState = req.query.state || "";
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
 
-  if (!input && !selectedDistrict && !selectedState) {
-    const { states, districts } = loadDropdownOptions();
+  const filters = {
+    input: req.query.q || "",
+    selectedState: req.query.state || "",
+    selectedDistrict: req.query.district || ""
+  };
 
-    return res.render("admin/dashboard", {
-      results: [],
-      message: "Please enter or select something to search.",
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict,
-      selectedState,
-      searchValue: "",
-      currentPage: 1,
-      totalPages: 0,
-      user: req.user
-    });
-  }
+  Admin.searchMembers(filters, page, limit, (err, data) => {
+    if (err) return res.status(500).send("Server Error");
 
-  Admin.searchMembers({ input, selectedDistrict, selectedState }, page, limit, (err, data) => {
-    if (err) {
-      console.error("Error searching members:", err);
-      const { states, districts } = loadDropdownOptions();
-      return res.render("admin/dashboard", {
-        results: [],
-        message: "Error searching. Please try again.",
-        districtOptions: districts,
-        stateOptions: states,
-        selectedDistrict,
-        selectedState,
-        searchValue: input,
-        currentPage: 1,
-        totalPages: 0,
-        user: req.user
+    Admin.getDropdownOptions((err2, dropdowns) => {
+      if (err2) return res.status(500).send("Server Error");
+
+      res.render("admin/dashboard", {
+        results: data.results,
+        totalPages: data.totalPages,
+        currentPage: page,
+        searchValue: filters.input,
+        selectedState: filters.selectedState,
+        selectedDistrict: filters.selectedDistrict,
+        states: dropdowns.states,
+        districts: dropdowns.districts
       });
-    }
-
-    const { states, districts } = loadDropdownOptions();
-
-    res.render("admin/dashboard", {
-      results: data.results,
-      message: data.results.length === 0 ? `No data found for "${input || "filters"}".` : null,
-      districtOptions: districts,
-      stateOptions: states,
-      selectedDistrict,
-      selectedState,
-      searchValue: input,
-      currentPage: page,
-      totalPages: data.totalPages,
-      user: req.user
     });
   });
 };
-
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
+  const updated = req.query.updated === 'true';
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
-    res.render("admin/view", { member });
+
+    Admin.getChildrenByParentId(id, (err2, children) => {
+      if (err2) throw err2;
+      res.render("admin/view", { member, children: children || [], updated });
+    });
   });
 };
-
 
 exports.editMember = (req, res) => {
   const id = req.params.id;
@@ -140,8 +92,7 @@ exports.editMember = (req, res) => {
       pincode: member.pincode
     } : null;
 
-    // Fetch children
-    Child.getByParentId(id, (err, children) => {
+    Child.getByParent(id, (err, children) => {
       if (err) {
         console.error("Error fetching children:", err);
         children = [];
@@ -152,42 +103,108 @@ exports.editMember = (req, res) => {
   });
 };
 
-
 exports.updateMember = (req, res) => {
   const id = req.params.id;
-  const updatedData = req.body;
-  Admin.updateMember(id, updatedData, (err) => {
-    if (err) throw err;
-    res.redirect("/admin/dashboard");
-  });
-};
 
-exports.addChild = (req, res) => {
-  const childData = req.body;
-  const Child = require("../models/Child");
+  // Handle photo uploads
+  const husbandPhoto = req.files ? req.files.find(file => file.fieldname === 'husband_photo') : null;
+  const wifePhoto = req.files ? req.files.find(file => file.fieldname === 'wife_photo') : null;
+  const childPhotos = req.files ? req.files.filter(file => file.fieldname.startsWith('children[') && file.fieldname.endsWith('][photo]')) : [];
 
-  Child.create(childData, (err, result) => {
+  const parentData = { ...req.body };
+
+  // Update photo filenames if new photos uploaded
+  if (husbandPhoto) {
+    parentData.husband_photo = husbandPhoto.filename;
+  }
+  if (wifePhoto) {
+    parentData.wife_photo = wifePhoto.filename;
+  }
+
+  Admin.updateMember(id, parentData, err => {
     if (err) {
-      console.error("Error adding child:", err);
-      return res.status(500).send("Error adding child");
+      console.error("DB Error updating parent:", err.message);
+      return res.redirect("/admin/dashboard");
     }
-    res.redirect("/admin/edit/" + childData.parent_id);
-  });
-};
 
+    // Get existing children to know which to delete
+    Child.getByParent(id, (err, existingChildren) => {
+      if (err) {
+        console.error("DB Error getting children:", err.message);
+        return res.redirect("/admin/dashboard");
+      }
 
-exports.addChild = (req, res) => {
-  const childData = {
-    parent_id: req.body.parent_id,
-    name: req.body.name,
-    dob: req.body.dob,
-    gender: req.body.gender,
-     occupation: req.body.occupation
-  };
-  const Child = require("../models/Child");
-  Child.create(childData, (err) => {
-    if (err) throw err;
-    res.redirect(`/admin/edit/${req.body.parent_id}`);
+      const existingIds = existingChildren.map(c => c.child_id);
+
+      // Parse children data from flat req.body keys
+      const childrenData = {};
+      for (const key in req.body) {
+        if (key.startsWith('children[')) {
+          const match = key.match(/children\[(\d+)\]\[(\w+)\]/);
+          if (match) {
+            const index = match[1];
+            const field = match[2];
+            if (!childrenData[index]) childrenData[index] = {};
+            childrenData[index][field] = req.body[key];
+          }
+        }
+      }
+
+      const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
+
+      let processed = 0;
+      const total = childKeys.length;
+
+      if (total === 0) {
+        // No children in form, delete all existing
+        deleteRemoved(existingIds, () => {
+          res.redirect("/admin/view/" + id + "?updated=true");
+        });
+      } else {
+        childKeys.forEach((key) => {
+          const child = childrenData[key];
+          const childId = child.id;
+          const childPhoto = childPhotos.find(photo => {
+            const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
+            return match && match[1] === key;
+          });
+          const childData = {
+            name: child.name,
+            occupation: child.occupation,
+            photo: childPhoto ? childPhoto.filename : null
+          };
+
+          if (childId) {
+            // Update existing child
+            Child.update(childId, childData, (err) => {
+              if (err) console.error("Update child error:", err);
+              processed++;
+              if (processed === total) {
+                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
+                const toDelete = existingIds.filter(id => !formIds.includes(id));
+                deleteRemoved(toDelete, () => {
+                  res.redirect("/admin/view/" + id + "?updated=true");
+                });
+              }
+            });
+          } else {
+            // Insert new child
+            childData.parent_id = id;
+            Child.create(childData, (err) => {
+              if (err) console.error("Create child error:", err);
+              processed++;
+              if (processed === total) {
+                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
+                const toDelete = existingIds.filter(id => !formIds.includes(id));
+                deleteRemoved(toDelete, () => {
+                  res.redirect("/admin/view/" + id + "?updated=true");
+                });
+              }
+            });
+          }
+        });
+      }
+    });
   });
 };
 
@@ -204,6 +221,18 @@ exports.addChild = (req, res) => {
     res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
   });
 };
+
+function deleteRemoved(ids, callback) {
+  if (ids.length === 0) return callback();
+  let deleted = 0;
+  ids.forEach(id => {
+    Child.delete(id, (err) => {
+      if (err) console.error("Delete child error:", err);
+      deleted++;
+      if (deleted === ids.length) callback();
+    });
+  });
+}
 
 function loadDropdownOptions() {
   try {

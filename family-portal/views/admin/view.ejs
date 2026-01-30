@@ -1,35 +1,81 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>View Family Member</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="container mt-4">
-      <h4>Family Member Details</h4>
+<head>
+  <title>View Family Member</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
 
-      <div class="card p-4 shadow-sm">
-        <p><b>Name:</b> <%= member.name %></p>
-        <p><b>Mobile:</b> <%= member.mobile %></p>
-        <p><b>Email:</b> <%= member.email %></p>
-        <p><b>Occupation:</b> <%= member.occupation %></p>
-        <p>
-          <b>Address:</b>
-          <%= member.door_no %>, <%= member.street %>, <%= member.district %>,
-          <%= member.state %> - <%= member.pincode %>
-        </p>
-        <p>
-          <b>Date of Birth:</b> <%= member.dob ? member.dob.toDateString() :
-          'N/A' %>
-        </p>
-        <p><b>Gender:</b> <%= member.gender %></p>
-        <p><b>Parent ID:</b> <%= member.parent_id || 'N/A' %></p>
+<% if (updated) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Member details have been updated successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
 
-        <a href="/admin/dashboard" class="btn btn-secondary mt-3">Back</a>
+<h3>Family Member Details</h3>
+
+<% if (!member) { %>
+    <div class="alert alert-danger">Member not found</div>
+<% } else { %>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Parent Details</h5>
+    <p><strong>Husband Name:</strong> <%= member.husband_name %></p>
+    <p><strong>Wife Name:</strong> <%= member.wife_name %></p>
+    <p><strong>Mobile:</strong> <%= member.mobile %></p>
+    <p><strong>Occupation:</strong> <%= member.occupation %></p>
+
+    <h6>Photos</h6>
+    <% if (member.husband_photo) { %>
+      <p><strong>Husband Photo:</strong> <img src="/uploads/<%= member.husband_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+    <% } %>
+    <% if (member.wife_photo) { %>
+      <p><strong>Wife Photo:</strong> <img src="/uploads/<%= member.wife_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+    <% } %>
+
+    <h6>Address</h6>
+    <p><strong>Door No:</strong> <%= member.door_no %></p>
+    <p><strong>Street:</strong> <%= member.street %></p>
+    <p><strong>District:</strong> <%= member.district %></p>
+    <p><strong>State:</strong> <%= member.state %></p>
+    <p><strong>Pincode:</strong> <%= member.pincode %></p>
+  </div>
+</div>
+
+<% if (children && children.length > 0) { %>
+<div class="card mt-3">
+  <div class="card-body">
+    <h5 class="card-title">Children Details</h5>
+    <% children.forEach(child => { %>
+      <div class="border p-2 mb-2">
+        <p><strong>Name:</strong> <%= child.child_name %></p>
+        <p><strong>Occupation:</strong> <%= child.occupation %></p>
+<p><strong>Date of Birth:</strong>
+  <%= new Date(child.date_of_birth).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }) %>
+</p>
+
+        <p><strong>Gender:</strong> <%= child.gender %></p>
+        <% if (child.photo) { %>
+          <p><strong>Photo:</strong> <img src="/uploads/<%= child.photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+        <% } %>
       </div>
-    </div>
-  </body>
+    <% }); %>
+  </div>
+</div>
+<% } %>
+
+<div class="mt-3">
+  <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+  <a href="/admin/edit/<%= member.family_id %>" class="btn btn-primary">Edit</a>
+</div>
+
+<% } %>
+
+</body>
 </html>
