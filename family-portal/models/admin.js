@@ -124,8 +124,8 @@ exports.updateMember = (id, data, callback) => {
       if (err2) return callback(err2);
 
       // Update wife family_member
-      const sqlWife = 'UPDATE family_members SET name = ?, photo = ? WHERE family_id = ? AND relationship = ?';
-      const wifeParams = [data.wife_name, data.wife_photo, id, 'wife'];
+      const sqlWife = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ?';
+      const wifeParams = [data.wife_name, data.wife_mobile, data.wife_occupation, data.wife_door_no, data.wife_street, data.wife_district, data.wife_state, data.wife_pincode, data.wife_photo, id, 'wife'];
       db.query(sqlWife, wifeParams, callback);
     });
   });
