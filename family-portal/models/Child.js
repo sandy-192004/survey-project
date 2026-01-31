@@ -14,6 +14,7 @@ exports.getByParent = (parentId, callback) => {
   db.query(sql, [parentId], callback);
 };
 
+
 exports.update = (childId, childData, callback) => {
   let sql = "UPDATE family_members SET name = ?, occupation = ? WHERE id = ?";
   let values = [childData.name, childData.occupation, childId];
@@ -29,4 +30,18 @@ exports.deleteById = (childId, callback) => {
   db.query(sql, [childId], callback);
 };
 
+
 };
+
+
+exports.update = (id, childData, callback) => {
+  const sql = "UPDATE children SET name = ?, occupation = ?, dob = ?, gender = ?, photo = ? WHERE child_id = ?";
+  const values = [childData.name, childData.occupation, childData.dob, childData.gender, childData.photo, id];
+  db.query(sql, values, callback);
+};
+
+exports.delete = (id, callback) => {
+  const sql = "DELETE FROM children WHERE child_id = ?";
+  db.query(sql, [id], callback);
+};
+

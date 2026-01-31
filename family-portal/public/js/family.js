@@ -39,7 +39,7 @@ function addChild() {
   <div class="card p-3 mb-2 child-card" id="child-${childIndex}">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h6 class="mb-0">Child</h6>
-      <button type="button" class="btn btn-danger btn-sm" onclick="removeChild(${childIndex})">❌ Remove</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeChildRow(${childIndex})">❌ Remove</button>
     </div>
 
     <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" required>
