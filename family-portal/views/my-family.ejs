@@ -1,67 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Family - Family Portal</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #8B4513 0%, #D2B48C 100%);
-            min-height: 100vh;
-        }
-        .container {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-top: 2rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            color: #333;
-        }
-        .member-card {
-            border: none;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        .member-card:hover {
-            transform: translateY(-5px);
-        }
-        .member-photo {
-            height: 200px;
-            object-fit: cover;
-        }
-        .member-info {
-            padding: 1rem;
-        }
-        .member-name {
-            color: #8B4513;
-            margin-bottom: 0.5rem;
-        }
-        .info-item {
-            margin-bottom: 0.4rem;
-            display: flex;
-            align-items: center;
-            font-size: 0.9rem;
-        }
-        .info-item i {
-            width: 18px;
-            color: #667eea;
-            margin-right: 0.4rem;
-            font-size: 0.8rem;
-        }
-        .section-title {
-            color: #333;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #667eea;
-            font-size: 1.5rem;
-        }
-        .no-data {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: #666;
-        }
+  <title>My Family</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .family-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+    .member-card {
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      margin-bottom: 1rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .member-card:hover {
+      transform: translateY(-5px);
+    }
+    .member-photo {
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 3px solid #667eea;
+    }
+    .member-info {
+      padding: 1rem;
+    }
+    .member-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .member-role {
+      background: #667eea;
+      color: white;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+    }
+    .info-item {
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    .info-item i {
+      width: 18px;
+      color: #667eea;
+      margin-right: 0.4rem;
+      font-size: 0.8rem;
+    }
+    .parents-section, .children-section {
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      color: #333;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #667eea;
+      font-size: 1.5rem;
+    }
+    .no-data {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #666;
+    }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
@@ -88,13 +100,14 @@
                 <p>Please add your family information</p>
                 <a href="/family-form" class="btn btn-primary">Add Family</a>
             </div>
-        <% } else { %>
+        <% } %>
+        <% if (members && members.length > 0) { %>
             <div class="row">
                 <% members.forEach(member => { %>
                     <div class="col-md-4 mb-4">
                         <div class="card member-card shadow-sm">
                             <% if (member.photo) { %>
-                                <img src="/uploads/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
+                                <img src="/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
                             <% } else { %>
                                 <div class="member-photo bg-light d-flex align-items-center justify-content-center">
                                     <i class="fas fa-user fa-3x text-muted"></i>

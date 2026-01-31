@@ -1,216 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Portal - Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* Removed media query to allow standard Bootstrap navbar behavior on mobile */
-        body {
-            background-image: url('/images/dashboard.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 100vh;
-        }
-        .navbar {
-            background-color: rgba(30, 21, 11, 0.9) !important;
-backdrop-filter: blur(10px);
-color: white;
-
-        }
-        .container.mt-5 {
-            background-color: rgba(50, 45, 45, 0.616);
-            border-radius: 10px;
-            padding: 2rem;
-            margin-top: 15rem !important;
-           
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Portal - Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background-image: url('/images/dashboard.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+    .navbar {
+      background-color: rgba(30, 21, 11, 0.9) !important;
+      backdrop-filter: blur(10px);
+      color: white;
+    }
+    .container.mt-5 {
+      background-color: rgba(50, 45, 45, 0.616);
+      border-radius: 10px;
+      padding: 2rem;
+      margin-top: 15rem !important;
+    }
+  </style>
 </head>
 <body>
-    <!-- Success Toast -->
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ✓ Family saved successfully!
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
+  <!-- Success Toast -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+      <div class="d-flex">
+        <div class="toast-body">✓ Family saved successfully!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
     </div>
+  </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-dark shadow-sm">
-        <div class="container-fluid">
-            <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand fw-bold fs-5 ms-2" href="/">
-                <i class="bi bi-house-heart"></i>
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark shadow-sm">
+    <div class="container-fluid">
+      <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand fw-bold fs-5 ms-2" href="/">
+        <i class="bi bi-house-heart"></i>
+      </a>
+      <div class="d-none d-lg-block ms-auto">
+        <ul class="navbar-nav flex-row">
+          <li class="nav-item mx-2">
+            <a class="nav-link fw-500" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+              <i class="bi bi-people-fill"></i> Family
             </a>
-            <div class="d-none d-lg-block ms-auto">
-                <ul class="navbar-nav flex-row">
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
-                            <i class="bi bi-people-fill"></i> Family
-                        </a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/pooja-booking">
-                            <i class="bi bi-calendar-heart"></i> Pooja Booking
-                        </a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/profile">
-                            <i class="bi bi-person-circle"></i> Profile
-                        </a>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/logout">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Mobile Sidebar -->
-    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="/family">
-                        <i class="bi bi-people-fill"></i> Family
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"  href="/pooja-booking">
-                        <i class="bi bi-calendar-heart"></i> Pooja Booking
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/profile">
-                        <i class="bi bi-person-circle"></i> Profile
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout">
-                        <i class="bi bi-box-arrow-right"></i> Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link fw-500" href="/pooja-booking">
+              <i class="bi bi-calendar-heart"></i> Pooja Booking
+            </a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link fw-500" href="/profile">
+              <i class="bi bi-person-circle"></i> Profile
+            </a>
+          </li>
+          <li class="nav-item mx-2">
+            <a class="nav-link fw-500" href="/logout">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
+  </nav>
 
-    <!-- Family Check Modal -->
-    <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="familyCheckModalLabel">Family Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="familyContent">
-                    <!-- Content will be loaded here -->
-                </div>
-            </div>
-        </div>
+  <!-- Mobile Sidebar -->
+  <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-12">
-               <div class="text-center">
-  <h2 style="
-      color: #ffffff;
-      font-family: 'Times New Roman', Times, serif;
-      font-weight: bold;
-  ">
-    Welcome to our temple digital seva portal
-  </h2>
-
-  <p class="lead" style="
-      color: #ffffff;
-      font-family: 'Times New Roman', Times, serif;
-      font-weight: bold;
-  ">
-    Manage family details, book poojas, and participate in temple services with ease.
-    <br>
-    May the divine bless you and your family
-  </p>
-</div>
-
-            </div>
-        </div>
+    <div class="offcanvas-body">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="/family">
+            <i class="bi bi-people-fill"></i> Family
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/pooja-booking">
+            <i class="bi bi-calendar-heart"></i> Pooja Booking
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/profile">
+            <i class="bi bi-person-circle"></i> Profile
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/logout">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </li>
+      </ul>
     </div>
+  </div>
 
+  <!-- Welcome Section -->
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-12 text-center">
+        <h2 style="color:#ffffff; font-family:'Times New Roman',Times,serif; font-weight:bold;">
+          Welcome to our temple digital seva portal
+        </h2>
+        <p class="lead" style="color:#ffffff; font-family:'Times New Roman',Times,serif; font-weight:bold;">
+          Manage family details, book poojas, and participate in temple services with ease.
+          <br>
+          May the divine bless you and your family.
+        </p>
+        <button id="familyBtn" class="btn btn-primary btn-lg mt-4">Family</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Family Check Modal -->
+  <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="familyCheckModalLabel">Family Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="familyContent">
+            <div class="text-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Check for success parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === 'true') {
-            const toastElement = document.getElementById('successToast');
-            toastElement.style.display = 'flex';
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
+  <!-- Family Status Modal -->
+  <div class="modal fade" id="familyStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="familyModalTitle"></h5>
+        </div>
+        <div class="modal-body" id="familyModalMsg"></div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="familyModalAction"></button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            // Clean up URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Success toast
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      const toastElement = document.getElementById('successToast');
+      toastElement.style.display = 'flex';
+      const toast = new bootstrap.Toast(toastElement);
+      toast.show();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Handle family button click
+    $("#familyBtn").on("click", function () {
+      $.get("/family/check", function (res) {
+        if (res.exists) {
+          window.location.href = "/my-family";
+        } else {
+          showFamilyModal(
+            "No Details Found",
+            "No family details found. Please add your family details.",
+            "Add Family",
+            "/family-form"
+          );
         }
+      });
+    });
 
-        // Handle family modal show
-        const familyModal = document.getElementById('familyCheckModal');
-        familyModal.addEventListener('show.bs.modal', function () {
-            const familyContent = document.getElementById('familyContent');
-            familyContent.innerHTML = `
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            `;
+    function showFamilyModal(title, msg, btnText, redirectUrl) {
+      $("#familyModalTitle").text(title);
+      $("#familyModalMsg").text(msg);
+      $("#familyModalAction").text(btnText);
 
-            fetch('/my-family-json')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect to /my-family if record exists
-                    window.location.href = '/my-family';
-                } else {
-                    familyContent.innerHTML = `
-                        <div class="text-center">
-                            <div class="alert alert-warning">
-                                <h5>No family details found</h5>
-                                <p>You haven't added your family details yet.</p>
-                                <button type="button" class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                familyContent.innerHTML = `
-                    <div class="text-center">
-                        <div class="alert alert-danger">
-                            <h5>Error Loading Family Details</h5>
-                            <p>An error occurred while loading your family details. Please try again.</p>
-                        </div>
+      const modal = new bootstrap.Modal(document.getElementById("familyStatusModal"));
+      modal.show();
+
+      $("#familyModalAction").off("click").on("click", function () {
+        modal.hide();
+        window.location.href = redirectUrl;
+      });
+    }
+
+    // Handle family modal show
+    const familyModal = document.getElementById('familyCheckModal');
+    familyModal.addEventListener('show.bs.modal', function () {
+      const familyContent = document.getElementById('familyContent');
+      familyContent.innerHTML = `
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      `;
+
+      fetch('/my-family-json')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.members && data.members.length > 0) {
+            // Display family details in modal
+            let html = '<div class="family-details">';
+            html += '<h5 class="mb-3">Family Details</h5>';
+
+            // Separate parents and children
+            const parents = data.members.filter(m => m.member_type === 'parent');
+            const children = data.members.filter(m => m.member_type === 'child');
+
+            if (parents.length > 0) {
+              html += '<h6 class="text-primary">Parents:</h6>';
+              html += '<div class="row">';
+              parents.forEach(parent => {
+                html += `
+                  <div class="col-md-6 mb-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title">${parent.name}</h6>
+                        <p class="card-text small">
+                          <strong>Relationship:</strong> ${parent.relationship}<br>
+                          <strong>Mobile:</strong> ${parent.mobile || 'N/A'}<br>
+                          <strong>Occupation:</strong> ${parent.occupation || 'N/A'}
+                        </p>
+                      </div>
                     </div>
+                  </div>
                 `;
-            });
+              });
+              html += '</div>';
+            }
+
+            if (children.length > 0) {
+              html += '<h6 class="text-success mt-3">Children:</h6>';
+              html += '<div class="row">';
+              children.forEach(child => {
+                html += `
+                  <div class="col-md-6 mb-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title">${child.name}</h6>
+                        <p class="card-text small">
+                          <strong>DOB:</strong> ${child.dob || 'N/A'}<br>
+                          <strong>Gender:</strong> ${child.gender || 'N/A'}<br>
+                          <strong>Occupation:</strong> ${child.occupation || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              });
+              html += '</div>';
+            }
+
+            html += '<div class="text-center mt-3">';
+            html += '<button type="button" class="btn btn-primary" onclick="window.location.href=\'/my-family\'">View Full Details</button>';
+            html += '</div></div>';
+
+            familyContent.innerHTML = html;
+          } else {
+            familyContent.innerHTML = `
+              <div class="text-center">
+                <div class="alert alert-warning">
+                  <h5>Add Details</h5>
+                  <p>No family details found. Please add your family details.</p>
+                  <button type="button" class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
+                </div>
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          familyContent.innerHTML = `
+            <div class="text-center">
+              <div class="alert alert-danger">
+                <h5>Error Loading Family Details</h5>
+                <p>An error occurred while loading your family details. Please try again.</p>
+              </div>
+            </div>
+          `;
         });
-    </script>
+    });
+  </script>
 </body>
 </html>

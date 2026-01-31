@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const controller = require("../controllers/adminController");
+
 const db = require("../config/db");
-const upload = require("../middleware/upload");
+const { upload } = require("../middleware/upload");
+
 
 // Get all families as JSON
 router.get('/families', async (req, res) => {
@@ -26,6 +28,9 @@ router.get("/dashboard", controller.dashboard);
 
 // Search
 router.get("/search", controller.search);
+
+
+// router.get("/search", controller.search);
 
 // View and Edit routes
 router.get("/view/:id", controller.viewMember);

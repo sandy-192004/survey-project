@@ -1,4 +1,4 @@
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 
 const db = mysql.createPool({
   host: "127.0.0.1",
@@ -6,21 +6,18 @@ const db = mysql.createPool({
   password: "sandhiya@sowmiya2004",
   database: "survey_app",
   // socketPath: '/tmp/mysql.sock',
-  port:'3306'
+  port:'3306',
+
 });
 
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error("Error connecting to the database:", err);
-  } else {
-
-    console.log("MySQL Connected Successfully");
-    connection.release(); 
-
-   
-
-  }
-});
+db.getConnection()
+  .then((connection) => {
+    console.log("MySQL Database connected successfully.");
+    connection.release();
+  })
+  .catch((err) => {
+    console.error("Error connecting to MySQL Database:", err);
+  });
 
 
 

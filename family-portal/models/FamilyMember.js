@@ -3,8 +3,8 @@ const db = require("../config/db");
 /**
  * Create a family member (parent or child)
  */
-exports.create = (data) => {
-  return db.query(
+exports.create = async (data) => {
+  const [result] = await db.query(
     `INSERT INTO family_members
      (family_id, member_type, name, relationship, mobile, occupation,
       dob, gender, door_no, street, district, state, pincode, photo)
@@ -26,6 +26,7 @@ exports.create = (data) => {
       data.photo
     ]
   );
+  return result.insertId;
 };
 
 /**
@@ -56,16 +57,21 @@ exports.getById = (memberId, callback) => {
  * Get ALL members of ONE family
  * (husband + wife + all children)
  */
-exports.getByFamilyId = (familyId, callback) => {
-  const sql = `
-    SELECT *
-    FROM family_members
-    WHERE family_id = ?
-    ORDER BY
-      FIELD(member_type, 'parent', 'child'),
-      created_at
-  `;
-  db.query(sql, [familyId], callback);
+exports.getByFamilyId = async (familyId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT *
+      FROM family_members
+      WHERE family_id = ?
+      ORDER BY
+        FIELD(member_type, 'parent', 'child'),
+        created_at
+    `;
+    db.query(sql, [familyId], (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
 };
 
 /**
