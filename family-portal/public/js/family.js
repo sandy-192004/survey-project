@@ -154,10 +154,21 @@ document.addEventListener("DOMContentLoaded", () => {
       if (result.success && result.exists) {
         window.location.href = "/my-family";
       } else if (result.success) {
-        alert("Family saved successfully ✅");
-        window.location.href = "/dashboard";
+        Swal.fire({
+          icon: 'success',
+          title: 'Family Saved Successfully!',
+          text: 'Your family details including children have been saved.',
+          showConfirmButton: false,
+          timer: 3000
+        }).then(() => {
+          window.location.href = "/my-family";
+        });
       } else {
-        alert(result.message || "Failed to save family");
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to Save Family',
+          text: result.message || 'An error occurred'
+        });
       }
     } catch (error) {
       console.error("❌ Network error:", error);

@@ -6,6 +6,7 @@ const upload = multer({ dest: "uploads/" });
 const controller = require("../controllers/familyController");
 const exportCtrl = require("../controllers/exportController");
 const { isLoggedIn } = require("../middleware/auth");
+const { processUpload } = require("../middleware/upload");
 
 console.log("🧩 exportCtrl keys:", Object.keys(exportCtrl));
 console.log("🧩 familyController keys:", Object.keys(controller));
@@ -30,12 +31,25 @@ router.get("/family", isLoggedIn, controller.familyCheck);
 
 // ================== FAMILY FORM ==================
 router.get("/family-form", isLoggedIn, controller.showForm);
-router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
+router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
 
 // ================== FAMILY MANAGEMENT ==================
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", isLoggedIn, controller.getMyFamilyJson);
+
+// ================== CHILD MANAGEMENT ==================
+router.post("/add-child", isLoggedIn, processUpload, controller.addChild);
+router.get("/get-children/:userId", isLoggedIn, controller.getChildren);
+router.get("/get-child/:id", isLoggedIn, controller.getChild);
+router.put("/update-child/:id", isLoggedIn, processUpload, controller.updateChild);
+router.delete("/delete-child/:id", isLoggedIn, controller.deleteChild);
+
+// ================== PARENT EDIT ==================
+router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
+router.post("/update-family", isLoggedIn, processUpload, controller.updateFamily);
+router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
+router.post("/update-member/:id", isLoggedIn, processUpload, controller.updateMember);
 
 // ================== PLACEHOLDERS ==================
 router.get("/pooja-booking", (req, res) => {
