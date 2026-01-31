@@ -18,6 +18,7 @@
             <h5 class="card-title"><%= member.name %></h5>
             <p class="text-muted mb-1"><%= member.district %>, <%= member.state %></p>
             <small><%= member.occupation %></small>
+            <p class="text-muted mb-1">Children: <%= member.children_count || 0 %></p>
             <div class="mt-3">
               <a href="/admin/view/<%= member.id %>" class="btn btn-primary btn-sm">View</a>
               <a href="/admin/edit/<%= member.id %>" class="btn btn-secondary btn-sm">Edit</a>

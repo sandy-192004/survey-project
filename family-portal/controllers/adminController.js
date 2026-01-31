@@ -3,8 +3,6 @@ const Child = require("../models/Child");
 const fs = require("fs");
 const path = require("path");
 
-
-
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
@@ -73,12 +71,13 @@ exports.viewMember = (req, res) => {
   });
 };
 
-
 exports.editMember = (req, res) => {
   const id = req.params.id;
+  const message = req.query.message;
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
+
 
     Admin.getChildrenByParentId(id, (err2, children) => {
       if (err2) throw err2;
@@ -99,12 +98,20 @@ exports.editMember = (req, res) => {
         pincode: member.pincode
       } : null;
 
+      res.render("admin/edit", { parent: member, wife, children: children || [], message: null });
+=======
+    // Fetch children
+    Child.getByParentId(id, (err, children) => {
+      if (err) {
+        console.error("Error fetching children:", err);
+        children = [];
+      }
       const message = req.query.message || null;
-      res.render("admin/edit", { parent: member, wife, children: children || [], message });
+      res.render("admin/edit", { parent: member, wife, children, message });
+>>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
     });
   });
 };
-
 
 
 exports.updateMember = (req, res) => {
@@ -131,8 +138,6 @@ exports.updateMember = (req, res) => {
       return res.redirect("/admin/dashboard");
     }
 
-    const Child = require("../models/Child");
-
     // Get existing children to know which to delete
     Child.getByParent(id, (err, existingChildren) => {
       if (err) {
@@ -142,20 +147,7 @@ exports.updateMember = (req, res) => {
 
       const existingIds = existingChildren.map(c => c.child_id);
 
-      // Parse children data from flat req.body keys
-      const childrenData = {};
-      for (const key in req.body) {
-        if (key.startsWith('children[')) {
-          const match = key.match(/children\[(\d+)\]\[(\w+)\]/);
-          if (match) {
-            const index = match[1];
-            const field = match[2];
-            if (!childrenData[index]) childrenData[index] = {};
-            childrenData[index][field] = req.body[key];
-          }
-        }
-      }
-
+      const childrenData = req.body.children || {};
       const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
 
       let processed = 0;
@@ -164,7 +156,7 @@ exports.updateMember = (req, res) => {
       if (total === 0) {
         // No children in form, delete all existing
         deleteRemoved(existingIds, () => {
-          res.redirect("/admin/view/" + id + "?updated=true");
+          res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
         });
       } else {
         childKeys.forEach((key) => {
@@ -177,6 +169,8 @@ exports.updateMember = (req, res) => {
           const childData = {
             name: child.name,
             occupation: child.occupation,
+            dob: child.dob && child.dob !== '' ? child.dob : null,
+            gender: child.gender,
             photo: childPhoto ? childPhoto.filename : null
           };
 
@@ -189,7 +183,7 @@ exports.updateMember = (req, res) => {
                 const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
                 const toDelete = existingIds.filter(id => !formIds.includes(id));
                 deleteRemoved(toDelete, () => {
-                  res.redirect("/admin/view/" + id + "?updated=true");
+                  res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
                 });
               }
             });
@@ -203,7 +197,7 @@ exports.updateMember = (req, res) => {
                 const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
                 const toDelete = existingIds.filter(id => !formIds.includes(id));
                 deleteRemoved(toDelete, () => {
-                  res.redirect("/admin/view/" + id + "?updated=true");
+                  res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
                 });
               }
             });
@@ -216,6 +210,7 @@ exports.updateMember = (req, res) => {
 
 exports.addChild = (req, res) => {
   const childData = req.body;
+
   const Child = require("../models/Child");
 
   Child.create(childData, (err, result) => {
@@ -246,6 +241,7 @@ exports.addChild = (req, res) => {
 
 exports.addChild = (req, res) => {
   const childData = req.body;
+
   if (req.files && req.files.photo) {
     childData.photo = req.files.photo[0].filename;
   }
@@ -257,7 +253,7 @@ exports.addChild = (req, res) => {
     res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
   });
 };
-
+>>>>>>> 93bb59deb99102196924651591fa6711e7edddfa
 
 function loadDropdownOptions() {
   try {
