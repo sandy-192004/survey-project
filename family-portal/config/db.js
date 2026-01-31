@@ -17,7 +17,7 @@ db.getConnection((err, connection) => {
     console.log("MySQL Connected Successfully");
     connection.release(); 
 
-    console.log("Connected to the database as id " + connection.threadId);
+   
 
   }
 });
