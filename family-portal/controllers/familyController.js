@@ -73,15 +73,17 @@ exports.familyLogic = async (req, res) => {
 
   try {
     const userId = req.session.user.id;
-    const Person = require("../models/Person");
 
-    const [personRows] = await Person.getByUserId(userId);
+    const [family] = await db.query(
+      "SELECT * FROM families WHERE user_id = ?",
+      [userId]
+    );
 
-    if (personRows.length === 0) {
+    if (!family.length) {
       return res.redirect("/family-form");
     }
 
-    const familyId = personRows[0].family_id;
+    const familyId = family[0].id;
     const [members] = await db.query(
       "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
       [familyId]
@@ -106,153 +108,57 @@ exports.showFamilyForm = (req, res) => {
   });
 };
 
-// FULL FUNCTIONALITY VERSION
 exports.saveFamily = async (req, res) => {
-  const connection = await db.getConnection();
-
+  const conn = await db.getConnection();
   try {
+    await conn.beginTransaction();
+
     const userId = req.session.user.id;
 
-    // DEBUG: Log what we receive
-    console.log("🔍 DEBUG - req.body:", req.body);
-    console.log("🔍 DEBUG - req.files:", req.files);
-
-    // form fields - husband_name might be in req.body or as a field
-    let husband_name = req.body.husband_name;
-    let members = req.body.members; // comes as JSON string from frontend
-
-    console.log("🔍 Raw members from req.body:", members);
-    console.log("🔍 Type of members:", typeof members);
-
-    // Parse members if it's a string
-    if (typeof members === 'string') {
-      try {
-        members = JSON.parse(members);
-        console.log("✅ Successfully parsed members JSON");
-      } catch (e) {
-        console.error("❌ Failed to parse members JSON:", e);
-        console.error("❌ Raw members string:", members);
-        members = [];
-      }
-    }
-
-    // Ensure members is an array
-    if (!Array.isArray(members)) {
-      console.log("⚠️ Members is not an array, converting to empty array");
-      members = [];
-    }
-
-    console.log("📊 Final parsed members:", members);
-    console.log("📊 Members count:", members.length);
-
-    await connection.beginTransaction();
-
-    // Check if user already has a family
-    const [existingPersons] = await connection.query(
-      "SELECT id FROM persons WHERE user_id = ?",
+    // 1️⃣ Create family
+    const [family] = await conn.query(
+      "INSERT INTO families (user_id) VALUES (?)",
       [userId]
     );
 
-    if (existingPersons.length > 0) {
-      throw new Error("User already has a family record");
-    }
+    const familyId = family.insertId;
 
-    // 1️⃣ create family
-    const familyCode = `FAM-${Date.now()}`;
-    const [familyResult] = await connection.query(
-      "INSERT INTO families (family_code) VALUES (?)",
-      [familyCode]
-    );
+    // 2️⃣ Parse members
+    const members = req.body.members;
+    if (!members) throw new Error("No members received");
 
-    const familyId = familyResult.insertId;
-    console.log("🏠 Created family with ID:", familyId, "and code:", familyCode);
+    // 3️⃣ Save members
+    for (let i in members) {
+      const m = members[i];
 
-    // 2️⃣ link user → family
-    await connection.query(
-      "INSERT INTO persons (user_id, family_id, husband_name) VALUES (?, ?, ?)",
-      [userId, familyId, husband_name]
-    );
-    console.log("👤 Linked user to family");
+      const photoFile = req.files?.find(
+        f => f.fieldname === `members[${i}][photo]`
+      );
 
-    // 3️⃣ insert family members
-    console.log("🔄 Starting member inserts, members count:", members.length);
-
-    for (let i = 0; i < members.length; i++) {
-      const member = members[i];
-      console.log(`🔄 Processing member ${i + 1}:`, member.name, member.member_type);
-
-      // Handle file uploads - simplified logic
-      let photoPath = null;
-      if (req.files && req.files.length > 0) {
-        // For parents: look for husband_photo or wife_photo
-        if (member.member_type === 'parent') {
-          if (member.relationship === 'husband') {
-            const husbandFile = req.files.find(f => f.fieldname === 'parent[husband_photo]');
-            if (husbandFile) photoPath = husbandFile.path.replace(/\\/g, "/");
-          } else if (member.relationship === 'wife') {
-            const wifeFile = req.files.find(f => f.fieldname === 'parent[wife_photo]');
-            if (wifeFile) photoPath = wifeFile.path.replace(/\\/g, "/");
-          }
-        }
-        // For children: look for children[index][photo]
-        else if (member.member_type === 'child') {
-          const childFile = req.files.find(f => f.fieldname === `children[${i - 2}][photo]`); // Adjust index since parents come first
-          if (childFile) photoPath = childFile.path.replace(/\\/g, "/");
-        }
-      }
-
-      console.log(`📸 Photo path for ${member.name}:`, photoPath);
-
-      await connection.query(
+      await conn.query(
         `INSERT INTO family_members
-         (family_id, member_type, name, relationship, mobile, occupation,
-          dob, gender, door_no, street, district, state, pincode, photo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (family_id, member_type, relationship, name, mobile, photo)
+         VALUES (?,?,?,?,?,?)`,
         [
           familyId,
-          member.member_type,
-          member.name,
-          member.relationship,
-          member.mobile || null,
-          member.occupation || null,
-          member.dob || null,
-          member.gender || null,
-          member.door_no || null,
-          member.street || null,
-          member.district || null,
-          member.state || null,
-          member.pincode || null,
-          photoPath
+          m.member_type,
+          m.relationship,
+          m.name,
+          m.mobile || null,
+          photoFile ? photoFile.filename : null
         ]
       );
-      console.log("✅ Inserted member:", member.name, "Type:", member.member_type);
     }
 
-    console.log("✅ All members inserted successfully");
-
-    await connection.commit();
-    console.log("✅ Transaction committed successfully");
-
-    // ✅ IMPORTANT: send JSON success with message
-    res.json({
-      success: true,
-      message: "Family details saved successfully"
-    });
+    await conn.commit();
+    res.json({ success: true });
 
   } catch (err) {
-    await connection.rollback();
-    console.error("🔥 SAVE FAMILY ERROR 🔥");
-    console.error("Full error:", err);
-    console.error("SQL Message:", err.sqlMessage);
-    console.error("Stack:", err.stack);
-    res.status(500).json({
-      success: false,
-      message: "Failed to save family",
-      error: err.message,
-      sql: err.sqlMessage
-    });
+    await conn.rollback();
+    console.error(err);
+    res.status(500).json({ message: err.message });
   } finally {
-    connection.release();
+    conn.release();
   }
 };
 
@@ -386,14 +292,19 @@ exports.checkFamilyExists = async (req, res) => {
 exports.myFamily = async (req, res) => {
   const userId = req.session.user.id;
 
-  const person = await Person.getByUserId(userId);
+  const [personRows] = await Person.getByUserId(userId);
 
-  if (!person) {
+  if (!personRows || personRows.length === 0) {
     // No family yet
     return res.render("family-form");
   }
 
+  const person = personRows[0];
   const members = await FamilyMember.getByFamilyId(person.family_id);
+
+  if (!members || members.length === 0) {
+    return res.redirect("/dashboard");
+  }
 
   res.render("my-family", {
     family: person,

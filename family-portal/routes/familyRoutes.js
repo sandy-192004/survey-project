@@ -25,6 +25,7 @@ router.get("/dashboard", isLoggedIn, controller.dashboard);
 router.get('/family', isLoggedIn, controller.familyLogic);
 router.get('/my-family', isLoggedIn, controller.myFamily);
 router.get('/my-family-json', isLoggedIn, controller.myFamilyJson);
+router.get('/family/check', isLoggedIn, controller.checkFamilyExists);
 router.get('/family/add', isLoggedIn, controller.showFamilyForm);
 router.post('/family/save', isLoggedIn, upload.any(), controller.saveFamily);
 

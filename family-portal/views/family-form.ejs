@@ -104,24 +104,28 @@
       <div class="row g-2">
         <div class="col-12 col-md-6">
           <h5 class="mb-3 small">Parent Details</h5>
-          <input class="form-control mb-2 small" name="husband_name" placeholder="Husband Name" required>
-          <input class="form-control mb-2 small" name="parent[wife_name]" placeholder="Wife Name">
-          <input class="form-control mb-2 small" name="parent[mobile_wife]" placeholder="Wife Mobile" type="tel">
-          <input class="form-control mb-2 small" name="parent[occupation_wife]" placeholder="Wife Occupation">
-          <input class="form-control mb-2 small" name="parent[mobile]" placeholder="Husband Mobile" type="tel">
-          <input class="form-control mb-2 small" name="parent[occupation]" placeholder="Husband occupation">
+          <input class="form-control mb-2 small" name="members[0][name]" placeholder="Husband Name" required>
+          <input type="hidden" name="members[0][relationship]" value="husband">
+          <input type="hidden" name="members[0][member_type]" value="parent">
+          <input class="form-control mb-2 small" name="members[0][mobile]" placeholder="Husband Mobile" type="tel">
+          <input class="form-control mb-2 small" name="members[0][occupation]" placeholder="Husband Occupation">
+          <input class="form-control mb-2 small" name="members[1][name]" placeholder="Wife Name">
+          <input type="hidden" name="members[1][relationship]" value="wife">
+          <input type="hidden" name="members[1][member_type]" value="parent">
+          <input class="form-control mb-2 small" name="members[1][mobile]" placeholder="Wife Mobile" type="tel">
+          <input class="form-control mb-2 small" name="members[1][occupation]" placeholder="Wife Occupation">
         </div>
 
         <div class="col-12 col-md-6">
           <h5 class="mb-3 small">Photos</h5>
           <div class="mb-3">
             <label class="form-label small">Husband Photo</label>
-            <input type="file" class="form-control small" name="parent[husband_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
+            <input type="file" class="form-control small" name="members[0][photo]" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
             <img id="husband_preview" class="img-thumbnail">
           </div>
           <div class="mb-3">
             <label class="form-label small">Wife Photo</label>
-            <input type="file" class="form-control small" name="parent[wife_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
+            <input type="file" class="form-control small" name="members[1][photo]" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
             <img id="wife_preview" class="img-thumbnail">
           </div>
         </div>
@@ -130,20 +134,20 @@
       <h5 class="mt-4 mb-3 small">Address</h5>
       <div class="row g-2">
         <div class="col-12 col-md-6">
-          <input class="form-control mb-2 small" name="parent[door_no]" placeholder="Door No">
-          <input class="form-control mb-2 small" name="parent[street]" placeholder="Street">
+          <input class="form-control mb-2 small" name="members[0][door_no]" placeholder="Door No">
+          <input class="form-control mb-2 small" name="members[0][street]" placeholder="Street">
         </div>
         <div class="col-12 col-md-6">
-          <select class="form-control mb-2 small" name="parent[state]" id="state">
+          <select class="form-control mb-2 small" name="members[0][state]" id="state">
             <option value="">Select State</option>
           </select>
-          <select class="form-control mb-2 small" name="parent[district]" id="district">
+          <select class="form-control mb-2 small" name="members[0][district]" id="district">
             <option value="">Select District</option>
           </select>
         </div>
       </div>
 
-      <input class="form-control mb-3 small" name="parent[pincode]" placeholder="Pincode" type="text">
+      <input class="form-control mb-3 small" name="members[0][pincode]" placeholder="Pincode" type="text">
 
       <h5 class="mt-4 mb-3 small">Children</h5>
       <div id="children" class="mb-3"></div>

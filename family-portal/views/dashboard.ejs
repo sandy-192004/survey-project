@@ -163,8 +163,7 @@ color: white;
     May the divine bless you and your family
   </p>
 
-  <button id="familyBtn" class="btn btn-primary btn-lg mt-4">Family</button>
-</div>
+  
 
             </div>
         </div>
@@ -190,12 +189,14 @@ color: white;
         $("#familyBtn").on("click", function () {
           $.get("/family/check", function (res) {
             if (res.exists) {
+              // DATA EXISTS → INSTANT REDIRECT
               window.location.href = "/my-family";
             } else {
+              // NO DATA → SHOW POPUP
               showFamilyModal(
-                "No Details Found",
-                "No family details found. Please add your family details.",
-                "Add Family",
+                "No Family Details Found",
+                "Please add your family details to continue.",
+                "Add Details",
                 "/family-form"
               );
             }

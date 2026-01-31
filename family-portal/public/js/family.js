@@ -34,6 +34,7 @@ let childIndex = 0;
 
 function addChild() {
   const container = document.getElementById("children");
+  const memberIndex = 2 + childIndex; // Start from 2 since 0 and 1 are parents
 
   const html = `
   <div class="card p-3 mb-2 child-card" id="child-${childIndex}">
@@ -42,27 +43,28 @@ function addChild() {
       <button type="button" class="btn btn-danger btn-sm" onclick="removeChildRow(${childIndex})">❌ Remove</button>
     </div>
 
-    <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" required>
+    <input class="form-control mb-2 small" name="members[${memberIndex}][name]" placeholder="Child Name" required>
+    <input type="hidden" name="members[${memberIndex}][member_type]" value="child">
 
-    <input type="date" class="form-control mb-2 small" name="children[${childIndex}][dob]">
+    <input type="date" class="form-control mb-2 small" name="members[${memberIndex}][dob]">
 
-    <select class="form-control mb-2 small" name="children[${childIndex}][gender]">
+    <select class="form-control mb-2 small" name="members[${memberIndex}][gender]">
       <option value="">Select Gender</option>
       <option value="Male">Male</option>
       <option value="Female">Female</option>
       <option value="Other">Other</option>
     </select>
 
-    <input class="form-control mb-2 small" name="children[${childIndex}][occupation]" placeholder="Occupation">
+    <input class="form-control mb-2 small" name="members[${memberIndex}][occupation]" placeholder="Occupation">
 
-    <select class="form-control mb-2 small" name="children[${childIndex}][relationship]">
+    <select class="form-control mb-2 small" name="members[${memberIndex}][relationship]">
       <option value="">Relationship</option>
       <option value="son">Son</option>
       <option value="daughter">Daughter</option>
     </select>
 
     <input type="file" class="form-control small"
-      name="children[${childIndex}][photo]" accept="image/*">
+      name="members[${memberIndex}][photo]" accept="image/*">
   </div>
   `;
 
@@ -96,63 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault(); // 🔥 THIS STOPS PAGE RELOAD
 
     const formData = new FormData(form);
-
-    // Collect members data from form
-    const members = [];
-
-    // Add husband (assuming husband_name is the logged-in user)
-    const husbandName = formData.get("husband_name");
-    if (husbandName) {
-      members.push({
-        member_type: "parent",
-        name: husbandName,
-        relationship: "husband",
-        mobile: formData.get("parent[mobile]") || null,
-        occupation: formData.get("parent[occupation]") || null,
-        door_no: formData.get("parent[door_no]") || null,
-        street: formData.get("parent[street]") || null,
-        district: formData.get("parent[district]") || null,
-        state: formData.get("parent[state]") || null,
-        pincode: formData.get("parent[pincode]") || null
-      });
-    }
-
-    // Add wife
-    const wifeName = formData.get("parent[wife_name]");
-    if (wifeName) {
-      members.push({
-        member_type: "parent",
-        name: wifeName,
-        relationship: "wife",
-        mobile: formData.get("parent[mobile_wife]") || null,
-        occupation: formData.get("parent[occupation_wife]") || null,
-        door_no: formData.get("parent[door_no]") || null,
-        street: formData.get("parent[street]") || null,
-        district: formData.get("parent[district]") || null,
-        state: formData.get("parent[state]") || null,
-        pincode: formData.get("parent[pincode]") || null
-      });
-    }
-
-    // Add children
-    const childrenContainer = document.getElementById("children");
-    const childCards = childrenContainer.querySelectorAll(".child-card");
-    childCards.forEach((card, index) => {
-      const childName = formData.get(`children[${index}][name]`);
-      if (childName) {
-        members.push({
-          member_type: "child",
-          name: childName,
-          relationship: formData.get(`children[${index}][relationship]`) || null,
-          dob: formData.get(`children[${index}][dob]`) || null,
-          gender: formData.get(`children[${index}][gender]`) || null,
-          occupation: formData.get(`children[${index}][occupation]`) || null
-        });
-      }
-    });
-
-    // Add members as JSON string to formData
-    formData.append("members", JSON.stringify(members));
 
     try {
       const response = await fetch("/save-family", {
