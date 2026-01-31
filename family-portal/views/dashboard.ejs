@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Portal - Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Removed media query to allow standard Bootstrap navbar behavior on mobile */
+    </style>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
 </head>
 <body>
     <!-- Success Toast -->
@@ -21,20 +27,20 @@
     </div>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-light bg-light shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold fs-5" href="/">
-                <i class="bi bi-house-heart"></i> Family Portal
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+            <a class="navbar-brand fw-bold fs-5 ms-2" href="/">
+                <i class="bi bi-house-heart"></i>
+            </a>
+            <div class="d-none d-lg-block ms-auto">
+                <ul class="navbar-nav flex-row">
                     <li class="nav-item mx-2">
-                        <button class="btn btn-link nav-link fw-500" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+                        <a class="nav-link fw-500" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
                             <i class="bi bi-people-fill"></i> Family
-                        </button>
+                        </a>
                     </li>
                     <li class="nav-item mx-2">
                         <a class="nav-link fw-500" href="/pooja-booking">
@@ -56,6 +62,38 @@
         </div>
     </nav>
 
+    <!-- Mobile Sidebar -->
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+                        <i class="bi bi-people-fill"></i> Family
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pooja-booking">
+                        <i class="bi bi-calendar-heart"></i> Pooja Booking
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/profile">
+                        <i class="bi bi-person-circle"></i> Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="container mt-5">
         <div class="row">
@@ -68,7 +106,11 @@
 
     <!-- Family Check Modal -->
     <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+
         <div class="modal-dialog modal-xl">
+
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="familyCheckModalLabel">My Family Details</h5>
@@ -118,61 +160,49 @@
                 if (data.success) {
                     const parent = data.parent;
                     const children = data.children;
-
-                    let html = `<div class="row g-3">`;
-
-                    // Parent Card
-                    html += `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 shadow-sm">
-                                <img src="${parent.husband_photo || 'https://via.placeholder.com/150'}" class="card-img-top" alt="Husband Photo">
-                                <div class="card-body">
-                                    <h5 class="card-title">${parent.name}</h5>
-                                    <p class="card-text"><strong>Wife:</strong> ${parent.wife_name || 'N/A'}</p>
-                                    <p class="card-text"><strong>Mobile:</strong> ${parent.mobile}</p>
-                                    <p class="card-text"><strong>Email:</strong> ${parent.email}</p>
-                                    <p class="card-text"><strong>Occupation:</strong> ${parent.occupation}</p>
-                                    <p class="card-text"><strong>Address:</strong> ${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}</p>
-                                </div>
+                    let html = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Parent Details</h5>
+                                <p><strong>Name:</strong> ${parent.name}</p>
+                                <p><strong>Wife Name:</strong> ${parent.wife_name || 'N/A'}</p>
+                                <p><strong>Mobile:</strong> ${parent.mobile}</p>
+                                <p><strong>Email:</strong> ${parent.email}</p>
+                                <p><strong>Occupation:</strong> ${parent.occupation}</p>
+                                <p><strong>Address:</strong> ${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}</p>
                             </div>
-                        </div>
+                            <div class="col-md-6">
+                                <h5>Children Details</h5>
                     `;
-
-                    // Children Cards
                     if (children.length > 0) {
                         children.forEach(child => {
                             html += `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card h-100 shadow-sm">
-                                        <img src="${child.photo || 'https://via.placeholder.com/150'}" class="card-img-top" alt="Child Photo">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${child.name}</h5>
-                                            <p class="card-text"><strong>Occupation:</strong> ${child.occupation}</p>
-                                            <p class="card-text"><strong>Date of Birth:</strong> ${child.dob}</p>
-                                            <p class="card-text"><strong>Gender:</strong> ${child.gender}</p>
-                                        </div>
-                                    </div>
+                                <div class="mb-3 p-2 border rounded">
+                                    <p><strong>Name:</strong> ${child.name}</p>
+                                    <p><strong>Occupation:</strong> ${child.occupation}</p>
+                                    <p><strong>Date of Birth:</strong> ${child.dob}</p>
+                                    <p><strong>Gender:</strong> ${child.gender}</p>
                                 </div>
                             `;
                         });
+                    } else {
+                        html += '<p>No children details available.</p>';
                     }
-
-                    html += `</div>`; // close row
-
                     html += `
+                            </div>
+                        </div>
                         <div class="text-center mt-3">
                             <a href="/my-family" class="btn btn-primary">Edit Family Details</a>
                         </div>
                     `;
-
                     familyContent.innerHTML = html;
                 } else {
                     familyContent.innerHTML = `
                         <div class="text-center">
                             <div class="alert alert-warning">
-                                <h5>No Family Details Available</h5>
+                                <h5>No family details found</h5>
                                 <p>You haven't added your family details yet.</p>
-                                <a href="/family-form" class="btn btn-primary">Add Family Details</a>
+                                <button type="button" class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
                             </div>
                         </div>
                     `;
