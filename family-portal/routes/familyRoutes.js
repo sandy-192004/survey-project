@@ -21,17 +21,23 @@ router.post("/login", controller.login);
 router.get("/register", controller.showRegister);
 router.post("/register", controller.register);
 router.get("/logout", controller.logout);
-
-// ================== DASHBOARD ==================
-router.get("/dashboard", isLoggedIn, controller.dashboard);
-
-// ================== FAMILY FORM ==================
-router.get("/family-form", isLoggedIn, controller.showForm);
-router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
-
-// ================== FAMILY MANAGEMENT ==================
-router.get("/my-family", isLoggedIn, controller.myFamily);
-router.get("/my-family-json", isLoggedIn, controller.getMyFamilyJson);
+router.get("/family-form", controller.showForm);
+router.post(
+  "/save-family",
+  isLoggedIn,
+  upload.any(),
+  controller.saveFamily
+);
+router.get("/family/:familyId", controller.viewFamily);
+router.get("/dashboard", isLoggedIn, controller.checkFamily);
+router.get("/family/edit/:id", controller.editForm);
+router.post("/family/update/:id", upload.any(), controller.updateFamily);
+router.get("/family/delete/:id", controller.deleteFamily);
+router.get("/family", controller.familyLogic);
+router.get("/my-family", controller.myFamily);
+router.get("/my-family-json", controller.getMyFamilyJson);
+router.get("/add-child", controller.showAddChild);
+router.post("/add-child", upload.any(), controller.addChild);
 
 // ================== PLACEHOLDERS ==================
 router.get("/pooja-booking", (req, res) => {
