@@ -887,6 +887,10 @@ exports.showForm = (req, res) => {
   res.render("family-form", { addChildMode: false });
 };
 
+exports.showFamilyForm = (req, res) => {
+  res.render("family-form", { addChildMode: false });
+};
+
 // Save family data
 exports.saveFamily = async (req, res) => {
   console.log("🟢 /save-family endpoint triggered");
