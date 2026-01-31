@@ -27,7 +27,7 @@ exports.getAll = (page, limit, callback) => {
   });
 };
 
-exports.searchMembers = (filters, page, limit, callback) => {
+exports.searchMembers = async (filters, page, limit) => {
   const { input, selectedState, selectedDistrict } = filters;
   const offset = (page - 1) * limit;
   const params = [];
@@ -57,19 +57,14 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
   const countSql = `SELECT COUNT(*) AS total FROM (${sql}) x`;
 
-  db.query(countSql, params, (err, countResult) => {
-    if (err) return callback(err);
+  const [countResult] = await db.query(countSql, params);
+  const totalPages = Math.ceil(countResult[0].total / limit);
 
-    const totalPages = Math.ceil(countResult[0].total / limit);
+  sql += " ORDER BY husband_name ASC LIMIT ? OFFSET ?";
+  params.push(limit, offset);
 
-    sql += " ORDER BY husband_name ASC LIMIT ? OFFSET ?";
-    params.push(limit, offset);
-
-    db.query(sql, params, (err2, results) => {
-      if (err2) return callback(err2);
-      callback(null, { results, totalPages });
-    });
-  });
+  const [results] = await db.query(sql, params);
+  return { results, totalPages };
 };
 
 exports.getDropdownOptions = (callback) => {
@@ -83,13 +78,11 @@ exports.getDropdownOptions = (callback) => {
   });
 };
 
-exports.getMemberById = (id, callback) => {
+exports.getMemberById = async (id) => {
   const sql = 'SELECT * FROM family WHERE family_id = ?';
-  db.query(sql, [id], (err, results) => {
-    if (err) return callback(err);
-    if (results.length === 0) return callback(null, null);
-    callback(null, results[0]);
-  });
+  const [results] = await db.query(sql, [id]);
+  if (results.length === 0) return null;
+  return results[0];
 };
 
 exports.updateMember = (id, data, callback) => {
@@ -98,7 +91,8 @@ exports.updateMember = (id, data, callback) => {
   db.query(sql, params, callback);
 };
 
-exports.getChildrenByParentId = (parentId, callback) => {
+exports.getChildrenByParentId = async (parentId) => {
   const sql = 'SELECT * FROM children WHERE family_id = ?';
-  db.query(sql, [parentId], callback);
+  const [results] = await db.query(sql, [parentId]);
+  return results;
 };
