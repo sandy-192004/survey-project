@@ -17,6 +17,7 @@ const app = express();
 
 
 
+
 app.set("view engine", "ejs");
 
 
@@ -39,8 +40,6 @@ app.use(session({
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
-
-app.use("/admin",adminRoutes)
 
 
 
