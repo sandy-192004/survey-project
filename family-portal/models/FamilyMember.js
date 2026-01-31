@@ -3,9 +3,29 @@ const db = require("../config/db");
 /**
  * Create a family member (parent or child)
  */
-exports.create = (memberData, callback) => {
-  const sql = "INSERT INTO family_members SET ?";
-  db.query(sql, memberData, callback);
+exports.create = (data) => {
+  return db.query(
+    `INSERT INTO family_members
+     (family_id, member_type, name, relationship, mobile, occupation,
+      dob, gender, door_no, street, district, state, pincode, photo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.family_id,
+      data.member_type,
+      data.name,
+      data.relationship,
+      data.mobile,
+      data.occupation,
+      data.dob,
+      data.gender,
+      data.door_no,
+      data.street,
+      data.district,
+      data.state,
+      data.pincode,
+      data.photo
+    ]
+  );
 };
 
 /**

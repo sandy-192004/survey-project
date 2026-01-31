@@ -7,6 +7,26 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* Removed media query to allow standard Bootstrap navbar behavior on mobile */
+        body {
+            background-image: url('/images/dashboard.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .navbar {
+            background-color: rgba(30, 21, 11, 0.9) !important;
+backdrop-filter: blur(10px);
+color: white;
+
+        }
+        .container.mt-5 {
+            background-color: rgba(50, 45, 45, 0.616);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 15rem !important;
+           
+        }
     </style>
 </head>
 <body>
@@ -23,7 +43,7 @@
     </div>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-dark shadow-sm">
         <div class="container-fluid">
             <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                 <span class="navbar-toggler-icon"></span>
@@ -34,7 +54,7 @@
             <div class="d-none d-lg-block ms-auto">
                 <ul class="navbar-nav flex-row">
                     <li class="nav-item mx-2">
-                        <a class="nav-link fw-500" href="/family">
+                        <a class="nav-link fw-500" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
                             <i class="bi bi-people-fill"></i> Family
                         </a>
                     </li>
@@ -72,7 +92,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pooja-booking">
+                    <a class="nav-link"  href="/pooja-booking">
                         <i class="bi bi-calendar-heart"></i> Pooja Booking
                     </a>
                 </li>
@@ -90,12 +110,45 @@
         </div>
     </div>
 
+    <!-- Family Check Modal -->
+    <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="familyCheckModalLabel">Family Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="familyContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="container mt-5">
         <div class="row">
             <div class="col-12">
-                <h1>Welcome to Family Portal</h1>
-                <p class="lead">Manage your family information and book pooja services.</p>
+               <div class="text-center">
+  <h2 style="
+      color: #ffffff;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+  ">
+    Welcome to our temple digital seva portal
+  </h2>
+
+  <p class="lead" style="
+      color: #ffffff;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+  ">
+    Manage family details, book poojas, and participate in temple services with ease.
+    <br>
+    May the divine bless you and your family
+  </p>
+</div>
+
             </div>
         </div>
     </div>
