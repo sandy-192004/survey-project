@@ -19,38 +19,28 @@ exports.dashboard = async (req, res) => {
 };
 
 
-exports.editMember = (req, res) => {
-  const id = req.params.id;
-  const message = req.query.message;
-  Admin.getMemberById(id, (err, member) => {
-    if (err) throw err;
-    if (!member) return res.send("No member found with that ID.");
+exports.editMember = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
 
-    // For the sample data structure, wife info is in the same record
-    // Create a wife object from the member data
-    const wife = member.wife_name ? {
-      id: member.id + '_wife', // Temporary ID for wife
-      name: member.wife_name,
-      mobile: member.mobile,
-      email: member.email,
-      occupation: '',
-      door_no: member.door_no,
-      street: member.street,
-      district: member.district,
-      state: member.state,
-      pincode: member.pincode
-    } : null;
+    const [members] = await FamilyMember.getByFamilyId(familyId);
 
-    Child.getByParent(id, (err, children) => {
-      if (err) {
-        console.error("Error fetching children:", err);
-        children = [];
-      }
-      const message = req.query.message || null;
-      res.render("admin/edit", { parent: member, wife, children, message });
+    // Separate parents and children
+    const parents = members.filter(m => m.member_type === 'parent');
+    const children = members.filter(m => m.member_type === 'child');
+
+    res.render("admin/edit", {
+      familyId,
+      parents,
+      children,
+      message: req.query.message || null
     });
-  });
-
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
 
 // Admin views all families - no search needed for now
 exports.search = async (req, res) => {
@@ -85,39 +75,9 @@ exports.viewMember = async (req, res) => {
   }
 };
 
-// Edit family members
-exports.editMember = async (req, res) => {
-  try {
-    const familyId = req.params.id;
-    const FamilyMember = require("../models/FamilyMember");
 
-    const [members] = await FamilyMember.getByFamilyId(familyId);
 
-    // Separate parents and children
-    const parents = members.filter(m => m.member_type === 'parent');
-    const children = members.filter(m => m.member_type === 'child');
 
-    res.render("admin/edit", {
-      familyId,
-      parents,
-      children,
-      message: req.query.message || null
-    });
-
-  });
-};
-
-exports.addChild = (req, res) => {
-  const childData = req.body;
-
-  if (req.files && req.files.photo) {
-    childData.photo = req.files.photo[0].filename;
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
-  }
-};
 
 // Update family members
 exports.updateMember = async (req, res) => {

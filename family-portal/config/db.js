@@ -3,15 +3,9 @@ const mysql = require("mysql2");
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
-
-  password: "disneyTorn@123",
-  database: "admin_db",
-
   password: "nidhi@20",
   database: "survey_app",
-
-  // socketPath: '/tmp/mysql.sock',
-  port:'3306'
+  port: '3306'
 });
 
 
