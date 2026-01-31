@@ -7,7 +7,7 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/adminController");
-const upload = require("../middleware/upload");
+const { upload } = require("../middleware/upload");
 
 
 router.get("/dashboard", controller.dashboard);

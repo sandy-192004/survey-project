@@ -93,8 +93,8 @@
     <!-- Main Content -->
     <div class="container mt-5">
         <div class="row">
-            <div class="col-12">
-                <h1>Welcome to Family Portal</h1>
+            <div class="col-12 text-end">
+                <h1>Welcome to Temple Trustee</h1>
                 <p class="lead">Manage your family information and book pooja services.</p>
             </div>
         </div>
@@ -102,24 +102,20 @@
 
     <!-- Family Check Modal -->
     <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="familyCheckModalLabel">My Family Details</h5>
+                    <h5 class="modal-title" id="familyCheckModalLabel">Family Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div id="familyContent">
-                        <div class="text-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="modal-body" id="familyContent">
+                    <!-- Content will be loaded here -->
                 </div>
             </div>
         </div>
     </div>
+
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
