@@ -50,7 +50,7 @@ exports.editMember = (req, res) => {
       res.render("admin/edit", { parent: member, wife, children, message });
     });
   });
-
+};
 
 // Admin views all families - no search needed for now
 exports.search = async (req, res) => {
