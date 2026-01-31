@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "scripts": {
-    "start": "cd family-portal && node app.js",
-    "dev": "cd family-portal && nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+"scripts": {
+  "start": "node app.js",
+  "dev": "nodemon app.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
