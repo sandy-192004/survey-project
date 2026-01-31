@@ -6,6 +6,7 @@ exports.getAll = (page, limit, callback) => {
   const offset = (page - 1) * limit;
 
   const sql = `
+
     SELECT f.id AS id, fm_husband.name AS name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
            fm_husband.district, fm_husband.state, COUNT(fm_child.id) AS children_count
     FROM families f
@@ -14,6 +15,12 @@ exports.getAll = (page, limit, callback) => {
     LEFT JOIN family_members fm_child ON f.id = fm_child.family_id AND fm_child.member_type = 'child'
     GROUP BY f.id, fm_husband.name, fm_wife.name, fm_husband.mobile, fm_husband.occupation, fm_husband.district, fm_husband.state
     ORDER BY fm_husband.name ASC
+
+    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
+           district, state
+    FROM family
+    ORDER BY husband_name ASC
+
     LIMIT ? OFFSET ?
   `;
 
@@ -37,6 +44,7 @@ exports.searchMembers = (filters, page, limit, callback) => {
   const params = [];
 
   let sql = `
+
     SELECT f.id AS id, p.husband_name AS name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
            fm_husband.district, fm_husband.state, COUNT(fm_child.id) AS children_count
     FROM families f
@@ -44,17 +52,26 @@ exports.searchMembers = (filters, page, limit, callback) => {
     LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband'
     LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife'
     LEFT JOIN family_members fm_child ON f.id = fm_child.family_id AND fm_child.member_type = 'child'
+
+    SELECT family_id AS id, husband_name AS name, wife_name, mobile, occupation,
+           district, state
+    FROM family
+
     WHERE 1=1
   `;
 
   if (input) {
     sql += " AND (p.husband_name LIKE ? OR fm_husband.mobile LIKE ? OR fm_husband.occupation LIKE ?)";
+    sql += " AND (husband_name LIKE ? OR mobile LIKE ? OR occupation LIKE ?)";
     const like = `%${input}%`;
     params.push(like, like, like);
   }
 
   if (selectedState) {
+
     sql += " AND fm_husband.state = ?";
+
+    sql += " AND state = ?";
     params.push(selectedState);
   }
 
@@ -65,6 +82,11 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
   sql += " GROUP BY f.id, p.husband_name, fm_wife.name, fm_husband.mobile, fm_husband.occupation, fm_husband.district, fm_husband.state";
 
+    sql += " AND district = ?";
+    params.push(selectedDistrict);
+  }
+
+
   const countSql = `SELECT COUNT(*) AS total FROM (${sql}) x`;
 
   db.query(countSql, params, (err, countResult) => {
@@ -72,7 +94,11 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
     const totalPages = Math.ceil(countResult[0].total / limit);
 
+
     sql += " ORDER BY p.husband_name ASC LIMIT ? OFFSET ?";
+
+    sql += " ORDER BY husband_name ASC LIMIT ? OFFSET ?";
+
     params.push(limit, offset);
 
     db.query(sql, params, (err2, results) => {
