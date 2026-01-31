@@ -11,9 +11,6 @@ const adminSearchRoutes = require("./routes/adminSearchRoutes");
 const db = require("./config/db");
 const app = express();
 
-// Initialize database tables
-
-
 
 
 
@@ -39,8 +36,6 @@ app.use(session({
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
-
-app.use("/admin",adminRoutes)
 
 
 
