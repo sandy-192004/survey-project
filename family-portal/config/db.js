@@ -3,7 +3,7 @@ const mysql = require("mysql2");
 const db = mysql.createPool({
   host: "127.0.0.1",
   user: "root",
-  password: "sowmiya25",
+  password: "sandhiya@sowmiya2004",
   database: "survey_app",
   // socketPath: '/tmp/mysql.sock',
   port:'3306'
@@ -17,7 +17,7 @@ db.getConnection((err, connection) => {
     console.log("MySQL Connected Successfully");
     connection.release(); 
 
-    console.log("Connected to the database as id " + connection.threadId);
+   
 
   }
 });

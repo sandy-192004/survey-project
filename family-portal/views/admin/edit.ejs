@@ -8,10 +8,15 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
   <!-- Bootstrap JS -->
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -19,10 +24,25 @@
       document.getElementById('grandchildParentId').value = id;
     }
   </script>
+
+
 </head>
 <body>
 
+
+<% if (message) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= message %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<% if (!parent) { %>
+    <div class="alert alert-danger">Parent record missing</div>
+  <% } else { %>
+
 <div class="container mt-4">
+
 
   <!-- Top X Button -->
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -36,6 +56,25 @@
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
   <% } %>
+
+
+  <!-- Children -->
+  <h5 class="mt-4">Children</h5>
+  <div id="children">
+    <% children.forEach((c, i) => { %>
+      <div class="border p-2 mb-2 child">
+        <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
+        <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
+        <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
+        <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>" placeholder="Date of Birth">
+        
+        <div class="mb-1">
+          <label>Photo</label>
+          <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
+          <% if (c.photo) { %>
+            <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width: 100px;">
+          <% } %>
+
 
   <!-- Parent Details -->
   <div class="card mb-4">
@@ -278,8 +317,48 @@
             </div>
             <button class="btn btn-success">Add Child</button>
           </form>
+
         </div>
       </div>
+
+    <% }) %>
+  </div>
+
+
+  <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
+
+  <div class="mt-3">
+    <button type="submit" class="btn btn-primary">Update Family</button>
+    <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+
+</form>
+<% } %>
+
+<script>
+    let index =  children && children.length ? children.length : 
+
+    $("#addChild").click(() => {
+      $("#children").append(`
+        <div class="border p-2 mb-2 child">
+          <input class="form-control mb-1" name="children[` + index + `][name]" placeholder="Child Name">
+          <input class="form-control mb-1" name="children[` + index + `][occupation]" placeholder="Occupation">
+          <input type="date" class="form-control mb-1" name="children[` + index + `][dob]" placeholder="Date of Birth"
+          <div class="mb-1">
+            <label>Photo</label>
+            <input type="file" class="form-control" name="children[` + index + `][photo]" accept="image/*">
+          </div>
+          <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
+        </div>
+      `);
+      index++;
+    });
+
+    $(document).on("click", ".removeChild", function () {
+      $(this).closest(".child").remove();
+    });
+  </script>
+
     </div>
   </div>
 
@@ -329,5 +408,6 @@
 
 </div>
 
+
 </body>
-</html> -->
+</html> 

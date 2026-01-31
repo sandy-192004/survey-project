@@ -8,24 +8,66 @@
   <script src="/js/family.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Brown Theme -->
+  <style>
+    :root {
+      --brown-main: #6f4e37;
+      --brown-light: #f5efe9;
+      --brown-border: #d6c2b3;
+    }
+
+    body {
+      background-color: var(--brown-light);
+    }
+
+    h3, h5 {
+      color: var(--brown-main);
+      font-weight: 600;
+    }
+
+    .card {
+      border: 1px solid var(--brown-border);
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .btn-primary {
+      background-color: var(--brown-main);
+      border-color: var(--brown-main);
+    }
+
+    .btn-primary:hover {
+      background-color: #5a3f2c;
+      border-color: #5a3f2c;
+    }
+
+    .form-control:focus {
+      border-color: var(--brown-main);
+      box-shadow: 0 0 0 0.2rem rgba(111, 78, 55, 0.25);
+    }
+
+    .img-thumbnail {
+      max-height: 150px;
+      object-fit: cover;
+      display: none;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body class="container-fluid mt-4">
-
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
   <h3 class="mb-3 mb-md-0"><% if (addChildMode) { %>Add Child<% } else { %>Add Family<% } %></h3>
 </div>
 
 <% if (addChildMode) { %>
-<!-- Add Child Form -->
 <form method="POST" action="/add-child" enctype="multipart/form-data">
 <% } else { %>
-<!-- Add Family Form -->
 <form method="POST" action="/save-family" enctype="multipart/form-data">
 <% } %>
 
 <% if (addChildMode) { %>
-<!-- Add Child Form -->
 <div class="row g-2">
   <div class="col-12">
     <div class="card p-3">
@@ -47,7 +89,8 @@
       </div>
 
       <h5 class="mt-4 mb-3 small">Photo</h5>
-      <input type="file" class="form-control small" name="photo" accept="image/*">
+      <input type="file" class="form-control small" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'child_preview')">
+      <img id="child_preview" class="img-thumbnail">
 
       <div class="mt-4">
         <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Add Child</button>
@@ -56,9 +99,7 @@
   </div>
 </div>
 <% } else { %>
-<!-- Add Family Form -->
 <div class="row g-2">
-  <!-- Parent & Address -->
   <div class="col-12">
     <div class="card p-3">
       <div class="row g-2">
@@ -72,34 +113,17 @@
           <input class="form-control mb-2 small" name="parent[occupation]" placeholder="Husband occupation">
         </div>
 
-
         <div class="col-12 col-md-6">
           <h5 class="mb-3 small">Photos</h5>
           <div class="mb-3">
             <label class="form-label small">Husband Photo</label>
-            <div class="d-flex gap-2 mb-2">
-              <button type="button" class="btn btn-info btn-sm flex-fill" onclick="openFileDialog('husband')">
-                📁 Choose Photo
-              </button>
-              <button type="button" class="btn btn-info btn-sm flex-fill" onclick="openCameraModal('husband')">
-                📷 Take Photo
-              </button>
-            </div>
-            <input type="file" id="husband_photo" name="parent[husband_photo]" accept="image/*" style="display:none;" onchange="handlePhotoSelect(this, 'husband_preview')">
-            <img id="husband_preview" class="img-thumbnail w-100" style="display:none; max-height: 150px; object-fit: cover;">
+            <input type="file" class="form-control small" name="parent[husband_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
+            <img id="husband_preview" class="img-thumbnail">
           </div>
           <div class="mb-3">
             <label class="form-label small">Wife Photo</label>
-            <div class="d-flex gap-2 mb-2">
-              <button type="button" class="btn btn-info btn-sm flex-fill" onclick="openFileDialog('wife')">
-                📁 Choose Photo
-              </button>
-              <button type="button" class="btn btn-info btn-sm flex-fill" onclick="openCameraModal('wife')">
-                📷 Take Photo
-              </button>
-            </div>
-            <input type="file" id="wife_photo" name="parent[wife_photo]" accept="image/*" style="display:none;" onchange="handlePhotoSelect(this, 'wife_preview')">
-            <img id="wife_preview" class="img-thumbnail w-100" style="display:none; max-height: 150px; object-fit: cover;">
+            <input type="file" class="form-control small" name="parent[wife_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
+            <img id="wife_preview" class="img-thumbnail">
           </div>
         </div>
       </div>
@@ -127,7 +151,8 @@
       <button type="button" class="btn btn-secondary btn-sm mb-3" onclick="addChild()">+ Add Child</button>
 
       <div class="mt-4">
-          <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Save Family</button>
+        <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Save Family</button>
+      </div>
     </div>
   </div>
 </div>
@@ -135,108 +160,18 @@
 
 </form>
 
-<!-- Camera Modal -->
-<div id="cameraModal" class="modal fade" tabindex="-1" style="display:none;">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Capture Photo</h5>
-        <button type="button" class="btn-close" onclick="closeCameraModal()"></button>
-      </div>
-      <div class="modal-body text-center">
-        <video id="videoElement" class="w-100 rounded mb-3" autoplay playsinline style="max-width: 400px;"></video>
-        <canvas id="canvasElement" style="display:none;"></canvas>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-success" onclick="capturePhoto()">📸 Capture</button>
-        <button type="button" class="btn btn-secondary" onclick="closeCameraModal()">❌ Close</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
 <script>
-let currentPhotoType = null;
-let cameraStream = null;
-
-function openFileDialog(type) {
-  document.getElementById(type + '_photo').click();
-}
-
-function openCameraModal(type) {
-  currentPhotoType = type;
-  document.getElementById('cameraModal').style.display = 'flex';
-  document.getElementById('cameraModal').classList.add('show');
-  startCamera();
-}
-
-function closeCameraModal() {
-  document.getElementById('cameraModal').style.display = 'none';
-  document.getElementById('cameraModal').classList.remove('show');
-  stopCamera();
-}
-
-function startCamera() {
-  const video = document.getElementById('videoElement');
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user' },
-    audio: false
-  }).then(stream => {
-    cameraStream = stream;
-    video.srcObject = stream;
-  }).catch(err => {
-    alert('Error accessing camera: ' + err.message);
-    closeCameraModal();
-  });
-}
-
-function stopCamera() {
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(track => track.stop());
-    cameraStream = null;
+  function handlePhotoSelect(input, previewId) {
+    if(input.files && input.files[0]){
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const img = document.getElementById(previewId);
+        img.src = e.target.result;
+        img.style.display = 'block';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
   }
-}
-
-function capturePhoto() {
-  const video = document.getElementById('videoElement');
-  const canvas = document.getElementById('canvasElement');
-  const context = canvas.getContext('2d');
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0);
-
-  canvas.toBlob(blob => {
-    const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    document.getElementById(currentPhotoType + '_photo').files = dataTransfer.files;
-
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const preview = document.getElementById(currentPhotoType + '_preview');
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(blob);
-
-    closeCameraModal();
-  }, 'image/jpeg', 0.95);
-}
-
-function handlePhotoSelect(input, previewId) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const preview = document.getElementById(previewId);
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
 </script>
 
 </body>
