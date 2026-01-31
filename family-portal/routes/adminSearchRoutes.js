@@ -5,3 +5,5 @@ const adminSearchController = require("../controllers/adminSearchController");
 router.get("/search", adminSearchController.searchFamilies);
 
 module.exports = router;
+
+
