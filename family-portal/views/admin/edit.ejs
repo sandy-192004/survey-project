@@ -1,1135 +1,173 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Family Member</title>
-
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-<body class="container mt-4">
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Family Member</title>
-
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-  <!-- Bootstrap JS -->
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    function setParentId(id) {
-      document.getElementById('grandchildParentId').value = id;
-    }
-  </script>
-
-
 </head>
 <body>
-
-
 <% if (message) { %>
   <div class="alert alert-success alert-dismissible fade show" role="alert">
     <%= message %>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-<% } %>
-
-<% if (!parent) { %>
-    <div class="alert alert-danger">Parent record missing</div>
-  <% } else { %>
-
-<div class="container mt-4">
-
-
-  <!-- Top X Button -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>Edit Family</h4>
-    <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
-  </div>
-
-  <% if (message) { %>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      <%= message %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  <% } %>
-
-
-  <!-- Children -->
-  <h5 class="mt-4">Children</h5>
-  <div id="children">
-    <% children.forEach((c, i) => { %>
-      <div class="border p-2 mb-2 child">
-        <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
-        <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
-        <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
-        <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>" placeholder="Date of Birth">
-        
-        <div class="mb-1">
-          <label>Photo</label>
-          <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
-          <% if (c.photo) { %>
-            <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width: 100px;">
-          <% } %>
-
-
-  <!-- Parent Details -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Parent Details</h5>
-    </div>
-    <div class="card-body">
-      <form method="POST" action="/admin/edit/<%= parent.id %>">
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="name" value="<%= parent.name %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Mobile</label>
-            <input class="form-control" name="mobile" value="<%= parent.mobile %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Email</label>
-            <input class="form-control" name="email" value="<%= parent.email %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Occupation</label>
-            <input class="form-control" name="occupation" value="<%= parent.occupation %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Door No</label>
-            <input class="form-control" name="door_no" value="<%= parent.door_no %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Street</label>
-            <input class="form-control" name="street" value="<%= parent.street %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">District</label>
-            <input class="form-control" name="district" value="<%= parent.district %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">State</label>
-            <input class="form-control" name="state" value="<%= parent.state %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Pincode</label>
-            <input class="form-control" name="pincode" value="<%= parent.pincode %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" name="dob" value="<%= parent.dob ? parent.dob.toISOString().split('T')[0] : '' %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Gender</label>
-            <select class="form-control" name="gender">
-              <option value="Male" <%= parent.gender === 'Male' ? 'selected' : '' %>>Male</option>
-              <option value="Female" <%= parent.gender === 'Female' ? 'selected' : '' %>>Female</option>
-              <option value="Other" <%= parent.gender === 'Other' ? 'selected' : '' %>>Other</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-success">Update Parent</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Wife Details -->
-  <% if (wife) { %>
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Wife Details</h5>
-    </div>
-    <div class="card-body">
-      <form method="POST" action="/admin/edit/<%= wife.id %>">
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="name" value="<%= wife.name %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Mobile</label>
-            <input class="form-control" name="mobile" value="<%= wife.mobile %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Email</label>
-            <input class="form-control" name="email" value="<%= wife.email %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Occupation</label>
-            <input class="form-control" name="occupation" value="<%= wife.occupation %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Door No</label>
-            <input class="form-control" name="door_no" value="<%= wife.door_no %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Street</label>
-            <input class="form-control" name="street" value="<%= wife.street %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">District</label>
-            <input class="form-control" name="district" value="<%= wife.district %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">State</label>
-            <input class="form-control" name="state" value="<%= wife.state %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Pincode</label>
-            <input class="form-control" name="pincode" value="<%= wife.pincode %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" name="dob" value="<%= wife.dob ? wife.dob.toISOString().split('T')[0] : '' %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Gender</label>
-            <select class="form-control" name="gender">
-              <option value="Male" <%= wife.gender === 'Male' ? 'selected' : '' %>>Male</option>
-              <option value="Female" <%= wife.gender === 'Female' ? 'selected' : '' %>>Female</option>
-              <option value="Other" <%= wife.gender === 'Other' ? 'selected' : '' %>>Other</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-success">Update Wife</button>
-      </form>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Children Details -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Children</h5>
-    </div>
-    <div class="card-body">
-      <% if (children && children.length > 0) { %>
-        <% children.forEach(child => { %>
-        <div class="border p-3 mb-3">
-          <form method="POST" action="/admin/edit/<%= child.id %>">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" value="<%= child.name %>" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Mobile</label>
-                <input class="form-control" name="mobile" value="<%= child.mobile %>" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" value="<%= child.email %>" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation" value="<%= child.occupation %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Door No</label>
-                <input class="form-control" name="door_no" value="<%= child.door_no %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Street</label>
-                <input class="form-control" name="street" value="<%= child.street %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">District</label>
-                <input class="form-control" name="district" value="<%= child.district %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">State</label>
-                <input class="form-control" name="state" value="<%= child.state %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Pincode</label>
-                <input class="form-control" name="pincode" value="<%= child.pincode %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob" value="<%= child.dob ? child.dob.toISOString().split('T')[0] : '' %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender">
-                  <option value="Male" <%= child.gender === 'Male' ? 'selected' : '' %>>Male</option>
-                  <option value="Female" <%= child.gender === 'Female' ? 'selected' : '' %>>Female</option>
-                  <option value="Other" <%= child.gender === 'Other' ? 'selected' : '' %>>Other</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-success">Update Child</button>
-          </form>
-          <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addChildModal">Add Member</button>
-          <button class="btn btn-secondary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addGrandChildModal" onclick="setParentId(<%= child.id %>)">Add Child</button>
-        </div>
-        <% }); %>
-      <% } else { %>
-        <p>No children added yet.</p>
-      <% } %>
-    </div>
-  </div>
-
-  <!-- Add Child Modal -->
-  <div class="modal fade" id="addChildModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Member</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/admin/add-child">
-            <input type="hidden" name="parent_id" value="<%= parent.id %>">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Mobile</label>
-                <input class="form-control" name="mobile" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender">
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-success">Add Child</button>
-          </form>
-
-        </div>
-      </div>
-
-    <% }) %>
-  </div>
-
-
-  <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-
-  <div class="mt-3">
-    <button type="submit" class="btn btn-primary">Update Family</button>
-    <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
-  </div>
-
-</form>
-<% } %>
-
-<script>
-    let index =  children && children.length ? children.length : 
-
-    $("#addChild").click(() => {
-      $("#children").append(`
-        <div class="border p-2 mb-2 child">
-          <input class="form-control mb-1" name="children[` + index + `][name]" placeholder="Child Name">
-          <input class="form-control mb-1" name="children[` + index + `][occupation]" placeholder="Occupation">
-          <input type="date" class="form-control mb-1" name="children[` + index + `][dob]" placeholder="Date of Birth"
-          <div class="mb-1">
-            <label>Photo</label>
-            <input type="file" class="form-control" name="children[` + index + `][photo]" accept="image/*">
-          </div>
-          <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
-        </div>
-      `);
-      index++;
-    });
-
-    $(document).on("click", ".removeChild", function () {
-      $(this).closest(".child").remove();
-    });
-  </script>
-
-    </div>
-  </div>
-
-  <!-- Add Grandchild Modal -->
-  <div class="modal fade" id="addGrandChildModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Child</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/admin/add-child" enctype="multipart/form-data">
-            <input type="hidden" name="parent_id" id="grandchildParentId">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender" required>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Photo</label>
-                <input type="file" class="form-control" name="photo" accept="image/*">
-              </div>
-            </div>
-            <button class="btn btn-success">Add Child</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-
-</body>
-</html><!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Family Member</title>
-
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-  <!-- Bootstrap JS -->
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    function setParentId(id) {
-      document.getElementById('grandchildParentId').value = id;
-    }
-  </script>
-
-
-</head>
-<body>
-
-
-<% if (message) { %>
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <%= message %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-<% } %>
-
-<% if (!parent) { %>
-    <div class="alert alert-danger">Parent record missing</div>
-  <% } else { %>
-
-<div class="container mt-4">
-
-
-  <!-- Top X Button -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>Edit Family</h4>
-    <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
-  </div>
-
-  <% if (message) { %>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      <%= message %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  <% } %>
-
-
-  <!-- Children -->
-  <h5 class="mt-4">Children</h5>
-  <div id="children">
-    <% children.forEach((c, i) => { %>
-      <div class="border p-2 mb-2 child">
-        <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
-        <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
-        <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
-        <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>" placeholder="Date of Birth">
-        
-        <div class="mb-1">
-          <label>Photo</label>
-          <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
-          <% if (c.photo) { %>
-            <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width: 100px;">
-          <% } %>
-
-
-  <!-- Parent Details -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Parent Details</h5>
-    </div>
-    <div class="card-body">
-      <form method="POST" action="/admin/edit/<%= parent.id %>">
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="name" value="<%= parent.name %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Mobile</label>
-            <input class="form-control" name="mobile" value="<%= parent.mobile %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Email</label>
-            <input class="form-control" name="email" value="<%= parent.email %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Occupation</label>
-            <input class="form-control" name="occupation" value="<%= parent.occupation %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Door No</label>
-            <input class="form-control" name="door_no" value="<%= parent.door_no %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Street</label>
-            <input class="form-control" name="street" value="<%= parent.street %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">District</label>
-            <input class="form-control" name="district" value="<%= parent.district %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">State</label>
-            <input class="form-control" name="state" value="<%= parent.state %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Pincode</label>
-            <input class="form-control" name="pincode" value="<%= parent.pincode %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" name="dob" value="<%= parent.dob ? parent.dob.toISOString().split('T')[0] : '' %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Gender</label>
-            <select class="form-control" name="gender">
-              <option value="Male" <%= parent.gender === 'Male' ? 'selected' : '' %>>Male</option>
-              <option value="Female" <%= parent.gender === 'Female' ? 'selected' : '' %>>Female</option>
-              <option value="Other" <%= parent.gender === 'Other' ? 'selected' : '' %>>Other</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-success">Update Parent</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Wife Details -->
-  <% if (wife) { %>
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Wife Details</h5>
-    </div>
-    <div class="card-body">
-      <form method="POST" action="/admin/edit/<%= wife.id %>">
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="name" value="<%= wife.name %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Mobile</label>
-            <input class="form-control" name="mobile" value="<%= wife.mobile %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Email</label>
-            <input class="form-control" name="email" value="<%= wife.email %>" required>
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Occupation</label>
-            <input class="form-control" name="occupation" value="<%= wife.occupation %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Door No</label>
-            <input class="form-control" name="door_no" value="<%= wife.door_no %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Street</label>
-            <input class="form-control" name="street" value="<%= wife.street %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">District</label>
-            <input class="form-control" name="district" value="<%= wife.district %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">State</label>
-            <input class="form-control" name="state" value="<%= wife.state %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Pincode</label>
-            <input class="form-control" name="pincode" value="<%= wife.pincode %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" name="dob" value="<%= wife.dob ? wife.dob.toISOString().split('T')[0] : '' %>">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Gender</label>
-            <select class="form-control" name="gender">
-              <option value="Male" <%= wife.gender === 'Male' ? 'selected' : '' %>>Male</option>
-              <option value="Female" <%= wife.gender === 'Female' ? 'selected' : '' %>>Female</option>
-              <option value="Other" <%= wife.gender === 'Other' ? 'selected' : '' %>>Other</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-success">Update Wife</button>
-      </form>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Children Details -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Children</h5>
-    </div>
-    <div class="card-body">
-      <% if (children && children.length > 0) { %>
-        <% children.forEach(child => { %>
-        <div class="border p-3 mb-3">
-          <form method="POST" action="/admin/edit/<%= child.id %>">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" value="<%= child.name %>" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Mobile</label>
-                <input class="form-control" name="mobile" value="<%= child.mobile %>" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" value="<%= child.email %>" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation" value="<%= child.occupation %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Door No</label>
-                <input class="form-control" name="door_no" value="<%= child.door_no %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Street</label>
-                <input class="form-control" name="street" value="<%= child.street %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">District</label>
-                <input class="form-control" name="district" value="<%= child.district %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">State</label>
-                <input class="form-control" name="state" value="<%= child.state %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Pincode</label>
-                <input class="form-control" name="pincode" value="<%= child.pincode %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob" value="<%= child.dob ? child.dob.toISOString().split('T')[0] : '' %>">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender">
-                  <option value="Male" <%= child.gender === 'Male' ? 'selected' : '' %>>Male</option>
-                  <option value="Female" <%= child.gender === 'Female' ? 'selected' : '' %>>Female</option>
-                  <option value="Other" <%= child.gender === 'Other' ? 'selected' : '' %>>Other</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-success">Update Child</button>
-          </form>
-          <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addChildModal">Add Member</button>
-          <button class="btn btn-secondary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addGrandChildModal" onclick="setParentId(<%= child.id %>)">Add Child</button>
-        </div>
-        <% }); %>
-      <% } else { %>
-        <p>No children added yet.</p>
-      <% } %>
-    </div>
-  </div>
-
-  <!-- Add Child Modal -->
-  <div class="modal fade" id="addChildModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Member</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/admin/add-child">
-            <input type="hidden" name="parent_id" value="<%= parent.id %>">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Mobile</label>
-                <input class="form-control" name="mobile" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender">
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-success">Add Child</button>
-          </form>
-
-        </div>
-      </div>
-
-    <% }) %>
-  </div>
-
-
-  <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-
-  <div class="mt-3">
-    <button type="submit" class="btn btn-primary">Update Family</button>
-    <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
-  </div>
-
-</form>
-<% } %>
-
-<script>
-    let index =  children && children.length ? children.length : 
-
-    $("#addChild").click(() => {
-      $("#children").append(`
-        <div class="border p-2 mb-2 child">
-          <input class="form-control mb-1" name="children[` + index + `][name]" placeholder="Child Name">
-          <input class="form-control mb-1" name="children[` + index + `][occupation]" placeholder="Occupation">
-          <input type="date" class="form-control mb-1" name="children[` + index + `][dob]" placeholder="Date of Birth"
-          <div class="mb-1">
-            <label>Photo</label>
-            <input type="file" class="form-control" name="children[` + index + `][photo]" accept="image/*">
-          </div>
-          <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
-        </div>
-      `);
-      index++;
-    });
-
-    $(document).on("click", ".removeChild", function () {
-      $(this).closest(".child").remove();
-    });
-  </script>
-
-    </div>
-  </div>
-
-  <!-- Add Grandchild Modal -->
-  <div class="modal fade" id="addGrandChildModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Child</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/admin/add-child" enctype="multipart/form-data">
-            <input type="hidden" name="parent_id" id="grandchildParentId">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender" required>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Photo</label>
-                <input type="file" class="form-control" name="photo" accept="image/*">
-              </div>
-            </div>
-            <button class="btn btn-success">Add Child</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-
-</body>
-</html>
-
-
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-  <!-- Bootstrap JS -->
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    function setParentId(id) {
-      document.getElementById('grandchildParentId').value = id;
-    }
-  </script>
-
-
-
-</head>
-<body>
-
-
-<% if (message) { %>
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <%= message %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
   </div>
 <% } %>
 
 <% if (!parent) { %>
   <div class="alert alert-danger">Parent record missing</div>
-<% } else 
-
+<% } else { %>
 <div class="container mt-4">
-
-
-
-  <!-- Top X Button -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Edit Family</h4>
     <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
   </div>
 
-  <% if (message) { %>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      <%= message %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  <% } %>
-
-
-  <!-- Children -->
-  <h5 class="mt-4">Children</h5>
-  <div id="children">
-    <% children.forEach((c, i) => { %>
-      <div class="border p-2 mb-2 child">
-        <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
-        <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
-        <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
-        <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>" placeholder="Date of Birth">
-        
-        <div class="mb-1">
-          <label>Photo</label>
-          <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
-          <% if (c.photo) { %>
-            <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width: 100px;">
+  <form method="POST" action="/admin/edit/<%= parent.id %>" enctype="multipart/form-data">
+    <!-- Parent Details -->
+    <div class="card mb-4">
+      <div class="card-header"><h5>Parent Details</h5></div>
+      <div class="card-body">
+        <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" placeholder="Husband Name" required>
+        <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" placeholder="Mobile" required>
+        <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>" placeholder="Occupation">
+        <div class="mb-3">
+          <label>Husband Photo</label>
+          <input type="file" class="form-control" name="husband_photo" accept="image/*">
+          <% if (parent.husband_photo) { %>
+            <img src="/uploads/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
           <% } %>
-
-
-  <!-- Parent Details -->
-  <div class="card mb-4">
-    <div class="card-header"><h5>Parent Details</h5></div>
-    <div class="card-body">
-      <input class="form-control mb-2" name="husband_name" value="<%= parent.husband_name %>" placeholder="Husband Name">
-      <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" placeholder="Mobile">
-      <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>" placeholder="Occupation">
-
-      <h6>Photos</h6>
-      <div class="mb-3">
-        <label>Husband Photo</label>
-        <input type="file" class="form-control" name="husband_photo" accept="image/*">
-        <% if (parent.husband_photo) { %>
-          <img src="/uploads/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-        <% } %>
+        </div>
+        <h6>Address</h6>
+        <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>" placeholder="Door No">
+        <input class="form-control mb-2" name="street" value="<%= parent.street %>" placeholder="Street">
+        <input class="form-control mb-2" name="district" value="<%= parent.district %>" placeholder="District">
+        <input class="form-control mb-2" name="state" value="<%= parent.state %>" placeholder="State">
+        <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>" placeholder="Pincode">
       </div>
-
-      <h6>Address</h6>
-      <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>" placeholder="Door No">
-      <input class="form-control mb-2" name="street" value="<%= parent.street %>" placeholder="Street">
-      <input class="form-control mb-2" name="district" value="<%= parent.district %>" placeholder="District">
-      <input class="form-control mb-2" name="state" value="<%= parent.state %>" placeholder="State">
-      <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>" placeholder="Pincode">
     </div>
-  </div>
 
-  <!-- Wife Details -->
-  <% if (wife) { %>
-  <div class="card mb-4">
-    <div class="card-header"><h5>Wife Details</h5></div>
-    <div class="card-body">
-      <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>" placeholder="Wife Name">
-      <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>" placeholder="Mobile">
-      <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>" placeholder="Occupation">
-
-      <div class="mb-3">
-        <label>Wife Photo</label>
-        <input type="file" class="form-control" name="wife_photo" accept="image/*">
-        <% if (wife.wife_photo) { %>
-          <img src="/uploads/<%= wife.wife_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-        <% } %>
+    <!-- Wife Details -->
+    <% if (wife) { %>
+    <div class="card mb-4">
+      <div class="card-header"><h5>Wife Details</h5></div>
+      <div class="card-body">
+        <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>" placeholder="Wife Name">
+        <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>" placeholder="Mobile">
+        <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>" placeholder="Occupation">
+        <div class="mb-3">
+          <label>Wife Photo</label>
+          <input type="file" class="form-control" name="wife_photo" accept="image/*">
+          <% if (wife.photo) { %>
+            <img src="/uploads/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
+          <% } %>
+        </div>
+        <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>" placeholder="Door No">
+        <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>" placeholder="Street">
+        <input class="form-control mb-2" name="wife_district" value="<%= wife.district %>" placeholder="District">
+        <input class="form-control mb-2" name="wife_state" value="<%= wife.state %>" placeholder="State">
+        <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>" placeholder="Pincode">
       </div>
-
-      <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>" placeholder="Door No">
-      <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>" placeholder="Street">
-      <input class="form-control mb-2" name="wife_district" value="<%= wife.district %>" placeholder="District">
-      <input class="form-control mb-2" name="wife_state" value="<%= wife.state %>" placeholder="State">
-      <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>" placeholder="Pincode">
     </div>
-  </div>
-  <% } %>
+    <% } %>
 
-  <!-- Children -->
-  <div class="card mb-4">
-    <div class="card-header"><h5>Children</h5></div>
-    <div class="card-body" id="children">
-      <% if (children && children.length > 0) { %>
-        <% children.forEach((c, i) => { %>
-          <div class="border p-3 mb-3 child">
-            <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
-            <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
-            <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
-            <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>">
-            <div class="mb-1">
-              <label>Photo</label>
-              <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
-              <% if (c.photo) { %>
-                <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width:100px;">
-              <% } %>
+    <!-- Children -->
+    <div class="card mb-4">
+      <div class="card-header"><h5>Children</h5></div>
+      <div class="card-body" id="children">
+        <% if (children && children.length > 0) { %>
+          <% children.forEach((c, i) => { %>
+            <div class="border p-3 mb-3 child">
+              <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
+              <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
+              <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
+              <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>">
+              <div class="mb-1">
+                <label>Photo</label>
+                <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
+                <% if (c.photo) { %>
+                  <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width:100px;">
+                <% } %>
+              </div>
+              <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
             </div>
-            <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
+          <% }) %>
+        <% } else { %>
+          <p>No children added yet.</p>
+        <% } %>
+      </div>
+      <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
+    </div>
+
+    <div class="mt-3">
+      <button type="submit" class="btn btn-primary">Update Family</button>
+      <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+<% } %>
+
+<!-- Add Child Modal -->
+<div class="modal fade" id="addChildModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Child</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="/admin/add-child" enctype="multipart/form-data">
+          <input type="hidden" name="parent_id" value="<%= parent.id %>">
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Name</label>
+              <input class="form-control" name="name" required>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Gender</label>
+              <select class="form-control" name="gender" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" name="dob" required>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Occupation</label>
+              <input class="form-control" name="occupation">
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Photo</label>
+              <input type="file" class="form-control" name="photo" accept="image/*">
+            </div>
           </div>
-        <% }) %>
-      <% } else { %>
-        <p>No children added yet.</p>
-      <% } %>
-    </div>
-    <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-  </div>
-
-  <!-- Final Update Button -->
-
-  <!-- Add Child Modal -->
-  <div class="modal fade" id="addChildModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Member</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/admin/add-child">
-            <input type="hidden" name="parent_id" value="<%= parent.id %>">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Mobile</label>
-                <input class="form-control" name="mobile" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender">
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-success">Add Child</button>
-          </form>
-
-        </div>
+          <button class="btn btn-success">Add Child</button>
+        </form>
       </div>
-
-    <% }) %>
+    </div>
   </div>
-
-
-  <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-
-  <div class="mt-3">
-    <button type="submit" class="btn btn-primary">Update Family</button>
-    <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
-  </div>
-
-</form>
+</div>
 
 <script>
-  // Set initial index for new children
-  let index =  children && children.length ? children.length : 0 %>
+  let index = 0;
+  <% if (children && children.length) { %>
+  index = <%= children.length %>;
+  <% } %>
 
-
-  // Add child dynamically
-  $("#addChild").click(function () {
+  $("#addChild").click(() => {
     $("#children").append(`
       <div class="border p-2 mb-2 child">
-        <input class="form-control mb-1" name="children[` + index + `][name]" placeholder="Child Name">
-        <input class="form-control mb-1" name="children[` + index + `][occupation]" placeholder="Occupation">
-        <input type="date" class="form-control mb-1" name="children[` + index + `][dob]" placeholder="Date of Birth">
+        <input class="form-control mb-1" name="children[${index}][name]" placeholder="Child Name">
+        <input class="form-control mb-1" name="children[${index}][occupation]" placeholder="Occupation">
+        <input type="date" class="form-control mb-1" name="children[${index}][dob]" placeholder="Date of Birth">
         <div class="mb-1">
           <label>Photo</label>
-          <input type="file" class="form-control" name="children[` + index + `][photo]" accept="image/*">
-
-    $("#addChild").click(() => {
-      $("#children").append(`
-        <div class="border p-2 mb-2 child">
-          <input class="form-control mb-1" name="children[` + index + `][name]" placeholder="Child Name">
-          <input class="form-control mb-1" name="children[` + index + `][occupation]" placeholder="Occupation">
-          <input type="date" class="form-control mb-1" name="children[` + index + `][dob]" placeholder="Date of Birth"
-          <div class="mb-1">
-            <label>Photo</label>
-            <input type="file" class="form-control" name="children[` + index + `][photo]" accept="image/*">
-          </div>
-          <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
-        </div>
-      `);
-      index++;
-    });
-
-    $(document).on("click", ".removeChild", function () {
-      $(this).closest(".child").remove();
-    });
-  </script>
-
-    </div>
-  </div>
-
-  <!-- Add Grandchild Modal -->
-  <div class="modal fade" id="addGrandChildModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Child</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/admin/add-child" enctype="multipart/form-data">
-            <input type="hidden" name="parent_id" id="grandchildParentId">
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Name</label>
-                <input class="form-control" name="name" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Gender</label>
-                <select class="form-control" name="gender" required>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" name="dob" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Occupation</label>
-                <input class="form-control" name="occupation">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Photo</label>
-                <input type="file" class="form-control" name="photo" accept="image/*">
-              </div>
-            </div>
-            <button class="btn btn-success">Add Child</button>
-          </form>
-
+          <input type="file" class="form-control" name="children[${index}][photo]" accept="image/*">
         </div>
         <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
       </div>
@@ -1137,7 +175,6 @@
     index++;
   });
 
-  // Remove dynamically added child
   $(document).on("click", ".removeChild", function () {
     $(this).closest(".child").remove();
   });

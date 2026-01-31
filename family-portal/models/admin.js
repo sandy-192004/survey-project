@@ -41,8 +41,8 @@ exports.searchMembers = (filters, page, limit, callback) => {
            fm_husband.district, fm_husband.state, COUNT(fm_child.id) AS children_count
     FROM families f
     JOIN persons p ON f.id = p.family_id
-    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband'
-    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife'
+    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband' AND fm_husband.member_type = 'parent'
+    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife' AND fm_wife.member_type = 'parent'
     LEFT JOIN family_members fm_child ON f.id = fm_child.family_id AND fm_child.member_type = 'child'
     WHERE 1=1
   `;
@@ -95,13 +95,12 @@ exports.getDropdownOptions = (callback) => {
 
 exports.getMemberById = (id, callback) => {
   const sql = `
-    SELECT f.id AS family_id, p.husband_name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
+    SELECT f.id AS family_id, fm_husband.name AS husband_name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
            fm_husband.door_no, fm_husband.street, fm_husband.district, fm_husband.state, fm_husband.pincode,
            fm_husband.photo AS husband_photo, fm_wife.photo AS wife_photo
     FROM families f
-    JOIN persons p ON f.id = p.family_id
-    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband'
-    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife'
+    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband' AND fm_husband.member_type = 'parent'
+    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife' AND fm_wife.member_type = 'parent'
     WHERE f.id = ?
   `;
   db.query(sql, [id], (err, results) => {
@@ -112,22 +111,16 @@ exports.getMemberById = (id, callback) => {
 };
 
 exports.updateMember = (id, data, callback) => {
-  // Update persons for husband_name
-  const sqlPersons = 'UPDATE persons SET husband_name = ? WHERE family_id = ?';
-  db.query(sqlPersons, [data.name, id], (err) => {
+  // Update husband family_member
+  const sqlHusband = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ? AND member_type = ?';
+  const husbandParams = [data.name, data.mobile, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, id, 'husband', 'parent'];
+  db.query(sqlHusband, husbandParams, (err) => {
     if (err) return callback(err);
 
-    // Update husband family_member
-    const sqlHusband = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ?';
-    const husbandParams = [data.name, data.mobile, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, id, 'husband'];
-    db.query(sqlHusband, husbandParams, (err2) => {
-      if (err2) return callback(err2);
-
-      // Update wife family_member
-      const sqlWife = 'UPDATE family_members SET name = ?, photo = ? WHERE family_id = ? AND relationship = ?';
-      const wifeParams = [data.wife_name, data.wife_photo, id, 'wife'];
-      db.query(sqlWife, wifeParams, callback);
-    });
+    // Update wife family_member
+    const sqlWife = 'UPDATE family_members SET name = ?, photo = ? WHERE family_id = ? AND relationship = ? AND member_type = ?';
+    const wifeParams = [data.wife_name, data.wife_photo, id, 'wife', 'parent'];
+    db.query(sqlWife, wifeParams, callback);
   });
 };
 

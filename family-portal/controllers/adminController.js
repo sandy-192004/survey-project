@@ -102,7 +102,7 @@ exports.editMember = (req, res) => {
       res.render("admin/edit", { parent: member, wife, children, message });
     });
   });
-
+};
 
 exports.updateMember = (req, res) => {
   const id = req.params.id;
@@ -137,9 +137,6 @@ exports.updateMember = (req, res) => {
 
       const existingIds = existingChildren.map(c => c.child_id);
 
-<<<<<<< HEAD
-      res.redirect("/admin/view/" + id + "?updated=true");
-=======
       const childrenData = req.body.children || {};
       const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
 
@@ -197,7 +194,6 @@ exports.updateMember = (req, res) => {
           }
         });
       }
->>>>>>> 667a00a97a34e2a89e91e688c095b7c6acb52055
     });
   });
 };
@@ -253,5 +249,3 @@ function loadDropdownOptions() {
     return { states: [], districts: [] };
   }
 }
-
-

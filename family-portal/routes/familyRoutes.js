@@ -5,8 +5,8 @@ const { isLoggedIn } = require("../middleware/auth");
 const controller = require("../controllers/familyController");
 const exportCtrl = require("../controllers/exportController");
 
-router.get("/export/excel", exportCtrl.excel);
-router.get("/export/pdf", exportCtrl.pdf);
+router.get("/export/excel", exportCtrl.exportToExcel);
+router.get("/export/pdf", exportCtrl.exportToPdf);
 
 router.get("/", controller.showLogin);
 router.get("/login", controller.showLogin);

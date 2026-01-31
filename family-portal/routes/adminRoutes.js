@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const controller = require("../controllers/adminController");
+const exportController = require("../controllers/exportController");
 
 const db = require("../config/db");
 
@@ -36,5 +37,8 @@ router.post("/edit/:id", upload.any(), controller.updateMember);
 
 router.post("/edit/:id", controller.updateMember);
 router.post("/add-child", upload.fields([{ name: 'photo', maxCount: 1 }]), controller.addChild);
+
+router.get("/export/excel", exportController.exportToExcel);
+router.get("/export/pdf", exportController.exportToPdf);
 
 module.exports = router;
