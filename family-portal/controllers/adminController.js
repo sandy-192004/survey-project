@@ -55,13 +55,14 @@ exports.search = (req, res) => {
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
+  const updated = req.query.updated === 'true';
   Admin.getMemberById(id, (err, member) => {
     if (err) throw err;
     if (!member) return res.send("No member found with that ID.");
 
     Admin.getChildrenByParentId(id, (err2, children) => {
       if (err2) throw err2;
-      res.render("admin/view", { member, children: children || [] });
+      res.render("admin/view", { member, children: children || [], updated });
     });
   });
 };
@@ -143,7 +144,7 @@ exports.updateMember = (req, res) => {
         Child.create(childData, () => {});
       });
 
-      res.redirect("/admin/view/" + id);
+      res.redirect("/admin/view/" + id + "?updated=true");
     });
   });
 };

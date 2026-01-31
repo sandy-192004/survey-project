@@ -15,7 +15,7 @@ const createTables = () => {
   const familyTable = `
     CREATE TABLE IF NOT EXISTS family (
       family_id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255),
+      husband_name VARCHAR(255),
       wife_name VARCHAR(255),
       husband_photo VARCHAR(255),
       wife_photo VARCHAR(255),
@@ -36,6 +36,8 @@ const createTables = () => {
       child_name VARCHAR(255),
       date_of_birth DATE,
       occupation VARCHAR(255),
+      gender VARCHAR(10),
+      photo VARCHAR(255),
       FOREIGN KEY (family_id) REFERENCES family(family_id)
     )
   `;

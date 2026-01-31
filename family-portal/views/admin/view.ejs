@@ -6,6 +6,13 @@
 </head>
 <body class="container mt-4">
 
+<% if (updated) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Member details have been updated successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
 <h3>Family Member Details</h3>
 
 <% if (!member) { %>
@@ -66,3 +73,5 @@
 
 </body>
 </html>
+
+

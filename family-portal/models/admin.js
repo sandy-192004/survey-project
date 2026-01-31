@@ -102,3 +102,5 @@ exports.getChildrenByParentId = (parentId, callback) => {
   const sql = 'SELECT * FROM children WHERE family_id = ?';
   db.query(sql, [parentId], callback);
 };
+
+
