@@ -1,21 +1,25 @@
 const db = require("../config/db");
 
-exports.create = (userData, callback) => {
+exports.create = async (userData) => {
   const sql = "INSERT INTO users SET ?";
-  db.query(sql, userData, callback);
+  const [result] = await db.query(sql, userData);
+  return result.insertId;
 };
 
-exports.getByEmail = (email, callback) => {
+exports.getByEmail = async (email) => {
   const sql = "SELECT * FROM users WHERE email = ?";
-  db.query(sql, [email], callback);
+  const [results] = await db.query(sql, [email]);
+  return results;
 };
 
-exports.getById = (id, callback) => {
+exports.getById = async (id) => {
   const sql = "SELECT id, email, created_at FROM users WHERE id = ?";
-  db.query(sql, [id], callback);
+  const [results] = await db.query(sql, [id]);
+  return results[0];
 };
 
-exports.deleteById = (id, callback) => {
+exports.deleteById = async (id) => {
   const sql = "DELETE FROM users WHERE id = ?";
-  db.query(sql, [id], callback);
+  const [result] = await db.query(sql, [id]);
+  return result.affectedRows > 0;
 };

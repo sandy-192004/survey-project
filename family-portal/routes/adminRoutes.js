@@ -4,7 +4,7 @@ const multer = require("multer");
 const controller = require("../controllers/adminController");
 
 const db = require("../config/db");
-const upload = require("../middleware/upload");
+const { upload } = require("../middleware/upload");
 
 
 // Get all families as JSON

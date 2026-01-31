@@ -100,13 +100,14 @@
                 <p>Please add your family information</p>
                 <a href="/family-form" class="btn btn-primary">Add Family</a>
             </div>
-        <% } else { %>
+        <% } %>
+        <% if (members && members.length > 0) { %>
             <div class="row">
                 <% members.forEach(member => { %>
                     <div class="col-md-4 mb-4">
                         <div class="card member-card shadow-sm">
                             <% if (member.photo) { %>
-                                <img src="/uploads/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
+                                <img src="/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
                             <% } else { %>
                                 <div class="member-photo bg-light d-flex align-items-center justify-content-center">
                                     <i class="fas fa-user fa-3x text-muted"></i>

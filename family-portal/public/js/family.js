@@ -82,3 +82,96 @@ function removeChildRow(index) {
 
 // Load India data on DOM load
 window.addEventListener("DOMContentLoaded", loadIndiaData);
+
+// Handle form submission with AJAX
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("familyForm");
+
+  if (!form) {
+    console.error("familyForm not found");
+    return;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // 🔥 THIS STOPS PAGE RELOAD
+
+    const formData = new FormData(form);
+
+    // Collect members data from form
+    const members = [];
+
+    // Add husband (assuming husband_name is the logged-in user)
+    const husbandName = formData.get("husband_name");
+    if (husbandName) {
+      members.push({
+        member_type: "parent",
+        name: husbandName,
+        relationship: "husband",
+        mobile: formData.get("parent[mobile]") || null,
+        occupation: formData.get("parent[occupation]") || null,
+        door_no: formData.get("parent[door_no]") || null,
+        street: formData.get("parent[street]") || null,
+        district: formData.get("parent[district]") || null,
+        state: formData.get("parent[state]") || null,
+        pincode: formData.get("parent[pincode]") || null
+      });
+    }
+
+    // Add wife
+    const wifeName = formData.get("parent[wife_name]");
+    if (wifeName) {
+      members.push({
+        member_type: "parent",
+        name: wifeName,
+        relationship: "wife",
+        mobile: formData.get("parent[mobile_wife]") || null,
+        occupation: formData.get("parent[occupation_wife]") || null,
+        door_no: formData.get("parent[door_no]") || null,
+        street: formData.get("parent[street]") || null,
+        district: formData.get("parent[district]") || null,
+        state: formData.get("parent[state]") || null,
+        pincode: formData.get("parent[pincode]") || null
+      });
+    }
+
+    // Add children
+    const childrenContainer = document.getElementById("children");
+    const childCards = childrenContainer.querySelectorAll(".child-card");
+    childCards.forEach((card, index) => {
+      const childName = formData.get(`children[${index}][name]`);
+      if (childName) {
+        members.push({
+          member_type: "child",
+          name: childName,
+          relationship: formData.get(`children[${index}][relationship]`) || null,
+          dob: formData.get(`children[${index}][dob]`) || null,
+          gender: formData.get(`children[${index}][gender]`) || null,
+          occupation: formData.get(`children[${index}][occupation]`) || null
+        });
+      }
+    });
+
+    // Add members as JSON string to formData
+    formData.append("members", JSON.stringify(members));
+
+    try {
+      const response = await fetch("/save-family", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("Family saved successfully ✅");
+        window.location.href = "/dashboard";
+      } else {
+        alert(result.message || "Failed to save family");
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Server error");
+    }
+  });
+});

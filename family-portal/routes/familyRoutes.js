@@ -19,6 +19,7 @@ router.get("/export/pdf", exportCtrl.pdf);
 router.get("/", controller.showLogin);
 router.get("/login", controller.showLogin);
 router.post("/login", controller.login);
+router.get("/register", controller.showRegister);
 router.post("/register", controller.register);
 router.get("/logout", controller.logout);
 router.get("/family-form", controller.showForm);
