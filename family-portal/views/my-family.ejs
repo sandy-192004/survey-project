@@ -11,200 +11,138 @@
             min-height: 100vh;
         }
         .container {
-            background-color: rgba(139, 69, 19, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 2rem;
             margin-top: 2rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            color: white;
+            color: #333;
+        }
+        .member-card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .member-card:hover {
+            transform: translateY(-5px);
+        }
+        .member-photo {
+            height: 200px;
+            object-fit: cover;
+        }
+        .member-info {
+            padding: 1rem;
+        }
+        .member-name {
+            color: #8B4513;
+            margin-bottom: 0.5rem;
+        }
+        .info-item {
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .info-item i {
+            width: 18px;
+            color: #667eea;
+            margin-right: 0.4rem;
+            font-size: 0.8rem;
+        }
+        .section-title {
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+            font-size: 1.5rem;
+        }
+        .no-data {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #666;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                margin-top: 1rem;
+            }
+            .member-photo {
+                height: 150px;
+            }
+            .member-info {
+                padding: 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <% if (!hasFamily) { %>
-            <div class="text-center">
-                <h4>No family details found</h4>
+        <h3 class="section-title">My Family</h3>
+
+        <% if (!members || members.length === 0) { %>
+            <div class="no-data">
+                <h4>No family members found</h4>
                 <p>Please add your family information</p>
-                <a href="/family/add" class="btn btn-primary">Add Family</a>
+                <a href="/family-form" class="btn btn-primary">Add Family</a>
             </div>
         <% } else { %>
-            <h3>My Family</h3>
-            <div class="card p-3">
-                <p><strong>Husband:</strong> <%= family.husband_name %></p>
-                <p><strong>Wife:</strong> <%= family.wife_name %></p>
-                <p><strong>Mobile:</strong> <%= family.mobile %></p>
-                <p><strong>Address:</strong> <%= family.address %></p>
-                <% if (family.husband_photo) { %>
-                    <p><strong>Husband Photo:</strong> <img src="/uploads/<%= family.husband_photo %>" alt="Husband" style="max-width: 100px;"></p>
-                <% } %>
-                <% if (family.wife_photo) { %>
-                    <p><strong>Wife Photo:</strong> <img src="/uploads/<%= family.wife_photo %>" alt="Wife" style="max-width: 100px;"></p>
-                <% } %>
+            <div class="row">
+                <% members.forEach(member => { %>
+                    <div class="col-md-4 mb-4">
+                        <div class="card member-card shadow-sm">
+                            <% if (member.photo) { %>
+                                <img src="/uploads/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
+                            <% } else { %>
+                                <div class="member-photo bg-light d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            <% } %>
+                            <div class="member-info">
+                                <h5 class="member-name"><%= member.name %></h5>
+                                <div class="info-item">
+                                    <i class="fas fa-user-tag"></i>
+                                    <strong>Type:</strong> <%= member.member_type %>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-link"></i>
+                                    <strong>Relationship:</strong> <%= member.relationship %>
+                                </div>
+                                <% if (member.mobile) { %>
+                                    <div class="info-item">
+                                        <i class="fas fa-phone"></i>
+                                        <strong>Mobile:</strong> <%= member.mobile %>
+                                    </div>
+                                <% } %>
+                                <% if (member.occupation) { %>
+                                    <div class="info-item">
+                                        <i class="fas fa-briefcase"></i>
+                                        <strong>Occupation:</strong> <%= member.occupation %>
+                                    </div>
+                                <% } %>
+                                <% if (member.dob) { %>
+                                    <div class="info-item">
+                                        <i class="fas fa-birthday-cake"></i>
+                                        <strong>DOB:</strong> <%= new Date(member.dob).toLocaleDateString() %>
+                                    </div>
+                                <% } %>
+                                <% if (member.gender) { %>
+                                    <div class="info-item">
+                                        <i class="fas fa-venus-mars"></i>
+                                        <strong>Gender:</strong> <%= member.gender %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
             </div>
         <% } %>
     </div>
-</body>
-</html>
- .info-item {
-      margin-bottom: 0.4rem;
-      display: flex;
-      align-items: center;
-      font-size: 0.9rem;
-    }
-    .info-item i {
-      width: 18px;
-      color: #667eea;
-      margin-right: 0.4rem;
-      font-size: 0.8rem;
-    }
-    .parents-section, .children-section {
-      margin-bottom: 2rem;
-    }
-    .section-title {
-      color: #333;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #667eea;
-      font-size: 1.5rem;
-    }
-    .no-data {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: #666;
-    }
 
-    /* Mobile Responsive Styles */
-    @media (max-width: 768px) {
-      .family-header {
-        padding: 1.5rem 0;
-        margin-bottom: 1rem;
-      }
-
-      .family-header h1 {
-        font-size: 1.8rem;
-      }
-
-      .family-header .btn {
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
-      }
-
-      .member-card {
-        margin-bottom: 1.5rem;
-        border-radius: 12px;
-      }
-
-      .member-photo {
-        height: 180px;
-      }
-
-      .member-info {
-        padding: 0.8rem;
-      }
-
-      .member-name {
-        font-size: 1rem;
-      }
-
-      .section-title {
-        font-size: 1.3rem;
-        margin-bottom: 1rem;
-      }
-
-      .info-item {
-        font-size: 0.85rem;
-      }
-
-      .btn {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-      }
-
-      /* Stack header content on mobile */
-      .family-header .row > div {
-        text-align: center !important;
-        margin-bottom: 1rem;
-      }
-
-      .family-header .row > div:last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    @media (max-width: 576px) {
-      .container {
-        padding-left: 15px;
-        padding-right: 15px;
-      }
-
-      .member-photo {
-        height: 160px;
-      }
-
-      .member-info {
-        padding: 0.7rem;
-      }
-
-      .section-title {
-        font-size: 1.2rem;
-      }
-
-      .no-data {
-        padding: 1.5rem 0.5rem;
-      }
-
-      .no-data h4 {
-        font-size: 1.3rem;
-      }
-
-      .no-data .btn {
-        font-size: 0.9rem;
-        padding: 0.6rem 1.2rem;
-      }
-    }
-
-    /* Touch-friendly buttons */
-    @media (hover: none) and (pointer: coarse) {
-      .member-card:hover {
-        transform: none;
-      }
-
-      .btn {
-        min-height: 44px;
-        min-width: 44px;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<div class="container mt-4">
-  <h3 class="mb-4">My Family</h3>
-
-  <div class="row">
-    <% members.forEach(m => { %>
-      <div class="col-md-4 mb-4">
-        <div class="card shadow-sm">
-          <img src="/<%= m.photo %>" class="card-img-top" style="height:200px;object-fit:cover">
-          <div class="card-body">
-            <h5 class="card-title"><%= m.name %></h5>
-            <p class="card-text">
-              <strong>Role:</strong> <%= m.relationship %><br>
-              <strong>Occupation:</strong> <%= m.occupation || '-' %><br>
-              <strong>Mobile:</strong> <%= m.mobile || '-' %>
-            </p>
-
-            <a href="/family/edit/<%= m.id %>" class="btn btn-primary btn-sm">
-              Edit
-            </a>
-          </div>
-        </div>
-      </div>
-    <% }) %>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
