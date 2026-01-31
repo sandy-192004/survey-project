@@ -1,18 +1,11 @@
-# Fix Family Form and Backend Issues
+# TODO - Family Portal UX Implementation
 
-## Issues Identified
-- Form photo fields use wrong names: `parent[husband_photo]` instead of `members[0][photo]`
-- Backend saveFamily uses Person model and persons table instead of direct families/family_members
-- myFamily function crashes because Person.getByUserId returns array but code treats it as object
-- familyLogic has similar issues
-
-## Tasks
-- [ ] Fix photo field names in family-form.ejs
-- [ ] Rewrite saveFamily controller to use direct DB queries as per instructions
-- [ ] Fix myFamily function to use direct queries
-- [ ] Update familyLogic to work with new structure
-- [ ] Test the complete flow
-
-## Progress
-- [x] Analyzed code and identified issues
-- [x] Created plan
+## Pending Tasks
+- [ ] Add checkFamilyExists function in familyController.js
+- [ ] Add /family/check route in familyRoutes.js
+- [ ] Modify saveFamily to return message in familyController.js
+- [ ] Add success modal to family-form.ejs
+- [ ] Update family.js to use modal instead of alert
+- [ ] Update dashboard.ejs for family button logic
+- [ ] Update my-family.ejs to hide add button if members exist
+- [ ] Add safety check in myFamily controller

@@ -39,18 +39,22 @@ exports.login = async (req, res) => {
 };
 
 // Register
-exports.register = (req, res) => {
-  const { email, password, confirmPassword } = req.body;
+exports.register = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
 
-  if (password !== confirmPassword) {
-    return res.status(400).send("Passwords do not match");
+    if (password !== confirmPassword) {
+      return res.status(400).send("Passwords do not match");
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    await User.create({ email, password: hash });
+
+    res.redirect("/login?registered=true");
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).send("Registration failed. Please try again.");
   }
-
-  bcrypt.hash(password, 10, (err, hash) => {
-    User.create({ email, password: hash }, () => {
-      res.redirect("/login?registered=true");
-    });
-  });
 };
 
 // Logout
@@ -65,10 +69,7 @@ exports.dashboard = (req, res) => {
   res.render("dashboard");
 };
 
-/* ================= FAMILY LOGIC ================= */
-
-// 🔑 CORE ROUTE: /family
-exports.familyLogic = async (req, res) => {
+exports.checkFamily = async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
 
   try {
@@ -95,12 +96,59 @@ exports.familyLogic = async (req, res) => {
 
     return res.redirect("/family-form");
   } catch (err) {
+    console.error("Database error in checkFamily:", err);
+    // If database is not available, redirect to family form
+    return res.redirect("/family-form");
+  }
+};
+
+/* ================= FAMILY LOGIC ================= */
+
+// 🔑 CORE ROUTE: /family
+exports.familyLogic = async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+
+  try {
+    const userId = req.session.user.id;
+    const Person = require("../models/Person");
+
+    const [personRows] = await Person.getByUserId(userId);
+
+    if (personRows.length === 0) {
+      // No family, show family form
+      return res.render("family-form", { addChildMode: false });
+    }
+
+    const familyId = personRows[0].family_id;
+    const [members] = await db.query(
+      "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
+      [familyId]
+    );
+
+    if (members.length > 0) {
+      // Has family, show my-family
+      const members = await FamilyMember.getByFamilyId(familyId);
+      return res.render("my-family", {
+        family: personRows[0],
+        members
+      });
+    }
+
+    // No members yet, show form
+    return res.render("family-form", { addChildMode: false });
+  } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
   }
 };
 
 /* ================= FAMILY FORM ================= */
+
+exports.showForm = (req, res) => {
+  res.render("family-form", {
+    addChildMode: false
+  });
+};
 
 exports.showFamilyForm = (req, res) => {
   res.render("family-form", {
@@ -337,6 +385,10 @@ exports.myFamilyJson = async (req, res) => {
 
 /* ================= ADD CHILD ================= */
 
+exports.showAddChild = (req, res) => {
+  res.render("add-child");
+};
+
 exports.addChild = async (req, res) => {
   const familyId = req.session.user.id;
   const { name, dob, gender, occupation } = req.body;
@@ -349,4 +401,90 @@ exports.addChild = async (req, res) => {
   );
 
   res.redirect("/my-family");
+};
+
+/* ================= EDIT FAMILY ================= */
+
+exports.editForm = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const [members] = await db.query(
+      "SELECT * FROM family_members WHERE id = ?",
+      [id]
+    );
+    if (members.length === 0) {
+      return res.status(404).send("Member not found");
+    }
+    res.render("family-edit", { member: members[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+exports.updateFamily = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { name, mobile, occupation, dob, gender, door_no, street, district, state, pincode } = req.body;
+
+    await db.query(
+      `UPDATE family_members SET
+       name = ?, mobile = ?, occupation = ?, dob = ?, gender = ?,
+       door_no = ?, street = ?, district = ?, state = ?, pincode = ?
+       WHERE id = ?`,
+      [name, mobile, occupation, dob, gender, door_no, street, district, state, pincode, id]
+    );
+
+    res.redirect("/my-family");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+exports.deleteFamily = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await db.query("DELETE FROM family_members WHERE id = ?", [id]);
+    res.redirect("/my-family");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+/* ================= VIEW FAMILY ================= */
+
+exports.viewFamily = async (req, res) => {
+  try {
+    const familyId = req.params.familyId;
+    const [members] = await FamilyMember.getByFamilyId(familyId);
+    res.render("my-family", { members });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+exports.getMyFamilyJson = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const Person = require("../models/Person");
+
+    const [personRows] = await Person.getByUserId(userId);
+
+    if (personRows.length === 0) {
+      res.json({ success: false });
+    } else {
+      const familyId = personRows[0].family_id;
+      const [members] = await db.query(
+        "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
+        [familyId]
+      );
+      res.json({ success: members.length > 0 });
+    }
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false });
+  }
 };
