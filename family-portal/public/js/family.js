@@ -137,19 +137,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/save-family", {
         method: "POST",
         body: formData,
-        credentials: "include" // ✅ Keep session cookie
+        credentials: "include"
       });
 
-      const result = await response.json();
-      if (result.success) {
+      const text = await response.text(); // FIRST read raw response
+
+      let result;
+      try {
+        result = JSON.parse(text); // Try to parse manually
+      } catch (err) {
+        console.error("Server did NOT return JSON. Raw response:", text);
+        alert("Server error: Invalid response from server. Check backend.");
+        return;
+      }
+
+      if (result.success && result.exists) {
+        window.location.href = "/my-family";
+      } else if (result.success) {
         alert("Family saved successfully ✅");
         window.location.href = "/dashboard";
       } else {
         alert(result.message || "Failed to save family");
       }
     } catch (error) {
-      console.error("❌ Server error:", error);
-      alert("Server error");
+      console.error("❌ Network error:", error);
+      alert("Server not reachable");
     }
   });
 });

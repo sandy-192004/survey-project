@@ -25,6 +25,9 @@ router.get("/logout", controller.logout);
 // ================== DASHBOARD ==================
 router.get("/dashboard", isLoggedIn, controller.dashboard);
 
+// ================== FAMILY CHECK ==================
+router.get("/family", isLoggedIn, controller.familyCheck);
+
 // ================== FAMILY FORM ==================
 router.get("/family-form", isLoggedIn, controller.showForm);
 router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);

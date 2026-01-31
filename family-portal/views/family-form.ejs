@@ -146,8 +146,8 @@
       <input class="form-control mb-3 small" name="parent[pincode]" placeholder="Pincode" type="text">
 
       <h5 class="mt-4 mb-3 small">Children</h5>
-      <div id="children" class="mb-3"></div>
-      <button type="button" class="btn btn-secondary btn-sm mb-3" onclick="addChild()">+ Add Child</button>
+ <div id="children" class="mb-3"></div>
+-      <button type="button" class="btn btn-secondary btn-sm mb-3" onclick="addChild()">+ Add Child</button>
 
       <div class="mt-4">
         <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Save Family</button>
@@ -173,6 +173,42 @@
   }
 </script>
 
+<!-- Child Add/Edit Modal -->
+<div class="modal fade" id="addChildModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="childModalTitle">Add Child</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="childId">
+
+        <input id="childName" class="form-control mb-2" placeholder="Child Name" style="font-family: Arial, sans-serif;">
+        <input id="childDOB" class="form-control mb-2" type="date" style="font-family: Arial, sans-serif;">
+        <select id="childGender" class="form-control mb-2" style="font-family: Arial, sans-serif;">
+          <option value="">Select Gender</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+        <input id="childOccupation" class="form-control mb-2" placeholder="Occupation" style="font-family: Arial, sans-serif;">
+        <input id="childRelationship" class="form-control mb-2" placeholder="Relationship" style="font-family: Arial, sans-serif;">
+        <textarea id="childAddress" class="form-control mb-2" placeholder="Address" style="font-family: Arial, sans-serif;"></textarea>
+
+        <label style="font-family: Arial, sans-serif;">Child Photo</label>
+        <input type="file" id="childPhoto" class="form-control mb-2" style="font-family: Arial, sans-serif;">
+        <img id="childPhotoPreview" style="max-width:100px; display:none;">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveChild()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Success Modal -->
 <div class="modal fade" id="saveSuccessModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
@@ -180,15 +216,6 @@
       <div class="modal-header">
         <h5 class="modal-title">Success</h5>
       </div>
-      <div class="modal-body">
-        Family details saved successfully.
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-success" id="saveSuccessBtn">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script src="/js/family.js"></script>
 

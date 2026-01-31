@@ -5,45 +5,65 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
+    /* ----- Brown-themed styling ----- */
     .family-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
       color: white;
       padding: 2rem 0;
       margin-bottom: 2rem;
+      text-align: center;
+      border-radius: 10px;
     }
+
     .member-card {
       border: none;
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
       transition: transform 0.3s ease;
       margin-bottom: 1rem;
       max-width: 600px;
       margin-left: auto;
       margin-right: auto;
     }
+
     .member-card:hover { transform: translateY(-5px); }
+
     .member-photo {
       height: 200px;
       object-fit: cover;
-      border-bottom: 3px solid #667eea;
+      border-bottom: 3px solid #8B4513;
     }
+
     .member-info { padding: 1rem; }
-    .member-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; }
-    .info-item { margin-bottom: 0.4rem; display: flex; align-items: center; font-size: 0.9rem; }
-    .info-item i { width: 18px; color: #667eea; margin-right: 0.4rem; font-size: 0.8rem; }
+    .member-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; color: #5C4033; }
+    .info-item { margin-bottom: 0.4rem; display: flex; align-items: center; font-size: 0.9rem; color: #4B3621; }
+    .info-item i { width: 18px; color: #8B4513; margin-right: 0.4rem; font-size: 0.9rem; }
+
     .edit-btn, .update-btn { margin: 0.25rem; border-radius: 20px; font-size: 0.85rem; }
-    .no-data { text-align: center; padding: 2rem 1rem; color: #666; }
+
+    .no-data {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #5C4033;
+    }
+
     @media (max-width: 768px) {
       .container { padding: 1rem; margin-top: 1rem; }
       .member-photo { height: 150px; }
       .member-info { padding: 0.8rem; }
+      .member-name { font-size: 1rem; }
+      .info-item { font-size: 0.85rem; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h3 class="section-title">My Family</h3>
+    <div class="family-header">
+      <h3>My Family</h3>
+    </div>
+
+    <% members = members || []; %>
 
     <% if (!members || members.length === 0) { %>
       <div class="no-data">
@@ -59,7 +79,6 @@
           <div class="col-md-4 mb-4">
             <div class="card member-card shadow-sm">
               <% if (member.photo) { %>
-                <!-- ✅ Corrected path to show uploaded photos -->
                 <img src="/uploads/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
               <% } else { %>
                 <div class="member-photo bg-light d-flex align-items-center justify-content-center">
@@ -97,7 +116,7 @@
   <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
       <form id="editForm" class="modal-content" enctype="multipart/form-data">
-        <div class="modal-header bg-primary text-white">
+        <div class="modal-header bg-brown text-white" style="background-color:#A0522D;">
           <h5 class="modal-title">Edit Family Member</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
