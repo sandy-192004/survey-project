@@ -22,140 +22,151 @@
       margin-left: auto;
       margin-right: auto;
     }
-    .member-card:hover {
-      transform: translateY(-5px);
-    }
+    .member-card:hover { transform: translateY(-5px); }
     .member-photo {
       height: 200px;
       object-fit: cover;
       border-bottom: 3px solid #667eea;
     }
-    .member-info {
-      padding: 1rem;
+    .member-info { padding: 1rem; }
+    .member-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; }
+    .info-item { margin-bottom: 0.4rem; display: flex; align-items: center; font-size: 0.9rem; }
+    .info-item i { width: 18px; color: #667eea; margin-right: 0.4rem; font-size: 0.8rem; }
+    .edit-btn, .update-btn { margin: 0.25rem; border-radius: 20px; font-size: 0.85rem; }
+    .no-data { text-align: center; padding: 2rem 1rem; color: #666; }
+    @media (max-width: 768px) {
+      .container { padding: 1rem; margin-top: 1rem; }
+      .member-photo { height: 150px; }
+      .member-info { padding: 0.8rem; }
     }
-    .member-name {
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-    .member-role {
-      background: #667eea;
-      color: white;
-      padding: 0.25rem 0.6rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      display: inline-block;
-      margin-bottom: 0.75rem;
-    }
-    .info-item {
-      margin-bottom: 0.4rem;
-      display: flex;
-      align-items: center;
-      font-size: 0.9rem;
-    }
-    .info-item i {
-      width: 18px;
-      color: #667eea;
-      margin-right: 0.4rem;
-      font-size: 0.8rem;
-    }
-    .parents-section, .children-section {
-      margin-bottom: 2rem;
-    }
-    .section-title {
-      color: #333;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #667eea;
-      font-size: 1.5rem;
-    }
-    .no-data {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: #666;
-    }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-                margin-top: 1rem;
-            }
-            .member-photo {
-                height: 150px;
-            }
-            .member-info {
-                padding: 0.8rem;
-            }
-        }
-    </style>
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h3 class="section-title">My Family</h3>
+  <div class="container">
+    <h3 class="section-title">My Family</h3>
 
-        <% if (!members || members.length === 0) { %>
-            <div class="no-data">
-                <h4>No family members found</h4>
-                <p>Please add your family information</p>
-                <a href="/family-form" class="btn btn-primary">Add Family</a>
+    <% if (!members || members.length === 0) { %>
+      <div class="no-data">
+        <h4>No family members found</h4>
+        <p>Please add your family information</p>
+        <a href="/family-form" class="btn btn-primary">Add Family</a>
+      </div>
+    <% } %>
+
+    <% if (members && members.length > 0) { %>
+      <div class="row">
+        <% members.forEach(member => { %>
+          <div class="col-md-4 mb-4">
+            <div class="card member-card shadow-sm">
+              <% if (member.photo) { %>
+                <!-- ✅ Corrected path to show uploaded photos -->
+                <img src="/uploads/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
+              <% } else { %>
+                <div class="member-photo bg-light d-flex align-items-center justify-content-center">
+                  <i class="fas fa-user fa-3x text-muted"></i>
+                </div>
+              <% } %>
+
+              <div class="member-info">
+                <h5 class="member-name"><%= member.name %></h5>
+                <div class="info-item"><i class="fas fa-user-tag"></i><strong>Type:</strong>&nbsp;<%= member.member_type %></div>
+                <div class="info-item"><i class="fas fa-link"></i><strong>Relationship:</strong>&nbsp;<%= member.relationship %></div>
+                <% if (member.mobile) { %>
+                  <div class="info-item"><i class="fas fa-phone"></i><strong>Mobile:</strong>&nbsp;<%= member.mobile %></div>
+                <% } %>
+                <% if (member.occupation) { %>
+                  <div class="info-item"><i class="fas fa-briefcase"></i><strong>Occupation:</strong>&nbsp;<%= member.occupation %></div>
+                <% } %>
+                <% if (member.gender) { %>
+                  <div class="info-item"><i class="fas fa-venus-mars"></i><strong>Gender:</strong>&nbsp;<%= member.gender %></div>
+                <% } %>
+
+                <div class="text-center mt-2">
+                  <button class="btn btn-warning edit-btn" onclick="openEditModal(<%= member.id %>)">✏️ Edit</button>
+                  <button class="btn btn-success update-btn" onclick="updateMember(<%= member.id %>)">💾 Update</button>
+                </div>
+              </div>
             </div>
-        <% } %>
-        <% if (members && members.length > 0) { %>
-            <div class="row">
-                <% members.forEach(member => { %>
-                    <div class="col-md-4 mb-4">
-                        <div class="card member-card shadow-sm">
-                            <% if (member.photo) { %>
-                                <img src="/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
-                            <% } else { %>
-                                <div class="member-photo bg-light d-flex align-items-center justify-content-center">
-                                    <i class="fas fa-user fa-3x text-muted"></i>
-                                </div>
-                            <% } %>
-                            <div class="member-info">
-                                <h5 class="member-name"><%= member.name %></h5>
-                                <div class="info-item">
-                                    <i class="fas fa-user-tag"></i>
-                                    <strong>Type:</strong> <%= member.member_type %>
-                                </div>
-                                <div class="info-item">
-                                    <i class="fas fa-link"></i>
-                                    <strong>Relationship:</strong> <%= member.relationship %>
-                                </div>
-                                <% if (member.mobile) { %>
-                                    <div class="info-item">
-                                        <i class="fas fa-phone"></i>
-                                        <strong>Mobile:</strong> <%= member.mobile %>
-                                    </div>
-                                <% } %>
-                                <% if (member.occupation) { %>
-                                    <div class="info-item">
-                                        <i class="fas fa-briefcase"></i>
-                                        <strong>Occupation:</strong> <%= member.occupation %>
-                                    </div>
-                                <% } %>
-                                <% if (member.dob) { %>
-                                    <div class="info-item">
-                                        <i class="fas fa-birthday-cake"></i>
-                                        <strong>DOB:</strong> <%= new Date(member.dob).toLocaleDateString() %>
-                                    </div>
-                                <% } %>
-                                <% if (member.gender) { %>
-                                    <div class="info-item">
-                                        <i class="fas fa-venus-mars"></i>
-                                        <strong>Gender:</strong> <%= member.gender %>
-                                    </div>
-                                <% } %>
-                            </div>
-                        </div>
-                    </div>
-                <% }) %>
-            </div>
-        <% } %>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="editForm" class="modal-content" enctype="multipart/form-data">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Edit Family Member</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editId" name="id">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" id="editName" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mobile</label>
+            <input type="text" id="editMobile" name="mobile" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Occupation</label>
+            <input type="text" id="editOccupation" name="occupation" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Photo</label>
+            <input type="file" id="editPhoto" name="photo" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function openEditModal(id) {
+      fetch('/family/edit/' + id)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('editId').value = data.member.id;
+            document.getElementById('editName').value = data.member.name;
+            document.getElementById('editMobile').value = data.member.mobile || '';
+            document.getElementById('editOccupation').value = data.member.occupation || '';
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+          } else {
+            alert('Failed to load member details.');
+          }
+        })
+        .catch(() => alert('Error fetching member info'));
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const formData = new FormData(e.target);
+      const res = await fetch('/family/update/' + id, {
+        method: 'POST',
+        body: formData
+      });
+      const result = await res.json();
+      if (result.success) {
+        alert('Member updated successfully!');
+        location.reload();
+      } else {
+        alert('Update failed: ' + result.message);
+      }
+    });
+
+    function updateMember(id) {
+      alert('This button can later trigger a status or live update if needed.');
+    }
+  </script>
 </body>
 </html>
