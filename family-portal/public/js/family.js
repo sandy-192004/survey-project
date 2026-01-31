@@ -4,7 +4,6 @@ async function loadIndiaData() {
   const res = await fetch("/data/india-states-districts.json");
   indiaData = await res.json();
 
-  // Populate State dropdown
   const stateSelect = document.getElementById("state");
   Object.keys(indiaData).forEach(state => {
     const option = document.createElement("option");
@@ -13,8 +12,7 @@ async function loadIndiaData() {
     stateSelect.appendChild(option);
   });
 
-  // Update District dropdown when state changes
-  stateSelect.addEventListener("change", function() {
+  stateSelect.addEventListener("change", function () {
     const selectedState = this.value;
     const districtSelect = document.getElementById("district");
     districtSelect.innerHTML = '<option value="">Select District</option>';
@@ -31,76 +29,56 @@ async function loadIndiaData() {
 }
 
 let childIndex = 0;
-
 function addChild() {
   const container = document.getElementById("children");
-
   const html = `
   <div class="card p-3 mb-2 child-card" id="child-${childIndex}">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h6 class="mb-0">Child</h6>
       <button type="button" class="btn btn-danger btn-sm" onclick="removeChildRow(${childIndex})">❌ Remove</button>
     </div>
-
     <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" required>
-
     <input type="date" class="form-control mb-2 small" name="children[${childIndex}][dob]">
-
     <select class="form-control mb-2 small" name="children[${childIndex}][gender]">
       <option value="">Select Gender</option>
       <option value="Male">Male</option>
       <option value="Female">Female</option>
       <option value="Other">Other</option>
     </select>
-
     <input class="form-control mb-2 small" name="children[${childIndex}][occupation]" placeholder="Occupation">
-
     <select class="form-control mb-2 small" name="children[${childIndex}][relationship]">
       <option value="">Relationship</option>
       <option value="son">Son</option>
       <option value="daughter">Daughter</option>
     </select>
-
-    <input type="file" class="form-control small"
-      name="children[${childIndex}][photo]" accept="image/*">
-  </div>
-  `;
-
+    <input type="file" class="form-control small" name="children[${childIndex}][photo]" accept="image/*">
+  </div>`;
   container.insertAdjacentHTML("beforeend", html);
   childIndex++;
 }
 
-/* SAFE remove (no DOM conflict) */
 function removeChildRow(index) {
   const el = document.getElementById(`child-${index}`);
-  if (el && el.parentNode) {
-    el.parentNode.removeChild(el);
-  }
+  if (el && el.parentNode) el.parentNode.removeChild(el);
 }
 
-
-
-// Load India data on DOM load
 window.addEventListener("DOMContentLoaded", loadIndiaData);
 
-// Handle form submission with AJAX
+// ================== FORM SUBMIT ==================
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("familyForm");
-
   if (!form) {
     console.error("familyForm not found");
     return;
   }
 
   form.addEventListener("submit", async (e) => {
-    e.preventDefault(); // 🔥 THIS STOPS PAGE RELOAD
+    e.preventDefault();
 
     const formData = new FormData(form);
-
-    // Collect members data from form
     const members = [];
 
-    // Add husband (assuming husband_name is the logged-in user)
+    // Add husband
     const husbandName = formData.get("husband_name");
     if (husbandName) {
       members.push({
@@ -151,26 +129,26 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Add members as JSON string to formData
+    // Append JSON data
     formData.append("members", JSON.stringify(members));
+    formData.append("husband_name", husbandName);
 
     try {
       const response = await fetch("/save-family", {
         method: "POST",
-        body: formData
+        body: formData,
+        credentials: "include" // ✅ Keep session cookie
       });
 
       const result = await response.json();
-
       if (result.success) {
         alert("Family saved successfully ✅");
         window.location.href = "/dashboard";
       } else {
         alert(result.message || "Failed to save family");
       }
-
     } catch (error) {
-      console.error(error);
+      console.error("❌ Server error:", error);
       alert("Server error");
     }
   });

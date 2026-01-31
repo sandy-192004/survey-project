@@ -218,14 +218,70 @@
       fetch('/my-family-json')
         .then(response => response.json())
         .then(data => {
-          if (data.success) {
-            window.location.href = '/my-family';
+          if (data.success && data.members && data.members.length > 0) {
+            // Display family details in modal
+            let html = '<div class="family-details">';
+            html += '<h5 class="mb-3">Family Details</h5>';
+
+            // Separate parents and children
+            const parents = data.members.filter(m => m.member_type === 'parent');
+            const children = data.members.filter(m => m.member_type === 'child');
+
+            if (parents.length > 0) {
+              html += '<h6 class="text-primary">Parents:</h6>';
+              html += '<div class="row">';
+              parents.forEach(parent => {
+                html += `
+                  <div class="col-md-6 mb-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title">${parent.name}</h6>
+                        <p class="card-text small">
+                          <strong>Relationship:</strong> ${parent.relationship}<br>
+                          <strong>Mobile:</strong> ${parent.mobile || 'N/A'}<br>
+                          <strong>Occupation:</strong> ${parent.occupation || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              });
+              html += '</div>';
+            }
+
+            if (children.length > 0) {
+              html += '<h6 class="text-success mt-3">Children:</h6>';
+              html += '<div class="row">';
+              children.forEach(child => {
+                html += `
+                  <div class="col-md-6 mb-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title">${child.name}</h6>
+                        <p class="card-text small">
+                          <strong>DOB:</strong> ${child.dob || 'N/A'}<br>
+                          <strong>Gender:</strong> ${child.gender || 'N/A'}<br>
+                          <strong>Occupation:</strong> ${child.occupation || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              });
+              html += '</div>';
+            }
+
+            html += '<div class="text-center mt-3">';
+            html += '<button type="button" class="btn btn-primary" onclick="window.location.href=\'/my-family\'">View Full Details</button>';
+            html += '</div></div>';
+
+            familyContent.innerHTML = html;
           } else {
             familyContent.innerHTML = `
               <div class="text-center">
                 <div class="alert alert-warning">
                   <h5>Add Details</h5>
-                  <p>Add Details</p>
+                  <p>No family details found. Please add your family details.</p>
                   <button type="button" class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
                 </div>
               </div>
