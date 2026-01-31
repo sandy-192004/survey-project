@@ -30,7 +30,7 @@ router.post(
   controller.saveFamily
 );
 router.get("/family/:familyId", controller.viewFamily);
-router.get("/dashboard", isLoggedIn, controller.checkFamily);
+router.get("/dashboard", isLoggedIn, controller.dashboard);
 router.get("/family/edit/:id", controller.editForm);
 router.post("/family/update/:id", upload.any(), controller.updateFamily);
 router.get("/family/delete/:id", controller.deleteFamily);

@@ -108,32 +108,31 @@ exports.familyLogic = async (req, res) => {
 
   try {
     const userId = req.session.user.id;
-    const Person = require("../models/Person");
 
-    const [personRows] = await Person.getByUserId(userId);
+    // Check if user has family
+    const [familyRows] = await db.query(
+      "SELECT id FROM families WHERE user_id = ?",
+      [userId]
+    );
 
-    if (personRows.length === 0) {
-      // No family, show family form
-      return res.render("family-form", { addChildMode: false });
+    if (familyRows.length === 0) {
+      // No family, redirect to form
+      return res.redirect("/family-form");
     }
 
-    const familyId = personRows[0].family_id;
+    const familyId = familyRows[0].id;
     const [members] = await db.query(
       "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
       [familyId]
     );
 
     if (members.length > 0) {
-      // Has family, show my-family
-      const members = await FamilyMember.getByFamilyId(familyId);
-      return res.render("my-family", {
-        family: personRows[0],
-        members
-      });
+      // Has family, redirect to my-family
+      return res.redirect("/my-family");
     }
 
-    // No members yet, show form
-    return res.render("family-form", { addChildMode: false });
+    // No members yet, redirect to form
+    return res.redirect("/family-form");
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
@@ -202,25 +201,21 @@ exports.saveFamily = async (req, res) => {
     );
 
     if (existingPersons.length > 0) {
-      throw new Error("User already has a family record");
+      return res.status(409).json({
+        message: "Family already exists",
+        redirect: "/family/edit"
+      });
     }
 
     // 1️⃣ create family
     const familyCode = `FAM-${Date.now()}`;
     const [familyResult] = await connection.query(
-      "INSERT INTO families (family_code) VALUES (?)",
-      [familyCode]
+      "INSERT INTO families (user_id, family_code) VALUES (?, ?)",
+      [userId, familyCode]
     );
 
     const familyId = familyResult.insertId;
     console.log("🏠 Created family with ID:", familyId, "and code:", familyCode);
-
-    // 2️⃣ link user → family
-    await connection.query(
-      "INSERT INTO persons (user_id, family_id, husband_name) VALUES (?, ?, ?)",
-      [userId, familyId, husband_name]
-    );
-    console.log("👤 Linked user to family");
 
     // 3️⃣ insert family members
     console.log("🔄 Starting member inserts, members count:", members.length);
@@ -418,7 +413,7 @@ exports.checkFamilyExists = async (req, res) => {
     const userId = req.session.user.id;
 
     const [rows] = await db.query(
-      "SELECT id FROM persons WHERE user_id = ? LIMIT 1",
+      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
       [userId]
     );
 
@@ -434,17 +429,22 @@ exports.checkFamilyExists = async (req, res) => {
 exports.myFamily = async (req, res) => {
   const userId = req.session.user.id;
 
-  const person = await Person.getByUserId(userId);
+  // Get family ID from families table
+  const [familyRows] = await db.query(
+    "SELECT id FROM families WHERE user_id = ?",
+    [userId]
+  );
 
-  if (!person) {
+  if (familyRows.length === 0) {
     // No family yet
     return res.render("family-form");
   }
 
-  const members = await FamilyMember.getByFamilyId(person.family_id);
+  const familyId = familyRows[0].id;
+  const members = await FamilyMember.getByFamilyId(familyId);
 
   res.render("my-family", {
-    family: person,
+    family: { family_id: familyId },
     members
   });
 };
@@ -452,15 +452,17 @@ exports.myFamily = async (req, res) => {
 exports.myFamilyJson = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const Person = require("../models/Person");
 
-    const [personRows] = await Person.getByUserId(userId);
+    const [familyRows] = await db.query(
+      "SELECT id FROM families WHERE user_id = ?",
+      [userId]
+    );
 
-    if (personRows.length === 0) {
+    if (familyRows.length === 0) {
       res.json({ success: false });
     } else {
-      const familyId = personRows[0].family_id;
-      const [members] = await db.promise().query(
+      const familyId = familyRows[0].id;
+      const [members] = await db.query(
         "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
         [familyId]
       );
