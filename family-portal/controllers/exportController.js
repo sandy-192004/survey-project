@@ -2,13 +2,15 @@ const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const Admin = require('../models/admin');
 
-exports.exportToExcel = (req, res) => {
-  // Get all data by setting a very large limit
-  Admin.getAll(1, 10000, (err, data) => {
-    if (err) {
-      console.error('Error fetching data for export:', err);
-      return res.status(500).send('Error exporting data');
-    }
+exports.exportToExcel = async (req, res) => {
+  try {
+    // Get all families
+    const data = await new Promise((resolve, reject) => {
+      Admin.getAll(1, 10000, (err, data) => {
+        if (err) reject(err);
+        else resolve(data);
+      });
+    });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Family Data');
@@ -23,54 +25,91 @@ exports.exportToExcel = (req, res) => {
       { header: 'Occupation', key: 'occupation', width: 20 },
       { header: 'Date of Birth', key: 'dob', width: 15 },
       { header: 'Gender', key: 'gender', width: 10 },
+      { header: 'Photo', key: 'photo', width: 30 },
+      { header: 'Door No', key: 'door_no', width: 10 },
+      { header: 'Street', key: 'street', width: 20 },
       { header: 'District', key: 'district', width: 15 },
-      { header: 'State', key: 'state', width: 15 }
+      { header: 'State', key: 'state', width: 15 },
+      { header: 'Pincode', key: 'pincode', width: 10 }
     ];
 
-    // Add rows
-    data.results.forEach(member => {
-      // Add parent row
+    // Process each family
+    for (const member of data.results) {
+      // Add husband/parent row
       worksheet.addRow({
         family_id: member.id,
-        type: 'Parent',
+        type: 'Husband',
         name: member.name,
-        wife_name: member.wife_name || '',
+        wife_name: '',
         mobile: member.mobile,
         occupation: member.occupation,
         dob: '',
-        gender: '',
+        gender: 'Male',
+        photo: member.husband_photo ? `http://localhost:3000/uploads/${member.husband_photo}` : '',
+        door_no: member.door_no,
+        street: member.street,
         district: member.district,
-        state: member.state
+        state: member.state,
+        pincode: member.pincode
       });
 
-      // Get children for this family
-      Admin.getChildrenByParentId(member.id, (err2, children) => {
-        if (!err2 && children) {
-          children.forEach(child => {
-            worksheet.addRow({
-              family_id: member.id,
-              type: 'Child',
-              name: child.name,
-              wife_name: '',
-              mobile: '',
-              occupation: child.occupation || '',
-              dob: child.date_of_birth ? new Date(child.date_of_birth).toLocaleDateString() : '',
-              gender: child.gender || '',
-              district: '',
-              state: ''
-            });
-          });
-        }
+      // Add wife row if exists
+      if (member.wife_name) {
+        worksheet.addRow({
+          family_id: member.id,
+          type: 'Wife',
+          name: member.wife_name,
+          wife_name: '',
+          mobile: '',
+          occupation: '',
+          dob: '',
+          gender: 'Female',
+          photo: member.wife_photo ? `http://localhost:3000/uploads/${member.wife_photo}` : '',
+          door_no: member.door_no,
+          street: member.street,
+          district: member.district,
+          state: member.state,
+          pincode: member.pincode
+        });
+      }
+
+      // Get and add children
+      const children = await new Promise((resolve, reject) => {
+        Admin.getChildrenByParentId(member.id, (err, children) => {
+          if (err) reject(err);
+          else resolve(children || []);
+        });
       });
-    });
+
+      for (const child of children) {
+        worksheet.addRow({
+          family_id: member.id,
+          type: 'Child',
+          name: child.child_name,
+          wife_name: '',
+          mobile: '',
+          occupation: child.occupation || '',
+          dob: child.date_of_birth ? new Date(child.date_of_birth).toLocaleDateString() : '',
+          gender: child.gender || '',
+          photo: child.photo ? `http://localhost:3000/uploads/children/${child.photo}` : '',
+          door_no: member.door_no,
+          street: member.street,
+          district: member.district,
+          state: member.state,
+          pincode: member.pincode
+        });
+      }
+    }
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=family-data.xlsx');
 
-    workbook.xlsx.write(res).then(() => {
-      res.end();
-    });
-  });
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+    res.status(500).send('Error exporting data');
+  }
 };
 
 exports.exportToPdf = (req, res) => {

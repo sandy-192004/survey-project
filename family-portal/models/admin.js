@@ -7,12 +7,13 @@ exports.getAll = (page, limit, callback) => {
 
   const sql = `
     SELECT f.id AS id, fm_husband.name AS name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
-           fm_husband.district, fm_husband.state, COUNT(fm_child.id) AS children_count
+           fm_husband.door_no, fm_husband.street, fm_husband.district, fm_husband.state, fm_husband.pincode,
+           fm_husband.photo AS husband_photo, fm_wife.photo AS wife_photo, COUNT(fm_child.id) AS children_count
     FROM families f
     LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband' AND fm_husband.member_type = 'parent'
     LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife' AND fm_wife.member_type = 'parent'
     LEFT JOIN family_members fm_child ON f.id = fm_child.family_id AND fm_child.member_type = 'child'
-    GROUP BY f.id, fm_husband.name, fm_wife.name, fm_husband.mobile, fm_husband.occupation, fm_husband.district, fm_husband.state
+    GROUP BY f.id, fm_husband.name, fm_wife.name, fm_husband.mobile, fm_husband.occupation, fm_husband.door_no, fm_husband.street, fm_husband.district, fm_husband.state, fm_husband.pincode, fm_husband.photo, fm_wife.photo
     ORDER BY fm_husband.name ASC
     LIMIT ? OFFSET ?
   `;
