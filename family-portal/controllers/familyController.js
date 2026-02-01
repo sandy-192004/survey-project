@@ -69,21 +69,21 @@
 // // // // // exports.checkFamily = async (req, res) => {
 // // // // //   if (!req.session.user) return res.redirect("/login");
 
-  try {
-    const userId = req.session.user.id;
-    const Person = require("../models/Person");
+//   try {
+//     const userId = req.session.user.id;
+//     const Person = require("../models/Person");
 
-    const [personRows] = await Person.getByUserId(userId);
+//     const [personRows] = await Person.getByUserId(userId);
 
-    if (personRows.length === 0) {
-      return res.redirect("/family-form");
-    }
+//     if (personRows.length === 0) {
+//       return res.redirect("/family-form");
+//     }
 
-    const familyId = personRows[0].family_id;
-    const [members] = await db.query(
-      "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
-      [familyId]
-    );
+//     const familyId = personRows[0].family_id;
+//     const [members] = await db.query(
+//       "SELECT id FROM family_members WHERE family_id = ? LIMIT 1",
+//       [familyId]
+//     );
 
 // // // // //     if (members.length > 0) {
 // // // // //       return res.redirect("/my-family");
@@ -1074,7 +1074,24 @@ exports.saveFamily = async (req, res) => {
 
 // My Family page (EJS render)
 exports.myFamily = async (req, res) => {
-  res.render("my-family");
+  try {
+    const userId = req.session.user.id;
+
+    const person = await Person.getByUserId(userId);
+
+    if (!person) {
+      // No family yet
+      return res.render("family-form");
+    }
+
+    const members = await FamilyMember.getByFamilyId(person.family_id);
+
+    // ✅ FIXED: Pass members to EJS so it’s defined
+    res.render("my-family", { family: person[0], members });
+  } catch (err) {
+    console.error("Error loading family:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
 };
 
 // ===================== VIEW SPECIFIC FAMILY =====================
