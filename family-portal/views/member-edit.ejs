@@ -125,6 +125,8 @@
   </div>
 </form>
 
+<script src="/js/family.js"></script>
+
 <script>
   function handlePhotoSelect(input, previewId) {
     if(input.files && input.files[0]){
@@ -159,7 +161,7 @@
         document.querySelector('input[name="pincode"]').value = member.pincode || '';
 
         if (member.photo) {
-          document.getElementById('photo_preview').src = '/uploads/' + member.photo;
+          document.getElementById('photo_preview').src = '/' + member.photo;
           document.getElementById('photo_preview').style.display = 'block';
         }
       }

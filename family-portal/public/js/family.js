@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
           showConfirmButton: false,
           timer: 3000
         }).then(() => {
-          window.location.href = "/my-family";
+          window.location.href = "/dashboard";
         });
       } else {
         Swal.fire({

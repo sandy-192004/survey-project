@@ -4,4 +4,7 @@
 - [x] Add update-family route in routes
 - [x] Implement updateFamily controller method
 - [x] Fix SQL query in showFamilyEdit to join with families table
+- [x] Add state/district dropdown JS to edit views
+- [x] Fix image URL paths to remove double /uploads
+- [x] Fix file upload handling for edit forms
 - [ ] Test the edit and update functionality

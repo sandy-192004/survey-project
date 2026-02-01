@@ -60,7 +60,9 @@ const processUpload = (req, res, next) => {
     { name: 'children[2][photo]', maxCount: 1 },
     { name: 'children[3][photo]', maxCount: 1 },
     { name: 'children[4][photo]', maxCount: 1 },
-    { name: 'photo', maxCount: 1 }
+    { name: 'photo', maxCount: 1 },
+    { name: 'husband_photo', maxCount: 1 },
+    { name: 'wife_photo', maxCount: 1 }
   ])(req, res, async (err) => {
     if (err) {
       return next(err);

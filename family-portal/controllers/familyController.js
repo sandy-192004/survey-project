@@ -187,18 +187,18 @@ exports.saveFamily = async (req, res) => {
 
       // Handle file uploads
       let photoPath = null;
-      if (req.files && req.files.length > 0) {
+      if (req.files) {
         if (member_type === 'parent') {
           if (relationship === 'husband') {
-            const husbandFile = req.files.find(f => f.fieldname === 'parent[husband_photo]');
-            if (husbandFile) photoPath = `parents/${husbandFile.filename}`;
+            const husbandFiles = req.files['parent[husband_photo]'];
+            if (husbandFiles && husbandFiles[0]) photoPath = `parents/${husbandFiles[0].filename}`;
           } else if (relationship === 'wife') {
-            const wifeFile = req.files.find(f => f.fieldname === 'parent[wife_photo]');
-            if (wifeFile) photoPath = `parents/${wifeFile.filename}`;
+            const wifeFiles = req.files['parent[wife_photo]'];
+            if (wifeFiles && wifeFiles[0]) photoPath = `parents/${wifeFiles[0].filename}`;
           }
         } else if (member_type === 'child') {
-          const childFile = req.files.find(f => f.fieldname === `children[${i - 2}][photo]`); // Adjust index since parents come first
-          if (childFile) photoPath = `children/${childFile.filename}`;
+          const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
+          if (childFiles && childFiles[0]) photoPath = `children/${childFiles[0].filename}`;
         }
       }
 
@@ -442,17 +442,17 @@ exports.updateChild = async (req, res) => {
   try {
     const id = req.params.id;
     const { name, dob, gender, occupation, relationship, address } = req.body;
-    const photo = req.file ? req.file.filename : null;
+    const photoPath = req.file ? `children/${req.file.filename}` : null;
 
     let sql, params;
 
-    if (photo) {
+    if (photoPath) {
       sql = `
         UPDATE family_members
         SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?, photo=?
         WHERE id=?
       `;
-      params = [name, dob, gender, occupation, relationship, address, photo, id];
+      params = [name, dob, gender, occupation, relationship, address, photoPath, id];
     } else {
       sql = `
         UPDATE family_members
@@ -541,11 +541,13 @@ exports.updateFamily = async (req, res) => {
     // Handle photos
     let husbandPhotoPath = null;
     let wifePhotoPath = null;
-    if (req.files && req.files.length > 0) {
-      const husbandFile = req.files.find(f => f.fieldname === 'husband_photo');
-      if (husbandFile) husbandPhotoPath = `parents/${husbandFile.filename}`;
-      const wifeFile = req.files.find(f => f.fieldname === 'wife_photo');
-      if (wifeFile) wifePhotoPath = `parents/${wifeFile.filename}`;
+    if (req.files) {
+      if (req.files['husband_photo'] && req.files['husband_photo'][0]) {
+        husbandPhotoPath = `parents/${req.files['husband_photo'][0].filename}`;
+      }
+      if (req.files['wife_photo'] && req.files['wife_photo'][0]) {
+        wifePhotoPath = `parents/${req.files['wife_photo'][0].filename}`;
+      }
     }
 
     // Update husband
