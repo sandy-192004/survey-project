@@ -31,28 +31,38 @@ async function loadIndiaData() {
 let childIndex = 0;
 function addChild() {
   const container = document.getElementById("children");
+
   const html = `
   <div class="card p-3 mb-2 child-card" id="child-${childIndex}">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h6 class="mb-0">Child</h6>
       <button type="button" class="btn btn-danger btn-sm" onclick="removeChildRow(${childIndex})">❌ Remove</button>
     </div>
+
     <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" required>
+
     <input type="date" class="form-control mb-2 small" name="children[${childIndex}][dob]">
+
     <select class="form-control mb-2 small" name="children[${childIndex}][gender]">
       <option value="">Select Gender</option>
       <option value="Male">Male</option>
       <option value="Female">Female</option>
       <option value="Other">Other</option>
     </select>
+
     <input class="form-control mb-2 small" name="children[${childIndex}][occupation]" placeholder="Occupation">
+
     <select class="form-control mb-2 small" name="children[${childIndex}][relationship]">
       <option value="">Relationship</option>
       <option value="son">Son</option>
       <option value="daughter">Daughter</option>
     </select>
-    <input type="file" class="form-control small" name="children[${childIndex}][photo]" accept="image/*">
-  </div>`;
+
+    <input type="file" class="form-control small"
+      name="children[${childIndex}][photo]" accept="image/*">
+  </div>
+  `;
+
   container.insertAdjacentHTML("beforeend", html);
   childIndex++;
 }
@@ -76,9 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const formData = new FormData(form);
+
+    // Collect members data from form
     const members = [];
 
-    // Add husband
+    // Add husband (assuming husband_name is the logged-in user)
     const husbandName = formData.get("husband_name");
     if (husbandName) {
       members.push({
@@ -129,9 +141,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Append JSON data
+    // Add members as JSON string to formData
     formData.append("members", JSON.stringify(members));
-    formData.append("husband_name", husbandName);
 
     try {
       const response = await fetch("/save-family", {

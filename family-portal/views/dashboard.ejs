@@ -159,35 +159,67 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Success toast
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true') {
-      const toastElement = document.getElementById('successToast');
-      toastElement.style.display = 'flex';
-      const toast = new bootstrap.Toast(toastElement);
-      toast.show();
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+               <div class="text-center">
+  <h2 style="
+      color: #ffffff;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+  ">
+    Welcome to our temple digital seva portal
+  </h2>
 
-    // Handle family button click
-    $("#familyBtn").on("click", function () {
-      $.get("/family/check", function (res) {
-        if (res.exists) {
-          window.location.href = "/my-family";
-        } else {
-          showFamilyModal(
-            "No Details Found",
-            "No family details found. Please add your family details.",
-            "Add Family",
-            "/family-form"
-          );
+  <p class="lead" style="
+      color: #ffffff;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+  ">
+    Manage family details, book poojas, and participate in temple services with ease.
+    <br>
+    May the divine bless you and your family
+  </p>
+
+  <button id="familyBtn" class="btn btn-primary btn-lg mt-4">Family</button>
+</div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check for success parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            const toastElement = document.getElementById('successToast');
+            toastElement.style.display = 'flex';
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
-      });
-    });
+
+        // Handle family button click
+        $("#familyBtn").on("click", function () {
+          $.get("/family/check", function (res) {
+            if (res.exists) {
+              window.location.href = "/my-family";
+            } else {
+              showFamilyModal(
+                "No Details Found",
+                "No family details found. Please add your family details.",
+                "Add Family",
+                "/family-form"
+              );
+            }
+          });
+        });
 
     function showFamilyModal(title, msg, btnText, redirectUrl) {
       $("#familyModalTitle").text(title);
