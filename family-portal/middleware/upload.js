@@ -53,9 +53,16 @@ const resizeImage = async (filePath, width, height) => {
 
 const processUpload = (req, res, next) => {
   upload.fields([
-    { name: 'husbandPhoto', maxCount: 1 },
-    { name: 'wifePhoto', maxCount: 1 },
-    { name: 'childPhoto', maxCount: 1 }
+    { name: 'parent[husband_photo]', maxCount: 1 },
+    { name: 'parent[wife_photo]', maxCount: 1 },
+    { name: 'children[0][photo]', maxCount: 1 },
+    { name: 'children[1][photo]', maxCount: 1 },
+    { name: 'children[2][photo]', maxCount: 1 },
+    { name: 'children[3][photo]', maxCount: 1 },
+    { name: 'children[4][photo]', maxCount: 1 },
+    { name: 'photo', maxCount: 1 },
+    { name: 'husband_photo', maxCount: 1 },
+    { name: 'wife_photo', maxCount: 1 }
   ])(req, res, async (err) => {
     if (err) {
       return next(err);

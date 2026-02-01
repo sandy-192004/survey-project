@@ -1,172 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>My Family</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
   <style>
+    /* ===== GLOBAL ===== */
+    body {
+      margin: 0;
+      background-color: #f5e6d3;
+      
+    }
+
+    /* ===== FULL WIDTH HEADER ===== */
     .family-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      background: linear-gradient(135deg, #8B4513, #A0522D);
       color: white;
-      padding: 2rem 0;
-      margin-bottom: 2rem;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
     }
+
+    /* ===== SECTION ===== */
+    .section-title {
+      margin: 25px 0 10px;
+      font-weight: bold;
+      color: #5a3e2b;
+    }
+
+    /* ===== ROWS ===== */
+    .parents-row,
+    .children-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    /* ===== CARD ===== */
     .member-card {
-      border: none;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
-      margin-bottom: 1rem;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
+      min-width: 420px;
+      max-width: 720px;
+      background-color: #f9f1e6;
+      border-radius: 14px;
+      padding: 100px;
+      position: relative;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-start;
     }
-    .member-card:hover { transform: translateY(-5px); }
+
+    /* ===== LEFT DETAILS ===== */
+    .member-info {
+      flex: 1;
+      padding-right: 19px;
+    }
+
+    .member-name {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #5a3e2b;
+      margin-bottom: 3px;
+    }
+
+    .info-item {
+      font-size: 1rem;
+      color: #4b3621;
+      margin-bottom: 4px;
+    }
+
+    /* ===== PHOTO ===== */
     .member-photo {
-      height: 200px;
+      width: 220px;
+      height: 220px;
       object-fit: cover;
-      border-bottom: 3px solid #667eea;
+      border-radius: 12px;
+      border: 2px solid #d1b89a;
     }
-    .member-info { padding: 1rem; }
-    .member-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; }
-    .info-item { margin-bottom: 0.4rem; display: flex; align-items: center; font-size: 0.9rem; }
-    .info-item i { width: 18px; color: #667eea; margin-right: 0.4rem; font-size: 0.8rem; }
-    .edit-btn, .update-btn { margin: 0.25rem; border-radius: 20px; font-size: 0.85rem; }
-    .no-data { text-align: center; padding: 2rem 1rem; color: #666; }
+
+    /* ===== EDIT ICON ===== */
+    .edit-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #8B4513;
+      color: white;
+      padding: 6px;
+      border-radius: 50%;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ===== ADD CHILD BAR ===== */
+    .add-child-bar {
+      margin: 20px 0;
+      background-color: #8B4513;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
-      .container { padding: 1rem; margin-top: 1rem; }
-      .member-photo { height: 150px; }
-      .member-info { padding: 0.8rem; }
+      .parents-row,
+      .children-row {
+        flex-wrap: wrap;
+      }
+
+      .member-card {
+        min-width: 100%;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <h3 class="section-title">My Family</h3>
 
-    <% if (!members || members.length === 0) { %>
-      <div class="no-data">
-        <h4>No family members found</h4>
-        <p>Please add your family information</p>
-        <a href="/family-form" class="btn btn-primary">Add Family</a>
-      </div>
-    <% } %>
-
-    <% if (members && members.length > 0) { %>
-      <div class="row">
-        <% members.forEach(member => { %>
-          <div class="col-md-4 mb-4">
-            <div class="card member-card shadow-sm">
-              <% if (member.photo) { %>
-                <!-- ✅ Corrected path to show uploaded photos -->
-                <img src="/uploads/<%= member.photo %>" class="card-img-top member-photo" alt="<%= member.name %>">
-              <% } else { %>
-                <div class="member-photo bg-light d-flex align-items-center justify-content-center">
-                  <i class="fas fa-user fa-3x text-muted"></i>
-                </div>
-              <% } %>
-
-              <div class="member-info">
-                <h5 class="member-name"><%= member.name %></h5>
-                <div class="info-item"><i class="fas fa-user-tag"></i><strong>Type:</strong>&nbsp;<%= member.member_type %></div>
-                <div class="info-item"><i class="fas fa-link"></i><strong>Relationship:</strong>&nbsp;<%= member.relationship %></div>
-                <% if (member.mobile) { %>
-                  <div class="info-item"><i class="fas fa-phone"></i><strong>Mobile:</strong>&nbsp;<%= member.mobile %></div>
-                <% } %>
-                <% if (member.occupation) { %>
-                  <div class="info-item"><i class="fas fa-briefcase"></i><strong>Occupation:</strong>&nbsp;<%= member.occupation %></div>
-                <% } %>
-                <% if (member.gender) { %>
-                  <div class="info-item"><i class="fas fa-venus-mars"></i><strong>Gender:</strong>&nbsp;<%= member.gender %></div>
-                <% } %>
-
-                <div class="text-center mt-2">
-                  <button class="btn btn-warning edit-btn" onclick="openEditModal(<%= member.id %>)">✏️ Edit</button>
-                  <button class="btn btn-success update-btn" onclick="updateMember(<%= member.id %>)">💾 Update</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-    <% } %>
+  <!-- HEADER -->
+  <div class="family-header">
+    My Family
   </div>
 
-  <!-- Edit Modal -->
-  <div class="modal fade" id="editModal" tabindex="-1">
+  <div class="container mt-4">
+
+    <% members = members || []; %>
+
+    <% if (!members.length) { %>
+      <div class="text-center mt-4 text-muted">
+        <h4>No family data found</h4>
+        <a href="/family-form" class="btn btn-primary mt-2">Add Family</a>
+      </div>
+    <% } %>
+
+    <!-- ================= PARENTS ================= -->
+    <h4 class="section-title">Parents</h4>
+    <div class="parents-row">
+
+      <% members.forEach(member => { %>
+        <% if (member.member_type === 'parent') { %>
+
+          <div class="member-card">
+            <i class="fas fa-edit edit-icon" onclick="window.location.href='/family-edit'"></i>
+
+            <div class="member-info">
+              <div class="member-name"><%= member.name %></div>
+              <div class="info-item"><b>Relationship:</b> <%= member.relationship %></div>
+              <div class="info-item"><b>Mobile:</b> <%= member.mobile || '-' %></div>
+              <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
+              <div class="info-item"><b>Gender:</b>
+                <%
+                  let gender = member.gender;
+                  if (!gender || gender === '-') {
+                    if (member.relationship === 'husband') gender = 'Male';
+                    else if (member.relationship === 'wife') gender = 'Female';
+                    else gender = '-';
+                  }
+                %>
+                <%= gender %>
+              </div>
+              <div class="info-item"><b>Address:</b> <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-' %></div>
+            </div>
+
+            <% if (member.photo && member.photo.trim() !== "") { %>
+              <% let photoSrc = member.photo; %>
+              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+              <% if (photoSrc.startsWith('uploads/')) { %>
+                <img src="/<%= photoSrc %>" class="member-photo">
+              <% } else { %>
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% } %>
+            <% } else { %>
+              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
+            <% } %>
+          </div>
+
+        <% } %>
+      <% }) %>
+
+    </div>
+
+    <!-- ================= CHILDREN ================= -->
+    <h4 class="section-title">Children</h4>
+    <div class="children-row">
+
+      <% members.forEach(member => { %>
+        <% if (member.member_type === 'child') { %>
+
+          <div class="member-card">
+            <i class="fas fa-edit edit-icon" onclick="window.location.href='/member-edit/<%= member.id %>'"></i>
+
+            <div class="member-info">
+              <div class="member-name"><%= member.name %></div>
+              <div class="info-item"><b>Relationship:</b> <%= member.relationship || '-' %></div>
+              <div class="info-item"><b>DOB:</b>
+                <%= member.dob
+                    ? new Date(member.dob).toISOString().split('T')[0]
+                    : '-'
+                %>
+              </div>
+              <div class="info-item"><b>Gender:</b>
+                <%
+                  let gender = member.gender;
+                  if (!gender || gender === '-') {
+                    if (member.relationship === 'husband') gender = 'Male';
+                    else if (member.relationship === 'wife') gender = 'Female';
+                    else gender = '-';
+                  }
+                %>
+                <%= gender %>
+              </div>
+              <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
+              <div class="info-item"><b>Address:</b> <%= member.door_no || '-' %></div>
+            </div>
+
+            <% if (member.photo && member.photo.trim() !== "") { %>
+              <% let photoSrc = member.photo; %>
+              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+              <% if (photoSrc.startsWith('uploads/')) { %>
+                <img src="/<%= photoSrc %>" class="member-photo">
+              <% } else { %>
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% } %>
+            <% } else { %>
+              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
+            <% } %>
+          </div>
+
+        <% } %>
+      <% }) %>
+
+    </div>
+
+    <div class="add-child-bar" data-bs-toggle="modal" data-bs-target="#addChildModal">
+      + Add Child
+    </div>
+
+  </div>
+
+  <!-- ADD CHILD MODAL (UI ONLY) -->
+  <div class="modal fade" id="addChildModal" tabindex="-1">
     <div class="modal-dialog">
-      <form id="editForm" class="modal-content" enctype="multipart/form-data">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">Edit Family Member</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-content">
+
+        <div class="modal-header" style="background:#A0522D;color:white;">
+          <h5 class="modal-title">Add Child</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
         <div class="modal-body">
-          <input type="hidden" id="editId" name="id">
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" id="editName" name="name" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Mobile</label>
-            <input type="text" id="editMobile" name="mobile" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Occupation</label>
-            <input type="text" id="editOccupation" name="occupation" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Photo</label>
-            <input type="file" id="editPhoto" name="photo" class="form-control">
-          </div>
+          <input class="form-control mb-2" placeholder="Child Name">
+          <input type="date" class="form-control mb-2">
+          <select class="form-control mb-2">
+            <option>Select Gender</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+          <input class="form-control mb-2" placeholder="Occupation">
+          <select class="form-control mb-2">
+            <option>Relationship</option>
+            <option>Son</option>
+            <option>Daughter</option>
+          </select>
+          <input type="file" class="form-control">
         </div>
+
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary">Save</button>
         </div>
-      </form>
+
+      </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    function openEditModal(id) {
-      fetch('/family/edit/' + id)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById('editId').value = data.member.id;
-            document.getElementById('editName').value = data.member.name;
-            document.getElementById('editMobile').value = data.member.mobile || '';
-            document.getElementById('editOccupation').value = data.member.occupation || '';
-            new bootstrap.Modal(document.getElementById('editModal')).show();
-          } else {
-            alert('Failed to load member details.');
-          }
-        })
-        .catch(() => alert('Error fetching member info'));
-    }
 
-    document.getElementById('editForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('editId').value;
-      const formData = new FormData(e.target);
-      const res = await fetch('/family/update/' + id, {
-        method: 'POST',
-        body: formData
-      });
-      const result = await res.json();
-      if (result.success) {
-        alert('Member updated successfully!');
-        location.reload();
-      } else {
-        alert('Update failed: ' + result.message);
-      }
-    });
-
-    function updateMember(id) {
-      alert('This button can later trigger a status or live update if needed.');
-    }
-  </script>
 </body>
 </html>

@@ -97,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         member_type: "parent",
         name: husbandName,
         relationship: "husband",
+        gender: formData.get("parent[husband_gender]") || "male",
         mobile: formData.get("parent[mobile]") || null,
         occupation: formData.get("parent[occupation]") || null,
         door_no: formData.get("parent[door_no]") || null,
@@ -114,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         member_type: "parent",
         name: wifeName,
         relationship: "wife",
+        gender: formData.get("parent[wife_gender]") || "female",
         mobile: formData.get("parent[mobile_wife]") || null,
         occupation: formData.get("parent[occupation_wife]") || null,
         door_no: formData.get("parent[door_no]") || null,
@@ -148,19 +150,42 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/save-family", {
         method: "POST",
         body: formData,
-        credentials: "include" // ✅ Keep session cookie
+        credentials: "include"
       });
 
-      const result = await response.json();
-      if (result.success) {
-        alert("Family saved successfully ✅");
-        window.location.href = "/dashboard";
+      const text = await response.text(); // FIRST read raw response
+
+      let result;
+      try {
+        result = JSON.parse(text); // Try to parse manually
+      } catch (err) {
+        console.error("Server did NOT return JSON. Raw response:", text);
+        alert("Server error: Invalid response from server. Check backend.");
+        return;
+      }
+
+      if (result.success && result.exists) {
+        window.location.href = "/my-family";
+      } else if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Family Saved Successfully!',
+          text: 'Your family details including children have been saved.',
+          showConfirmButton: false,
+          timer: 3000
+        }).then(() => {
+          window.location.href = "/dashboard";
+        });
       } else {
-        alert(result.message || "Failed to save family");
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to Save Family',
+          text: result.message || 'An error occurred'
+        });
       }
     } catch (error) {
-      console.error("❌ Server error:", error);
-      alert("Server error");
+      console.error("❌ Network error:", error);
+      alert("Server not reachable");
     }
   });
 });
