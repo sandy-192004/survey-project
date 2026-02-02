@@ -165,6 +165,11 @@
         <input class="form-control mb-1" name="children[${index}][name]" placeholder="Child Name">
         <input class="form-control mb-1" name="children[${index}][occupation]" placeholder="Occupation">
         <input type="date" class="form-control mb-1" name="children[${index}][dob]" placeholder="Date of Birth">
+        <select class="form-control mb-1" name="children[${index}][gender]" required>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
         <div class="mb-1">
           <label>Photo</label>
           <input type="file" class="form-control" name="children[${index}][photo]" accept="image/*">
