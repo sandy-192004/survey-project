@@ -2,6 +2,8 @@ const Admin = require("../models/admin");
 const Child = require("../models/Child");
 const fs = require("fs");
 const path = require("path");
+const Admin = require("../models/admin");
+const Child = require("../models/Child");
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -102,6 +104,24 @@ exports.editMember = (req, res) => {
       res.render("admin/edit", { parent: member, wife, children, message });
     });
   });
+
+
+
+// Admin views all families - no search needed for now
+exports.search = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT f.id AS family_id, fm.*
+      FROM families f
+      JOIN family_members fm ON fm.family_id = f.id
+      ORDER BY f.id
+    `);
+
+    res.render("admin/dashboard", { families: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
 };
 
 exports.updateMember = (req, res) => {
@@ -203,6 +223,10 @@ exports.addChild = (req, res) => {
 
   if (req.files && req.files.photo) {
     childData.photo = req.files.photo[0].filename;
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+
   }
   Child.create(childData, (err, result) => {
     if (err) {
@@ -212,6 +236,19 @@ exports.addChild = (req, res) => {
     res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
   });
 };
+
+
+
+
+
+// Update family members
+exports.updateMember = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    // Get existing members
+    const [existingMembers] = await FamilyMember.getByFamilyId(familyId);
 
 
 function deleteRemoved(ids, callback) {

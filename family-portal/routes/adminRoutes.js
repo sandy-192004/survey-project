@@ -3,6 +3,14 @@ const router = express.Router();
 const multer = require("multer");
 const controller = require("../controllers/adminController");
 
+
+
+const exportController = require("../controllers/exportController");
+
+
+const db = require("../config/db");
+
+
 const db = require("../config/db");
 
 const upload = require("../middleware/upload");
@@ -34,5 +42,8 @@ router.get("/edit/:id", controller.editMember);
 
 router.post("/edit/:id", upload.any(), controller.updateMember);
 router.post("/add-child", upload.fields([{ name: 'photo', maxCount: 1 }]), controller.addChild);
+
+router.get("/export/excel", exportController.exportToExcel);
+router.get("/export/pdf", exportController.exportToPdf);
 
 module.exports = router;
