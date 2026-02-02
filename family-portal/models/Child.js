@@ -1,46 +1,33 @@
 const db = require("../config/db");
 
 exports.create = (childData, callback) => {
-  const sql = "INSERT INTO children (family_id, child_name, occupation, photo) VALUES (?, ?, ?, ?)";
-  const values = [childData.parent_id, childData.name, childData.occupation, childData.photo];
+  const sql = "INSERT INTO family_members (family_id, member_type, name, relationship, occupation, dob, gender, photo) VALUES (?, 'child', ?, 'child', ?, ?, ?, ?)";
+  const values = [childData.parent_id, childData.name, childData.occupation, childData.dob, childData.gender, childData.photo];
   db.query(sql, values, callback);
 };
 
 exports.deleteByParent = (parentId, callback) => {
-  const sql = "DELETE FROM children WHERE parent_id = ?";
+  const sql = "DELETE FROM family_members WHERE family_id = ? AND member_type = 'child'";
   db.query(sql, [parentId], callback);
 };
 
 exports.getByParent = (parentId, callback) => {
-  const sql = "SELECT * FROM children WHERE parent_id = ?";
+  const sql = "SELECT id AS child_id, name AS child_name, occupation, dob, gender, photo FROM family_members WHERE family_id = ? AND member_type = 'child'";
   db.query(sql, [parentId], callback);
 };
 
-
 exports.update = (childId, childData, callback) => {
-  let sql = "UPDATE children SET child_name = ?, occupation = ? WHERE child_id = ?";
+  let sql = "UPDATE family_members SET name = ?, occupation = ? WHERE id = ?";
   let values = [childData.name, childData.occupation, childId];
   if (childData.photo !== undefined && childData.photo !== null) {
-    sql = "UPDATE children SET child_name = ?, occupation = ?, photo = ? WHERE child_id = ?";
+    sql = "UPDATE family_members SET name = ?, occupation = ?, photo = ? WHERE id = ?";
     values = [childData.name, childData.occupation, childData.photo, childId];
   }
   db.query(sql, values, callback);
 };
 
 exports.deleteById = (childId, callback) => {
-  const sql = "DELETE FROM children WHERE child_id = ?";
+  const sql = "DELETE FROM family_members WHERE id = ?";
   db.query(sql, [childId], callback);
-};
-
-
-exports.update = (id, childData, callback) => {
-  const sql = "UPDATE children SET name = ?, occupation = ?, dob = ?, gender = ?, photo = ? WHERE child_id = ?";
-  const values = [childData.name, childData.occupation, childData.dob, childData.gender, childData.photo, id];
-  db.query(sql, values, callback);
-};
-
-exports.delete = (id, callback) => {
-  const sql = "DELETE FROM children WHERE child_id = ?";
-  db.query(sql, [id], callback);
 };
 
