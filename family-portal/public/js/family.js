@@ -51,7 +51,13 @@ function addChild() {
       <option value="son">Son</option>
       <option value="daughter">Daughter</option>
     </select>
-    <input type="file" class="form-control small" name="children[${childIndex}][photo]" accept="image/*">
+    <div class="d-flex gap-2 mb-2">
+      <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('child_${childIndex}')">Select Photo</button>
+      <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('child_${childIndex}')">Capture Photo</button>
+    </div>
+    <input type="file" id="child_${childIndex}_file" class="form-control small d-none" name="children[${childIndex}][photo]" accept="image/*" onchange="handlePhotoSelect(this, 'child_${childIndex}_preview')">
+    <div id="child_${childIndex}_size" class="small text-muted"></div>
+    <img id="child_${childIndex}_preview" class="img-thumbnail">
   </div>`;
   container.insertAdjacentHTML("beforeend", html);
   childIndex++;
@@ -63,6 +69,113 @@ function removeChildRow(index) {
 }
 
 window.addEventListener("DOMContentLoaded", loadIndiaData);
+
+// ================== ADD CHILD MODAL HANDLING ==================
+document.addEventListener("DOMContentLoaded", () => {
+  const addChildForm = document.getElementById("addChildForm");
+  if (addChildForm) {
+    addChildForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(addChildForm);
+
+      try {
+        const response = await fetch("/add-child", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById("addChildModal"));
+          modal.hide();
+
+          // Reset form
+          addChildForm.reset();
+
+          // Show success message and reload page
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Child Added Successfully!',
+              text: result.message,
+              showConfirmButton: false,
+              timer: 1500
+            }).then(() => {
+              // Reload page to show new child
+              window.location.reload();
+            });
+          } else {
+            alert('Child Added Successfully!');
+            window.location.reload();
+          }
+        } else {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed to Add Child',
+              text: result.message || 'An error occurred'
+            });
+          } else {
+            alert('Failed to Add Child: ' + (result.message || 'An error occurred'));
+          }
+        }
+      } catch (error) {
+        console.error("Add child error:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Network Error',
+          text: 'Failed to connect to server'
+        });
+      }
+    });
+  }
+
+  // Load states when add child modal is shown
+  const addChildModal = document.getElementById("addChildModal");
+  if (addChildModal) {
+    addChildModal.addEventListener('show.bs.modal', () => {
+      loadStatesForChildModal();
+    });
+  }
+});
+
+async function loadStatesForChildModal() {
+  const stateSelect = document.getElementById("childState");
+  if (!stateSelect) return;
+
+  try {
+    const res = await fetch("/data/india-states-districts.json");
+    const indiaData = await res.json();
+
+    Object.keys(indiaData).forEach(state => {
+      const option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+
+    stateSelect.addEventListener("change", function () {
+      const selectedState = this.value;
+      const districtSelect = document.getElementById("childDistrict");
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+
+      if (selectedState && indiaData[selectedState]) {
+        indiaData[selectedState].forEach(district => {
+          const option = document.createElement("option");
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Error loading states for child modal:", error);
+  }
+}
 
 // ================== FORM SUBMIT ==================
 document.addEventListener("DOMContentLoaded", () => {
@@ -173,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     } catch (error) {
-      console.error("❌ Network error:", error);
+      console.error("Network error:", error);
       alert("Server not reachable");
     }
   });

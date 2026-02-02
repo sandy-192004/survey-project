@@ -8,8 +8,6 @@ const exportCtrl = require("../controllers/exportController");
 const { isLoggedIn } = require("../middleware/auth");
 const { processUpload } = require("../middleware/upload");
 
-console.log("🧩 exportCtrl keys:", Object.keys(exportCtrl));
-console.log("🧩 familyController keys:", Object.keys(controller));
 
 // ================== EXPORT ROUTES ==================
 router.get("/export/excel", exportCtrl.excel);
@@ -62,7 +60,7 @@ router.get("/profile", (req, res) => {
 
 // ================== TEST ==================
 router.post("/test-save-family", upload.any(), (req, res) => {
-  console.log("🔍 TEST ENDPOINT - req.body:", req.body);
+  console.log("TEST ENDPOINT - req.body:", req.body);
   res.json({ success: true, message: "Test endpoint working" });
 });
 

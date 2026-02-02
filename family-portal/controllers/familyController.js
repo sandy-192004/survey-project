@@ -67,12 +67,33 @@ exports.logout = (req, res) => {
 
 /* ================= DASHBOARD ================= */
 
-exports.dashboard = (req, res) => {
+exports.dashboard = async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
-  res.render("dashboard", {
-    user: req.session.user,
-    message: req.query.message || null
-  });
+
+  try {
+    const userId = req.session.user.id;
+
+    // Check if user has a family
+    const [families] = await db.query(
+      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
+
+    const hasFamily = families.length > 0;
+
+    res.render("dashboard", {
+      user: req.session.user,
+      message: req.query.message || null,
+      hasFamily
+    });
+  } catch (err) {
+    console.error("Dashboard error:", err);
+    res.render("dashboard", {
+      user: req.session.user,
+      message: req.query.message || null,
+      hasFamily: false
+    });
+  }
 };
 
 /* ================= FAMILY CHECK ================= */
@@ -127,7 +148,7 @@ exports.saveFamily = async (req, res) => {
       try {
         members = JSON.parse(members);
       } catch (e) {
-        console.error("❌ Failed to parse members JSON:", e);
+        console.error("Failed to parse members JSON:", e);
         members = [];
       }
     }
@@ -230,21 +251,21 @@ exports.saveFamily = async (req, res) => {
 
     res.json({
       success: true,
-      message: "✅ Family details saved successfully!",
+      message: "Family details saved successfully!",
       familyId,
       familyCode
     });
 
   } catch (err) {
     await connection.rollback();
-    console.error("🔥 SAVE FAMILY ERROR 🔥");
+    console.error("SAVE FAMILY ERROR");
     console.error("Message:", err.message);
     console.error("SQL:", err.sqlMessage);
     console.error("Stack:", err.stack);
 
     res.status(500).json({
       success: false,
-      message: "❌ Failed to save family data",
+      message: "Failed to save family data",
       error: err.message,
       sql: err.sqlMessage
     });
@@ -255,14 +276,13 @@ exports.saveFamily = async (req, res) => {
 
 // My Family page (EJS render)
 exports.myFamily = async (req, res) => {
-  console.log("🔥 myFamily controller HIT");
+  console.log("myFamily controller HIT");
 
   try {
     const userId = req.session.user.id;
 
     let family = null;
-    let members = []; // ⬅️ GUARANTEED
-
+    let members = []; 
     const [families] = await db.query(
       "SELECT * FROM families WHERE user_id = ? LIMIT 1",
       [userId]
@@ -279,16 +299,14 @@ exports.myFamily = async (req, res) => {
       members = rows || [];
     }
 
-    // 🔥 ALWAYS PASS members
     return res.render("my-family", {
       family,
       members
     });
 
   } catch (err) {
-    console.error("🔥 myFamily ERROR:", err);
+    console.error("myFamily ERROR:", err);
 
-    // 🔥 EVEN ON ERROR
     return res.render("my-family", {
       family: null,
       members: []
@@ -335,7 +353,7 @@ exports.getMyFamilyJson = async (req, res) => {
     res.json({ success: true, members });
 
   } catch (err) {
-    console.error("❌ Error fetching family JSON:", err);
+    console.error("Error fetching family JSON:", err);
     res.json({ success: false });
   }
 };
@@ -349,8 +367,8 @@ exports.addChild = async (req, res) => {
     }
     const userId = req.session.user.id;
 
-    const { name, dob, gender, occupation, relationship, address } = req.body;
-    const photoPath = req.file ? `children/${req.file.filename}` : null;
+    const { name, dob, gender, occupation, relationship, door_no, street, pincode, state, district } = req.body;
+    const photoPath = req.files && req.files['photo'] && req.files['photo'][0] ? `children/${req.files['photo'][0].filename}` : null;
     const validRelationship = relationship || 'other';
 
     // Get family_id from families table
@@ -371,8 +389,8 @@ exports.addChild = async (req, res) => {
     // Insert child into family_members
     const sql = `
       INSERT INTO family_members
-      (family_id, member_type, name, relationship, dob, gender, occupation, door_no, photo)
-      VALUES (?, 'child', ?, ?, ?, ?, ?, ?, ?)
+      (family_id, member_type, name, relationship, dob, gender, occupation, door_no, street, pincode, state, district, photo)
+      VALUES (?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const [result] = await db.query(sql, [
@@ -382,7 +400,11 @@ exports.addChild = async (req, res) => {
       dob || null,
       gender || null,
       occupation || null,
-      address || null,
+      door_no || null,
+      street || null,
+      pincode || null,
+      state || null,
+      district || null,
       photoPath
     ]);
 

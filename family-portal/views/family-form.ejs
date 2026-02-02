@@ -88,7 +88,12 @@
       </div>
 
       <h5 class="mt-4 mb-3 small">Photo</h5>
-      <input type="file" class="form-control small" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'child_preview')">
+      <div class="d-flex gap-2 mb-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('child')">Select Photo</button>
+        <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('child')">Capture Photo</button>
+      </div>
+      <input type="file" id="child_file" class="form-control small d-none" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'child_preview')">
+      <div id="child_size" class="small text-muted"></div>
       <img id="child_preview" class="img-thumbnail">
 
       <div class="mt-4">
@@ -126,12 +131,22 @@
           <h5 class="mb-3 small">Photos</h5>
           <div class="mb-3">
             <label class="form-label small">Husband Photo</label>
-            <input type="file" class="form-control small" name="parent[husband_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
+            <div class="d-flex gap-2 mb-2">
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('husband')">Select Photo</button>
+              <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('husband')">Capture Photo</button>
+            </div>
+            <input type="file" id="husband_file" class="form-control small d-none" name="parent[husband_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
+            <div id="husband_size" class="small text-muted"></div>
             <img id="husband_preview" class="img-thumbnail">
           </div>
           <div class="mb-3">
             <label class="form-label small">Wife Photo</label>
-            <input type="file" class="form-control small" name="parent[wife_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
+            <div class="d-flex gap-2 mb-2">
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('wife')">Select Photo</button>
+              <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('wife')">Capture Photo</button>
+            </div>
+            <input type="file" id="wife_file" class="form-control small d-none" name="parent[wife_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
+            <div id="wife_size" class="small text-muted"></div>
             <img id="wife_preview" class="img-thumbnail">
           </div>
         </div>
@@ -172,13 +187,101 @@
 <script>
   function handlePhotoSelect(input, previewId) {
     if(input.files && input.files[0]){
+      const file = input.files[0];
       const reader = new FileReader();
       reader.onload = function(e){
         const img = document.getElementById(previewId);
         img.src = e.target.result;
         img.style.display = 'block';
+
+        // Display file size
+        const sizeElement = document.getElementById(previewId.replace('_preview', '_size'));
+        if (sizeElement) {
+          const sizeKB = (file.size / 1024).toFixed(2);
+          sizeElement.textContent = `Size: ${sizeKB} KB`;
+        }
       }
-      reader.readAsDataURL(input.files[0]);
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function selectPhoto(type) {
+    const fileInput = document.getElementById(`${type}_file`);
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  async function capturePhoto(type) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+
+      // Create modal for camera
+      const modal = document.createElement('div');
+      modal.className = 'modal fade show';
+      modal.style.display = 'block';
+      modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Capture Photo</h5>
+              <button type="button" class="btn-close" onclick="closeCameraModal()"></button>
+            </div>
+            <div class="modal-body text-center">
+              <video id="cameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>
+              <br><br>
+              <button type="button" class="btn btn-success" onclick="takePhoto('${type}')">Take Photo</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const videoElement = modal.querySelector('#cameraVideo');
+      videoElement.srcObject = stream;
+
+      // Store stream globally for cleanup
+      window.currentStream = stream;
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      alert('Unable to access camera. Please check permissions.');
+    }
+  }
+
+  function takePhoto(type) {
+    const video = document.querySelector('#cameraVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+      const file = new File([blob], 'captured-photo.jpg', { type: 'image/jpeg' });
+
+      // Create a DataTransfer to simulate file input
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const fileInput = document.getElementById(`${type}_file`);
+      if (fileInput) {
+        fileInput.files = dt.files;
+        handlePhotoSelect(fileInput, `${type}_preview`);
+      }
+
+      closeCameraModal();
+    }, 'image/jpeg', 0.8);
+  }
+
+  function closeCameraModal() {
+    const modal = document.querySelector('.modal.fade.show');
+    if (modal) {
+      document.body.removeChild(modal);
+    }
+    if (window.currentStream) {
+      window.currentStream.getTracks().forEach(track => track.stop());
     }
   }
 </script>
@@ -207,7 +310,12 @@
         <textarea id="childAddress" class="form-control mb-2" placeholder="Address" style="font-family: Arial, sans-serif;"></textarea>
 
         <label style="font-family: Arial, sans-serif;">Child Photo</label>
-        <input type="file" id="childPhoto" class="form-control mb-2" style="font-family: Arial, sans-serif;">
+        <div class="d-flex gap-2 mb-2">
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('modal_child')">Select Photo</button>
+          <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('modal_child')">Capture Photo</button>
+        </div>
+        <input type="file" id="childPhoto" class="form-control mb-2 d-none" style="font-family: Arial, sans-serif;" accept="image/*" onchange="handlePhotoSelect(this, 'childPhotoPreview')">
+        <div id="modal_child_size" class="small text-muted"></div>
         <img id="childPhotoPreview" style="max-width:100px; display:none;">
       </div>
 

@@ -42,7 +42,7 @@ app.use("/admin", adminSearchRoutes);
 
 // ================== ERROR HANDLER ==================
 app.use((err, req, res, next) => {
-  console.error("🔥 GLOBAL ERROR:", err);
+  console.error("GLOBAL ERROR:", err);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
@@ -52,5 +52,5 @@ app.use((err, req, res, next) => {
 
 // ================== SERVER START ==================
 app.listen(3000, () => {
-  console.log("✅ Server running on http://localhost:3000");
+  console.log("Server running on http://localhost:3000");
 });
