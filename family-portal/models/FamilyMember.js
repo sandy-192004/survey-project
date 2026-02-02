@@ -3,7 +3,6 @@ const db = require("../config/db");
 /**
  * Create a family member (parent or child)
  */
-
 exports.create = async (data) => {
   const sql = `INSERT INTO family_members
      (family_id, member_type, name, relationship, mobile, occupation,
@@ -26,19 +25,14 @@ exports.create = async (data) => {
     data.photo
   ];
   await db.promise().query(sql, params);
-
-exports.create = (memberData, callback) => {
-  const sql = "INSERT INTO family_members SET ?";
-  db.query(sql, memberData, callback);
-
 };
 
 /**
  * Update a family member by ID
  */
-exports.update = (memberId, memberData, callback) => {
+exports.update = async (memberId, memberData) => {
   const sql = "UPDATE family_members SET ? WHERE id = ?";
-  db.query(sql, [memberData, memberId], callback);
+  await db.promise().query(sql, [memberData, memberId]);
 };
 
 /**
