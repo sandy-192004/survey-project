@@ -57,9 +57,41 @@ exports.logout = (req, res) => {
 
 /* ================= DASHBOARD ================= */
 
-exports.dashboard = (req, res) => {
+exports.dashboard = async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
-  res.render("dashboard");
+
+  try {
+    const userId = req.session.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 9;
+    const offset = (page - 1) * limit;
+
+    const Person = require("../models/Person");
+
+    const [personRows] = await Person.getByUserId(userId);
+
+    if (personRows.length === 0) {
+      return res.render("dashboard", { results: [], totalPages: 0, currentPage: 1 });
+    }
+
+    const familyId = personRows[0].family_id;
+
+    const [rows] = await db.promise().query("SELECT * FROM family_members WHERE family_id = ? ORDER BY id LIMIT ? OFFSET ?", [familyId, limit, offset]);
+
+    const [countResult] = await db.promise().query("SELECT COUNT(*) AS total FROM family_members WHERE family_id = ?", [familyId]);
+
+    const totalPages = Math.ceil(countResult[0].total / limit);
+
+    res.render("dashboard", {
+      results: rows,
+      totalPages,
+      currentPage: page
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
 };
 
 /* ================= FAMILY LOGIC ================= */

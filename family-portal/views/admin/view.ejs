@@ -29,10 +29,10 @@
 
     <h6>Photos</h6>
     <% if (member.husband_photo) { %>
-      <p><strong>Husband Photo:</strong> <img src="/uploads/<%= member.husband_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+      <p><strong>Husband Photo:</strong> <img src="/uploads/parents/<%= member.husband_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
     <% } %>
     <% if (member.wife_photo) { %>
-      <p><strong>Wife Photo:</strong> <img src="/uploads/<%= member.wife_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+      <p><strong>Wife Photo:</strong> <img src="/uploads/parents/<%= member.wife_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
     <% } %>
 
     <h6>Address</h6>
@@ -62,7 +62,7 @@
 
         <p><strong>Gender:</strong> <%= child.gender %></p>
         <% if (child.photo) { %>
-          <p><strong>Photo:</strong> <img src="/uploads/<%= child.photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+          <p><strong>Photo:</strong> <img src="/uploads/children/<%= child.photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
         <% } %>
       </div>
     <% }); %>
