@@ -8,11 +8,13 @@
 
 <div class="container py-4">
 
-  <%- include("search-filter-form") %>
+<%- include("search-filter-form") %>
+
+  <p>Debug: Results count: <%= results.length %></p>
 
   <div class="row g-4">
     <% results.forEach(member => { %>
-      <div class="col-md-4">
+      <div class="col-4">
         <div class="card shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><%= member.name %></h5>

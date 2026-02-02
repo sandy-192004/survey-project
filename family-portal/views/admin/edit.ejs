@@ -25,7 +25,11 @@
     <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
   </div>
 
+
+  <form method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
+
   <form method="POST" action="/admin/edit/<%= parent.family_id %>" enctype="multipart/form-data">
+
     <!-- Parent Details -->
     <div class="card mb-4">
       <div class="card-header"><h5>Husband Details</h5></div>
@@ -37,7 +41,7 @@
           <label>Husband Photo</label>
           <input type="file" class="form-control" name="husband_photo" accept="image/*">
           <% if (parent.husband_photo) { %>
-            <img src="/uploads/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
+            <img src="/uploads/parents/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
           <% } %>
         </div>
         <h6>Address</h6>
@@ -61,7 +65,7 @@
           <label>Wife Photo</label>
           <input type="file" class="form-control" name="wife_photo" accept="image/*">
           <% if (wife.photo) { %>
-            <img src="/uploads/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
+            <img src="/uploads/parents/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
           <% } %>
         </div>
         <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>" placeholder="Door No">
@@ -88,7 +92,7 @@
                 <label>Photo</label>
                 <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
                 <% if (c.photo) { %>
-                  <img src="/uploads/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width:100px;">
+                  <img src="/uploads/children/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width:100px;">
                 <% } %>
               </div>
               <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
@@ -119,7 +123,7 @@
       </div>
       <div class="modal-body">
         <form method="POST" action="/admin/add-child" enctype="multipart/form-data">
-          <input type="hidden" name="parent_id" value="<%= parent.id %>">
+          <input type="hidden" name="family_id" value="<%= familyId %>">
           <div class="row">
             <div class="col-md-6 mb-2">
               <label class="form-label">Name</label>
@@ -182,3 +186,5 @@
 
 </body>
 </html>
+
+
