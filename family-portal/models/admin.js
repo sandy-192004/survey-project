@@ -118,10 +118,24 @@ exports.updateMember = (id, data, callback) => {
   db.query(sqlHusband, husbandParams, (err) => {
     if (err) return callback(err);
 
+
+    // Update husband family_member
+    const sqlHusband = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ?';
+    const husbandParams = [data.name, data.mobile, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, id, 'husband'];
+    db.query(sqlHusband, husbandParams, (err2) => {
+      if (err2) return callback(err2);
+
+      // Update wife family_member
+      const sqlWife = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ?';
+      const wifeParams = [data.wife_name, data.wife_mobile, data.wife_occupation, data.wife_door_no, data.wife_street, data.wife_district, data.wife_state, data.wife_pincode, data.wife_photo, id, 'wife'];
+      db.query(sqlWife, wifeParams, callback);
+    });
+
     // Update wife family_member
     const sqlWife = 'UPDATE family_members SET name = ?, photo = ? WHERE family_id = ? AND relationship = ? AND member_type = ?';
     const wifeParams = [data.wife_name, data.wife_photo, id, 'wife', 'parent'];
     db.query(sqlWife, wifeParams, callback);
+
   });
 };
 

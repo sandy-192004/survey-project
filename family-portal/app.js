@@ -11,7 +11,6 @@ const adminSearchRoutes = require("./routes/adminSearchRoutes");
 const db = require("./config/db");
 const app = express();
 
-// Initialize database tables
 
 
 
