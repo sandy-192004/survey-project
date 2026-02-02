@@ -135,3 +135,5 @@ exports.getChildrenByParentId = (parentId, callback) => {
   const sql = 'SELECT id AS child_id, name AS child_name, occupation, dob AS date_of_birth, gender, photo FROM family_members WHERE family_id = ? AND member_type = ?';
   db.query(sql, [parentId, 'child'], callback);
 };
+
+

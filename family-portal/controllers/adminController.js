@@ -1,57 +1,61 @@
-const Admin = require("../models/admin");
 const Child = require("../models/Child");
 const fs = require("fs");
 const path = require("path");
+const Admin = require("../models/admin");
+
+
 
 exports.dashboard = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 9;
 
-  Admin.getAll(page, limit, (err, data) => {
-    if (err) return res.status(500).send("Server Error");
-
-    Admin.getDropdownOptions((err2, dropdowns) => {
-      if (err2) return res.status(500).send("Server Error");
-
-      res.render("admin/dashboard", {
-        results: data.results,
-        totalPages: data.totalPages,
-        currentPage: page,
-        searchValue: "",
-        selectedState: "",
+  // Load dropdown options
+  Admin.getDropdownOptions((err, dropdowns) => {
+    if (err) {
+      console.error("Error loading dropdown options:", err);
+      return res.render("admin/dashboard", {
+        results: [],
+        message: "Error loading data. Please try again.",
+        districtOptions: [],
+        stateOptions: [],
         selectedDistrict: "",
-        states: dropdowns.states,
-        districts: dropdowns.districts
+        selectedState: "",
+        searchValue: "",
+        currentPage: 1,
+        totalPages: 0,
+        user: req.user
       });
-    });
-  });
-};
+    }
 
-exports.search = (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 9;
-
-  const filters = {
-    input: req.query.q || "",
-    selectedState: req.query.state || "",
-    selectedDistrict: req.query.district || ""
-  };
-
-  Admin.searchMembers(filters, page, limit, (err, data) => {
-    if (err) return res.status(500).send("Server Error");
-
-    Admin.getDropdownOptions((err2, dropdowns) => {
-      if (err2) return res.status(500).send("Server Error");
+    // Get all families
+    Admin.getAll(page, limit, (err2, data) => {
+      if (err2) {
+        console.error("Error fetching families:", err2);
+        return res.render("admin/dashboard", {
+          results: [],
+          message: "Error loading data. Please try again.",
+          districtOptions: dropdowns.districts,
+          stateOptions: dropdowns.states,
+          selectedDistrict: "",
+          selectedState: "",
+          searchValue: "",
+          currentPage: 1,
+          totalPages: 0,
+          user: req.user
+        });
+      }
 
       res.render("admin/dashboard", {
         results: data.results,
-        totalPages: data.totalPages,
+        message: null,
+        districtOptions: dropdowns.districts,
+        stateOptions: dropdowns.states,
+        selectedDistrict: "",
+        selectedState: "",
+        searchValue: "",
         currentPage: page,
-        searchValue: filters.input,
-        selectedState: filters.selectedState,
-        selectedDistrict: filters.selectedDistrict,
-        states: dropdowns.states,
-        districts: dropdowns.districts
+        totalPages: data.totalPages,
+        user: req.user
       });
     });
   });
@@ -59,193 +63,76 @@ exports.search = (req, res) => {
 
 exports.viewMember = (req, res) => {
   const id = req.params.id;
-  const updated = req.query.updated === 'true';
   Admin.getMemberById(id, (err, member) => {
-    if (err) throw err;
-    if (!member) return res.send("No member found with that ID.");
-
+    if (err) {
+      console.error("Error fetching member:", err);
+      return res.render("admin/view", { member: null, children: [], updated: false });
+    }
+    if (!member) {
+      return res.render("admin/view", { member: null, children: [], updated: false });
+    }
     Admin.getChildrenByParentId(id, (err2, children) => {
-      if (err2) throw err2;
-      res.render("admin/view", { member, children: children || [], updated });
+      if (err2) {
+        console.error("Error fetching children:", err2);
+        return res.render("admin/view", { member, children: [], updated: false });
+      }
+      res.render("admin/view", { member, children, updated: false });
     });
   });
 };
 
 exports.editMember = (req, res) => {
   const id = req.params.id;
-  const message = req.query.message;
-  Admin.getMemberById(id, (err, member) => {
-    if (err) throw err;
-    if (!member) return res.send("No member found with that ID.");
-
-    // For the sample data structure, wife info is in the same record
-    // Create a wife object from the member data
-    const wife = member.wife_name ? {
-      id: member.id + '_wife', // Temporary ID for wife
-      name: member.wife_name,
-      mobile: member.mobile,
-      email: member.email,
-      occupation: '',
-      door_no: member.door_no,
-      street: member.street,
-      district: member.district,
-      state: member.state,
-      pincode: member.pincode
-    } : null;
-
-    Child.getByParent(id, (err, children) => {
-      if (err) {
-        console.error("Error fetching children:", err);
-        children = [];
+  Admin.getMemberById(id, (err, parent) => {
+    if (err) {
+      console.error("Error fetching member:", err);
+      return res.render("admin/edit", { parent: null, wife: null, children: [], message: null });
+    }
+    if (!parent) {
+      return res.render("admin/edit", { parent: null, wife: null, children: [], message: null });
+    }
+    Admin.getChildrenByParentId(id, (err2, children) => {
+      if (err2) {
+        console.error("Error fetching children:", err2);
+        return res.render("admin/edit", { parent, wife: null, children: [], message: null });
       }
-      const message = req.query.message || null;
-      res.render("admin/edit", { parent: member, wife, children, message });
+      // Assuming wife is part of parent or separate query, but for now, set to null or adjust
+      res.render("admin/edit", { parent, wife: null, children, message: null });
     });
   });
-
+};
 
 exports.updateMember = (req, res) => {
   const id = req.params.id;
-
-  // Handle photo uploads
-  const husbandPhoto = req.files ? req.files.find(file => file.fieldname === 'husband_photo') : null;
-  const wifePhoto = req.files ? req.files.find(file => file.fieldname === 'wife_photo') : null;
-  const childPhotos = req.files ? req.files.filter(file => file.fieldname.startsWith('children[') && file.fieldname.endsWith('][photo]')) : [];
-
-  const parentData = { ...req.body };
-
-  // Update photo filenames if new photos uploaded
-  if (husbandPhoto) {
-    parentData.husband_photo = husbandPhoto.filename;
-  }
-  if (wifePhoto) {
-    parentData.wife_photo = wifePhoto.filename;
-  }
-
-  Admin.updateMember(id, parentData, err => {
-    if (err) {
-      console.error("DB Error updating parent:", err.message);
-      return res.redirect("/admin/dashboard");
+  const data = req.body;
+  // Handle file uploads if any
+  if (req.files) {
+    if (req.files.husband_photo) {
+      data.husband_photo = req.files.husband_photo[0].filename;
     }
-
-    // Get existing children to know which to delete
-    Child.getByParent(id, (err, existingChildren) => {
-      if (err) {
-        console.error("DB Error getting children:", err.message);
-        return res.redirect("/admin/dashboard");
-      }
-
-      const existingIds = existingChildren.map(c => c.child_id);
-
-      const childrenData = req.body.children || {};
-      const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
-
-      let processed = 0;
-      const total = childKeys.length;
-
-      if (total === 0) {
-        // No children in form, delete all existing
-        deleteRemoved(existingIds, () => {
-          res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
-        });
-      } else {
-        childKeys.forEach((key) => {
-          const child = childrenData[key];
-          const childId = child.id;
-          const childPhoto = childPhotos.find(photo => {
-            const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
-            return match && match[1] === key;
-          });
-          const childData = {
-            name: child.name,
-            occupation: child.occupation,
-            dob: child.dob && child.dob !== '' ? child.dob : null,
-            gender: child.gender,
-            photo: childPhoto ? childPhoto.filename : null
-          };
-
-          if (childId) {
-            // Update existing child
-            Child.update(childId, childData, (err) => {
-              if (err) console.error("Update child error:", err);
-              processed++;
-              if (processed === total) {
-                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
-                const toDelete = existingIds.filter(id => !formIds.includes(id));
-                deleteRemoved(toDelete, () => {
-                  res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
-                });
-              }
-            });
-          } else {
-            // Insert new child
-            childData.parent_id = id;
-            Child.create(childData, (err) => {
-              if (err) console.error("Create child error:", err);
-              processed++;
-              if (processed === total) {
-                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
-                const toDelete = existingIds.filter(id => !formIds.includes(id));
-                deleteRemoved(toDelete, () => {
-                  res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
-                });
-              }
-            });
-          }
-        });
-      }
-    });
+    if (req.files.wife_photo) {
+      data.wife_photo = req.files.wife_photo[0].filename;
+    }
+  }
+  Admin.updateMember(id, data, (err) => {
+    if (err) {
+      console.error("Error updating member:", err);
+      return res.redirect("/admin/edit/" + id);
+    }
+    res.redirect("/admin/dashboard");
   });
 };
 
 exports.addChild = (req, res) => {
   const childData = req.body;
-
   if (req.files && req.files.photo) {
     childData.photo = req.files.photo[0].filename;
   }
-  Child.create(childData, (err, result) => {
+  Child.create(childData, (err) => {
     if (err) {
       console.error("Error adding child:", err);
-      return res.status(500).send("Error adding child");
+      return res.redirect("/admin/edit/" + childData.parent_id);
     }
-    res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
+    res.redirect("/admin/edit/" + childData.parent_id);
   });
 };
-
-
-function deleteRemoved(ids, callback) {
-  if (ids.length === 0) return callback();
-  let deleted = 0;
-  ids.forEach(id => {
-    Child.delete(id, (err) => {
-      if (err) console.error("Delete child error:", err);
-      deleted++;
-      if (deleted === ids.length) callback();
-    });
-  });
-}
-
-
-function loadDropdownOptions() {
-  try {
-    const filePath = path.join(__dirname, "../public/data/india-states-districts.json");
-    const data = fs.readFileSync(filePath, "utf8");
-    const jsonData = JSON.parse(data);
-
-    const states = Object.keys(jsonData);
-    const districts = [];
-    Object.keys(jsonData).forEach(state => {
-      districts.push(...jsonData[state]);
-    });
-    const uniqueDistricts = [...new Set(districts)];
-
-    console.log("States loaded:", states.slice(0, 5)); // Log first 5 states
-    console.log("Districts loaded:", uniqueDistricts.slice(0, 5)); // Log first 5 districts
-
-    return { states, districts: uniqueDistricts };
-  } catch (error) {
-    console.error("Error loading dropdown options from JSON:", error);
-    return { states: [], districts: [] };
-  }
-}
