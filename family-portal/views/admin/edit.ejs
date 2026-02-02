@@ -25,10 +25,14 @@
     <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
   </div>
 
+
   <form method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
+
+  <form method="POST" action="/admin/edit/<%= parent.family_id %>" enctype="multipart/form-data">
+
     <!-- Parent Details -->
     <div class="card mb-4">
-      <div class="card-header"><h5>Parent Details</h5></div>
+      <div class="card-header"><h5>Husband Details</h5></div>
       <div class="card-body">
         <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" placeholder="Husband Name" required>
         <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" placeholder="Mobile" required>
@@ -75,7 +79,7 @@
 
     <!-- Children -->
     <div class="card mb-4">
-      <div class="card-header"><h5>Children</h5></div>
+      <div class="card-header"><h5>Children Details</h5></div>
       <div class="card-body" id="children">
         <% if (children && children.length > 0) { %>
           <% children.forEach((c, i) => { %>
@@ -155,7 +159,9 @@
 
 <script>
   let index = 0;
-  
+  if (children && children.length) { 
+  index = children.length ;
+  }
 
   $("#addChild").click(() => {
     $("#children").append(`
