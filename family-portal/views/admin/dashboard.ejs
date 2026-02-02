@@ -10,6 +10,11 @@
 
 <%- include("search-filter-form") %>
 
+<div class="mb-3">
+  <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
+  <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
+</div>
+
   <p>Debug: Results count: <%= results.length %></p>
 
   <div class="row g-4">
