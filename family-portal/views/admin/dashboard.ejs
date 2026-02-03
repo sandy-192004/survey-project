@@ -8,11 +8,25 @@
 
 <div class="container py-4">
 
-  <%- include("search-filter-form") %>
+<% if (updated) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Family details updated successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<%- include("search-filter-form") %>
+
+<div class="mb-3">
+  <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
+  <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
+</div>
+
+  <p>Debug: Results count: <%= results.length %></p>
 
   <div class="row g-4">
     <% results.forEach(member => { %>
-      <div class="col-md-4">
+      <div class="col-4">
         <div class="card shadow-sm h-100">
           <div class="card-body">
             <h5 class="card-title"><%= member.name %></h5>
@@ -47,3 +61,5 @@
 </div>
 </body>
 </html>
+ 
+

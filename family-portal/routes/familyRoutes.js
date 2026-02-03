@@ -8,8 +8,6 @@ const exportCtrl = require("../controllers/exportController");
 const { isLoggedIn } = require("../middleware/auth");
 const { processUpload } = require("../middleware/upload");
 
-console.log("🧩 exportCtrl keys:", Object.keys(exportCtrl));
-console.log("🧩 familyController keys:", Object.keys(controller));
 
 // ================== EXPORT ROUTES ==================
 router.get("/export/excel", exportCtrl.excel);
@@ -22,14 +20,6 @@ router.post("/login", controller.login);
 router.get("/register", controller.showRegister);
 router.post("/register", controller.register);
 router.get("/logout", controller.logout);
-router.get("/family-form", controller.showForm);
-router.post(
-  "/save-family",
-  isLoggedIn,
-  upload.any(),
-  controller.saveFamily
-);
-router.get("/family/:familyId", controller.viewFamily);
 router.get("/dashboard", isLoggedIn, controller.dashboard);
 
 // ================== FAMILY FORM ==================
@@ -40,6 +30,12 @@ router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", isLoggedIn, controller.getMyFamilyJson);
+
+// Edit routes
+router.get("/edit-form/:id", isLoggedIn, controller.editForm);
+router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
+router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
+router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
 
 // ================== PLACEHOLDERS ==================
 router.get("/pooja-booking", (req, res) => {
@@ -52,7 +48,7 @@ router.get("/profile", (req, res) => {
 
 // ================== TEST ==================
 router.post("/test-save-family", upload.any(), (req, res) => {
-  console.log("🔍 TEST ENDPOINT - req.body:", req.body);
+  console.log("TEST ENDPOINT - req.body:", req.body);
   res.json({ success: true, message: "Test endpoint working" });
 });
 

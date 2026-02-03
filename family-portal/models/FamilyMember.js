@@ -32,9 +32,9 @@ exports.create = async (data) => {
 /**
  * Update a family member by ID
  */
-exports.update = (memberId, memberData, callback) => {
+exports.update = async (memberId, memberData) => {
   const sql = "UPDATE family_members SET ? WHERE id = ?";
-  db.query(sql, [memberData, memberId], callback);
+  await db.query(sql, [memberData, memberId]);
 };
 
 /**
@@ -58,20 +58,16 @@ exports.getById = (memberId, callback) => {
  * (husband + wife + all children)
  */
 exports.getByFamilyId = async (familyId) => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT *
-      FROM family_members
-      WHERE family_id = ?
-      ORDER BY
-        FIELD(member_type, 'parent', 'child'),
-        created_at
-    `;
-    db.query(sql, [familyId], (err, results) => {
-      if (err) reject(err);
-      else resolve(results);
-    });
-  });
+  const sql = `
+    SELECT *
+    FROM family_members
+    WHERE family_id = ?
+    ORDER BY
+      FIELD(member_type, 'parent', 'child'),
+      created_at
+  `;
+  const [rows] = await db.query(sql, [familyId]);
+  return rows;
 };
 
 /**

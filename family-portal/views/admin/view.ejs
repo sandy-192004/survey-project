@@ -19,28 +19,59 @@
     <div class="alert alert-danger">Member not found</div>
 <% } else { %>
 
-<div class="card">
-  <div class="card-body">
-    <h5 class="card-title">Parent Details</h5>
-    <p><strong>Husband Name:</strong> <%= member.husband_name %></p>
-    <p><strong>Wife Name:</strong> <%= member.wife_name %></p>
-    <p><strong>Mobile:</strong> <%= member.mobile %></p>
-    <p><strong>Occupation:</strong> <%= member.occupation %></p>
+<div class="row">
+  <!-- Husband Details Card -->
+  <div class="col-md-6 mb-3">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Husband Details</h5>
+      </div>
+      <div class="card-body d-flex">
+        <div class="flex-grow-1">
+          <p><strong>Name:</strong> <%= member.husband_name %></p>
+          <p><strong>Mobile:</strong> <%= member.mobile %></p>
+          <p><strong>Occupation:</strong> <%= member.occupation %></p>
+          <h6>Address</h6>
+          <p><strong>Door No:</strong> <%= member.door_no %></p>
+          <p><strong>Street:</strong> <%= member.street %></p>
+          <p><strong>District:</strong> <%= member.district %></p>
+          <p><strong>State:</strong> <%= member.state %></p>
+          <p><strong>Pincode:</strong> <%= member.pincode %></p>
+        </div>
+        <% if (member.husband_photo) { %>
+          <div class="ms-3">
+            <img src="/uploads/parents/<%= member.husband_photo %>" class="img-thumbnail" style="max-width: 120px; max-height: 120px;">
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
 
-    <h6>Photos</h6>
-    <% if (member.husband_photo) { %>
-      <p><strong>Husband Photo:</strong> <img src="/uploads/<%= member.husband_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
-    <% } %>
-    <% if (member.wife_photo) { %>
-      <p><strong>Wife Photo:</strong> <img src="/uploads/<%= member.wife_photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
-    <% } %>
-
-    <h6>Address</h6>
-    <p><strong>Door No:</strong> <%= member.door_no %></p>
-    <p><strong>Street:</strong> <%= member.street %></p>
-    <p><strong>District:</strong> <%= member.district %></p>
-    <p><strong>State:</strong> <%= member.state %></p>
-    <p><strong>Pincode:</strong> <%= member.pincode %></p>
+  <!-- Wife Details Card -->
+  <div class="col-md-6 mb-3">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Wife Details</h5>
+      </div>
+      <div class="card-body d-flex">
+        <div class="flex-grow-1">
+          <p><strong>Name:</strong> <%= member.wife_name %></p>
+          <p><strong>Mobile:</strong> <%= member.mobile %></p>
+          <p><strong>Occupation:</strong> <%= member.occupation %></p>
+          <h6>Address</h6>
+          <p><strong>Door No:</strong> <%= member.door_no %></p>
+          <p><strong>Street:</strong> <%= member.street %></p>
+          <p><strong>District:</strong> <%= member.district %></p>
+          <p><strong>State:</strong> <%= member.state %></p>
+          <p><strong>Pincode:</strong> <%= member.pincode %></p>
+        </div>
+        <% if (member.wife_photo) { %>
+          <div class="ms-3">
+            <img src="/uploads/parents/<%= member.wife_photo %>" class="img-thumbnail" style="max-width: 120px; max-height: 120px;">
+          </div>
+        <% } %>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -49,20 +80,23 @@
   <div class="card-body">
     <h5 class="card-title">Children Details</h5>
     <% children.forEach(child => { %>
-      <div class="border p-2 mb-2">
-        <p><strong>Name:</strong> <%= child.child_name %></p>
-        <p><strong>Occupation:</strong> <%= child.occupation %></p>
-<p><strong>Date of Birth:</strong>
-  <%= new Date(child.date_of_birth).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  }) %>
-</p>
-
-        <p><strong>Gender:</strong> <%= child.gender %></p>
+      <div class="border p-2 mb-2 d-flex">
+        <div class="flex-grow-1">
+          <p><strong>Name:</strong> <%= child.name %></p>
+          <p><strong>Occupation:</strong> <%= child.occupation %></p>
+          <p><strong>Date of Birth:</strong>
+            <%= child.dob && new Date(child.dob).toString() !== 'Invalid Date' ? new Date(child.dob).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric'
+            }) : 'N/A' %>
+          </p>
+          <p><strong>Gender:</strong> <%= child.gender %></p>
+        </div>
         <% if (child.photo) { %>
-          <p><strong>Photo:</strong> <img src="/uploads/<%= child.photo %>" class="img-thumbnail" style="max-width: 100px;"></p>
+          <div class="ms-3">
+            <img src="/uploads/children/<%= child.photo %>" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+          </div>
         <% } %>
       </div>
     <% }); %>
@@ -79,3 +113,4 @@
 
 </body>
 </html>
+
