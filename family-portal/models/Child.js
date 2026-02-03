@@ -21,4 +21,3 @@ exports.delete = (id, callback) => {
   const sql = "DELETE FROM children WHERE child_id = ?";
   db.query(sql, [id], callback);
 };
-

@@ -30,9 +30,9 @@ exports.create = async (data) => {
 /**
  * Update a family member by ID
  */
-exports.update = (memberId, memberData, callback) => {
+exports.update = async (memberId, memberData) => {
   const sql = "UPDATE family_members SET ? WHERE id = ?";
-  db.query(sql, [memberData, memberId], callback);
+  await db.promise().query(sql, [memberData, memberId]);
 };
 
 /**

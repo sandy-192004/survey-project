@@ -1,3 +1,4 @@
+
 const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
@@ -114,7 +115,8 @@ exports.dashboard = async (req, res) => {
       selectedDistrict: district,
       searchValue: q,
       totalPages,
-      currentPage: page
+      currentPage: page,
+      updated: req.query.updated === "true"
     });
 
   } catch (err) {
@@ -323,15 +325,126 @@ exports.editMember = async (req, res) => {
 };
 
 // =======================
-// UPDATE FAMILY (placeholder)
+// UPDATE FAMILY
 // =======================
 exports.updateMember = async (req, res) => {
   try {
     const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
 
-    // Update logic can be added later
+    // Get existing members
+    const [members] = await FamilyMember.getByFamilyId(familyId);
+    const parents = members.filter(m => m.member_type === "parent");
+    const children = members.filter(m => m.member_type === "child");
 
-    res.redirect(`/admin/edit/${familyId}?message=Family details updated successfully!`);
+    // Find husband and wife
+    const husband = parents.find(p => p.relationship === "husband") || parents[0];
+    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+
+    // Handle photo uploads
+    const uploadedFiles = {};
+    if (req.files) {
+      req.files.forEach(file => {
+        uploadedFiles[file.fieldname] = file.filename;
+      });
+    }
+
+    // Update husband
+    if (husband) {
+      const husbandData = {
+        name: req.body.name,
+        mobile: req.body.mobile,
+        occupation: req.body.occupation,
+        door_no: req.body.door_no,
+        street: req.body.street,
+        district: req.body.district,
+        state: req.body.state,
+        pincode: req.body.pincode,
+        photo: uploadedFiles.husband_photo || husband.photo
+      };
+      await FamilyMember.update(husband.id, husbandData);
+    }
+
+    // Handle wife
+    if (req.body.wife_name) {
+      const wifeData = {
+        family_id: familyId,
+        member_type: "parent",
+        name: req.body.wife_name,
+        relationship: "wife",
+        mobile: req.body.wife_mobile || "",
+        occupation: req.body.wife_occupation || "",
+        door_no: req.body.wife_door_no || "",
+        street: req.body.wife_street || "",
+        district: req.body.wife_district || "",
+        state: req.body.wife_state || "",
+        pincode: req.body.wife_pincode || "",
+        photo: uploadedFiles.wife_photo || (wife ? wife.photo : null)
+      };
+
+      if (wife) {
+        // Update existing wife
+        await FamilyMember.update(wife.id, wifeData);
+      } else {
+        // Insert new wife
+        await FamilyMember.create(wifeData);
+      }
+    }
+
+    // Handle children updates and inserts
+    if (req.body.children) {
+      const childKeys = Object.keys(req.body.children).sort();
+
+      for (const key of childKeys) {
+        const child = req.body.children[key];
+        if (child.name) { // Process any child with a name
+          const childPhotoKey = `children[${key}][photo]`;
+          const childPhoto = uploadedFiles[childPhotoKey] || null;
+
+          if (child.id) {
+            // Update existing child
+            const childData = {
+              name: child.name,
+              occupation: child.occupation || "",
+              dob: child.dob,
+              gender: child.gender || ""
+            };
+            if (childPhoto) {
+              childData.photo = childPhoto;
+            }
+
+            const sql = "UPDATE family_members SET name = ?, occupation = ?, dob = ?, gender = ?" + (childData.photo ? ", photo = ?" : "") + " WHERE id = ?";
+            const params = [childData.name, childData.occupation, childData.dob, childData.gender];
+            if (childData.photo) params.push(childData.photo);
+            params.push(child.id);
+            await db.promise().query(sql, params);
+          } else {
+            // Insert new child (added via + Add Child button)
+            const fullChildData = {
+              family_id: familyId,
+              member_type: "child",
+              name: child.name,
+              relationship: "child",
+              mobile: "",
+              occupation: child.occupation || "",
+              dob: child.dob,
+              gender: child.gender || "",
+              door_no: "",
+              street: "",
+              district: "",
+              state: "",
+              pincode: "",
+              photo: childPhoto
+            };
+
+            await FamilyMember.create(fullChildData);
+          }
+        }
+      }
+    }
+
+    // Redirect to dashboard with success message
+    res.redirect("/admin/dashboard?updated=true");
 
   } catch (err) {
     console.error(err);
@@ -366,7 +479,7 @@ exports.addChild = async (req, res) => {
         : null
     });
 
-    res.redirect(`/admin/edit/${familyId}?message=Child added successfully`);
+    res.redirect("/admin/dashboard?updated=true");
 
   } catch (err) {
     console.error(err);

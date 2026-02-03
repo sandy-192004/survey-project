@@ -8,7 +8,19 @@
 
 <div class="container py-4">
 
+<% if (updated) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Family details updated successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
 <%- include("search-filter-form") %>
+
+<div class="mb-3">
+  <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
+  <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
+</div>
 
   <p>Debug: Results count: <%= results.length %></p>
 
@@ -45,12 +57,6 @@
     </ul>
   </nav>
   <% } %>
-
-  <!-- Export Buttons -->
-  <div class="d-flex justify-content-end mt-4">
-    <a href="/admin/export/excel" class="btn btn-success me-2">Export to Excel</a>
-    <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
-  </div>
 
 </div>
 </body>

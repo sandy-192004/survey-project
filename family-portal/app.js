@@ -11,6 +11,7 @@ const adminSearchRoutes = require("./routes/adminSearchRoutes");
 const db = require("./config/db");
 const app = express();
 
+
 // Initialize database tables
 const initDB = async () => {
   try {
@@ -52,6 +53,7 @@ const initDB = async () => {
 };
 
 initDB();
+
 
 
 

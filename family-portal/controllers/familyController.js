@@ -1,7 +1,10 @@
+
 const User = require("../models/User");
 const FamilyMember = require("../models/FamilyMember");
 const bcrypt = require("bcryptjs");
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 /* ================= AUTH ================= */
 
@@ -268,15 +271,129 @@ exports.myFamilyJson = async (req, res) => {
 /* ================= ADD CHILD ================= */
 
 exports.addChild = async (req, res) => {
-  const familyId = req.session.user.id;
-  const { name, dob, gender, occupation } = req.body;
+  try {
+    const userId = req.session.user.id;
+    const { name, dob, gender, occupation, relationship } = req.body;
 
-  await db.promise().query(
-    `INSERT INTO children
-     (family_id, name, dob, gender, occupation)
-     VALUES (?, ?, ?, ?, ?)`,
-    [familyId, name, dob, gender, occupation]
-  );
+    const Person = require("../models/Person");
+    const FamilyMember = require("../models/FamilyMember");
 
-  res.redirect("/my-family");
+    // Get family_id from persons table
+    const [personRows] = await Person.getByUserId(userId);
+    if (personRows.length === 0) {
+      return res.status(400).send("No family found for user");
+    }
+    const familyId = personRows[0].family_id;
+
+    await FamilyMember.create({
+      family_id: familyId,
+      member_type: 'child',
+      name,
+      relationship: relationship || 'child',
+      mobile: '',
+      occupation: occupation || '',
+      dob,
+      gender,
+      door_no: '',
+      street: '',
+      district: '',
+      state: '',
+      pincode: '',
+      photo: null
+    });
+
+    res.redirect("/my-family");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// Placeholder functions for missing routes
+exports.checkFamily = exports.dashboard;
+
+exports.viewFamily = (req, res) => {
+  res.send("View family feature coming soon!");
+};
+
+exports.editForm = async (req, res) => {
+  try {
+    const memberId = req.params.id;
+
+    FamilyMember.getById(memberId, (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(404).send("Member not found");
+      }
+
+      const member = results[0];
+      res.render("family-edit", { member, memberId });
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+exports.updateFamily = async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const { name, mobile, occupation, dob, gender, relationship, door_no, street, district, state, pincode, current_photo } = req.body;
+
+    let photo = current_photo || null;
+
+    // Handle photo upload (multer style)
+    if (req.files && req.files.length > 0) {
+      const photoFile = req.files.find(file => file.fieldname === 'photo');
+      if (photoFile) {
+        // File is already uploaded by multer to the destination
+        photo = `children/${photoFile.filename}`;
+      }
+    }
+
+    const updateData = {
+      name,
+      mobile: mobile || '',
+      occupation: occupation || '',
+      dob: dob ? dob : null,
+      gender: gender || '',
+      relationship: relationship || 'child',
+      door_no: door_no || '',
+      street: street || '',
+      district: district || '',
+      state: state || '',
+      pincode: pincode || '',
+      photo
+    };
+
+    FamilyMember.update(memberId, updateData, (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error updating member");
+      }
+
+      res.redirect("/dashboard");
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+exports.deleteFamily = (req, res) => {
+  const memberId = req.params.id;
+
+  FamilyMember.deleteById(memberId, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error deleting member");
+    }
+
+    res.redirect("/my-family");
+  });
+};
+
+exports.showAddChild = (req, res) => {
+  res.render("add-child");
 };
