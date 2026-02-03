@@ -7,7 +7,8 @@ const exportController = require("../controllers/exportController");
 
 
 const db = require("../config/db");
-const upload = require("../middleware/upload");
+const { upload } = require("../middleware/upload");
+
 
 // Get all families as JSON
 router.get('/families', async (req, res) => {

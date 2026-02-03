@@ -32,7 +32,7 @@ exports.getAll = (page, limit, callback) => {
   });
 };
 
-exports.searchMembers = (filters, page, limit, callback) => {
+exports.searchMembers = async (filters, page, limit) => {
   const { input, selectedState, selectedDistrict } = filters;
   const offset = (page - 1) * limit;
   const params = [];
@@ -68,19 +68,14 @@ exports.searchMembers = (filters, page, limit, callback) => {
 
   const countSql = `SELECT COUNT(*) AS total FROM (${sql}) x`;
 
-  db.query(countSql, params, (err, countResult) => {
-    if (err) return callback(err);
+  const [countResult] = await db.query(countSql, params);
+  const totalPages = Math.ceil(countResult[0].total / limit);
 
-    const totalPages = Math.ceil(countResult[0].total / limit);
+  sql += " ORDER BY p.husband_name ASC LIMIT ? OFFSET ?";
+  params.push(limit, offset);
 
-    sql += " ORDER BY p.husband_name ASC LIMIT ? OFFSET ?";
-    params.push(limit, offset);
-
-    db.query(sql, params, (err2, results) => {
-      if (err2) return callback(err2);
-      callback(null, { results, totalPages });
-    });
-  });
+  const [results] = await db.query(sql, params);
+  return { results, totalPages };
 };
 
 exports.getDropdownOptions = (callback) => {
@@ -93,6 +88,11 @@ exports.getDropdownOptions = (callback) => {
     callback(null, { states, districts });
   });
 };
+
+
+
+
+
 
 exports.getMemberById = (id, callback) => {
   const sql = `
@@ -129,3 +129,4 @@ exports.getChildrenByParentId = (parentId, callback) => {
   const sql = 'SELECT id AS child_id, name AS child_name, occupation, dob AS date_of_birth, gender, photo FROM family_members WHERE family_id = ? AND member_type = ?';
   db.query(sql, [parentId, 'child'], callback);
 };
+

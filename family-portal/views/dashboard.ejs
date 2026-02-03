@@ -1,56 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-  <title>Family Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container py-4">
-
-  <h1 class="mb-4">My Family Members</h1>
-
-  <div class="row g-4">
-    <% results.forEach(member => { %>
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title"><%= member.name %></h5>
-            <p class="text-muted mb-1"><%= member.relationship %></p>
-            <small><%= member.occupation || 'N/A' %></small>
-            <p class="text-muted mb-1">Mobile: <%= member.mobile %></p>
-            <p class="text-muted mb-1">DOB: <%= member.dob ? new Date(member.dob).toLocaleDateString() : 'N/A' %></p>
-            <div class="mt-3">
-              <span class="badge bg-secondary"><%= member.member_type %></span>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Portal - Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
         /* Removed media query to allow standard Bootstrap navbar behavior on mobile */
+        body {
+            background-image: url('/images/dashboard.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .navbar {
+            background-color: rgba(30, 21, 11, 0.9) !important;
+backdrop-filter: blur(10px);
+color: white;
+
+        }
+        .container.mt-5 {
+            background-color: rgba(50, 45, 45, 0.616);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 15rem !important;
+           
+        }
     </style>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
 </head>
 <body>
-    <!-- Success Toast -->
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ✓ Family saved successfully!
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
+
+<!-- Success Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
+  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+    <div class="d-flex">
+      <div class="toast-body">✓ Family saved successfully!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
+  </div>
+</div>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-dark shadow-sm">
         <div class="container-fluid">
             <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                 <span class="navbar-toggler-icon"></span>
@@ -94,12 +86,12 @@
         <div class="offcanvas-body">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+                    <a class="nav-link" href="/family">
                         <i class="bi bi-people-fill"></i> Family
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pooja-booking">
+                    <a class="nav-link"  href="/pooja-booking">
                         <i class="bi bi-calendar-heart"></i> Pooja Booking
                     </a>
                 </li>
@@ -117,139 +109,116 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-12">
-                <h1>Welcome to Family Portal</h1>
-                <p class="lead">Manage your family information and book pooja services.</p>
+    <!-- Family Check Modal -->
+    <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="familyCheckModalLabel">Family Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="familyContent">
+                    <!-- Content will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Family Check Modal -->
-    <div class="modal fade" id="familyCheckModal" tabindex="-1" aria-labelledby="familyCheckModalLabel" aria-hidden="true">
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+               <div class="text-center">
+  <h2 style="
+      color: #ffffff;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+  ">
+    Welcome to our temple digital seva portal
+  </h2>
 
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-
-        <div class="modal-dialog modal-xl">
-
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="familyCheckModalLabel">My Family Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="familyContent">
-                        <div class="text-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <p class="lead" style="
+      color: #ffffff;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+  ">
+    Manage family details, book poojas, and participate in temple services with ease.
+    <br>
+    May the divine bless you and your family
+  </p>
+</div>
 
             </div>
-          </div>
         </div>
-      </div>
-    <% }) %>
-  </div>
-
-  <% if (totalPages > 1) { %>
-  <nav class="mt-4">
-    <ul class="pagination justify-content-center">
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-          <a class="page-link" href="?page=<%= i %>">
-            <%= i %>
-          </a>
-        </li>
-      <% } %>
-    </ul>
-  </nav>
-  <% } %>
-
-  <div class="mt-4">
-    <a href="/my-family" class="btn btn-primary">View Full Family</a>
-    <a href="/logout" class="btn btn-secondary">Logout</a>
-  </div>
-
-
-</div>
-</body>
-</html>
- 
+    </div>
 
 
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Show success toast if ?success=true
+        // Check for success parameter
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('success') === 'true') {
             const toastElement = document.getElementById('successToast');
             toastElement.style.display = 'flex';
             const toast = new bootstrap.Toast(toastElement);
             toast.show();
+
+            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // Handle family modal show
-        const familyModal = document.getElementById('familyCheckModal');
-        familyModal.addEventListener('show.bs.modal', function () {
-            const familyContent = document.getElementById('familyContent');
-            familyContent.innerHTML = `
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            `;
+/* ---------- FAMILY BUTTON CLICK (MAIN CHANGE YOU ASKED FOR) ---------- */
+$("#familyBtn").on("click", function () {
+  $.get("/family/check", function (res) {
+    if (res.exists) {
+      // Family exists → go to My Family page
+      window.location.href = "/my-family";
+    } else {
+      // ❌ NO REDIRECT HERE
+      // ✅ SHOW POPUP ON DASHBOARD ITSELF
+      showFamilyModal(
+        "No Details Found",
+        "No family details found. Please add your family details.",
+        "Add Family",
+        "/family-form"
+      );
+    }
+  });
+});
+
+/* ---------- SHOW DASHBOARD POPUP ---------- */
+function showFamilyModal(title, msg, btnText, redirectUrl) {
+  $("#familyModalTitle").text(title);
+  $("#familyModalMsg").text(msg);
+  $("#familyModalAction").text(btnText);
+
+  const modal = new bootstrap.Modal(document.getElementById("familyStatusModal"));
+  modal.show();
+
+  $("#familyModalAction").off("click").on("click", function () {
+    modal.hide();
+    window.location.href = redirectUrl; // Only when user clicks button
+  });
+}
+
+/* ---------- EXISTING: LOAD FAMILY INTO MODAL ---------- */
+const familyModal = document.getElementById('familyCheckModal');
+familyModal.addEventListener('show.bs.modal', function () {
+  const familyContent = document.getElementById('familyContent');
+
+  familyContent.innerHTML = `
+    <div class="text-center">
+      <div class="spinner-border"></div>
+    </div>
+  `;
 
             fetch('/my-family-json')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const parent = data.parent;
-                    const children = data.children;
-                    let html = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Parent Details</h5>
-                                <p><strong>Name:</strong> ${parent.name}</p>
-                                <p><strong>Wife Name:</strong> ${parent.wife_name || 'N/A'}</p>
-                                <p><strong>Mobile:</strong> ${parent.mobile}</p>
-                                <p><strong>Email:</strong> ${parent.email}</p>
-                                <p><strong>Occupation:</strong> ${parent.occupation}</p>
-                                <p><strong>Address:</strong> ${parent.door_no}, ${parent.street}, ${parent.district}, ${parent.state} - ${parent.pincode}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h5>Children Details</h5>
-                    `;
-                    if (children.length > 0) {
-                        children.forEach(child => {
-                            html += `
-                                <div class="mb-3 p-2 border rounded">
-                                    <p><strong>Name:</strong> ${child.name}</p>
-                                    <p><strong>Occupation:</strong> ${child.occupation}</p>
-                                    <p><strong>Date of Birth:</strong> ${child.dob}</p>
-                                    <p><strong>Gender:</strong> ${child.gender}</p>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        html += '<p>No children details available.</p>';
-                    }
-                    html += `
-                            </div>
-                        </div>
-                        <div class="text-center mt-3">
-                            <a href="/my-family" class="btn btn-primary">Edit Family Details</a>
-                        </div>
-                    `;
-                    familyContent.innerHTML = html;
+                    // Redirect to /my-family if record exists
+                    window.location.href = '/my-family';
                 } else {
                     familyContent.innerHTML = `
                         <div class="text-center">

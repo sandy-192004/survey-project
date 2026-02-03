@@ -4,27 +4,29 @@ const db = require("../config/db");
  * Create a family member (parent or child)
  */
 exports.create = async (data) => {
-  const sql = `INSERT INTO family_members
+  const [result] = await db.query(
+    `INSERT INTO family_members
      (family_id, member_type, name, relationship, mobile, occupation,
       dob, gender, door_no, street, district, state, pincode, photo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  const params = [
-    data.family_id,
-    data.member_type,
-    data.name,
-    data.relationship,
-    data.mobile,
-    data.occupation,
-    data.dob,
-    data.gender,
-    data.door_no,
-    data.street,
-    data.district,
-    data.state,
-    data.pincode,
-    data.photo
-  ];
-  await db.promise().query(sql, params);
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.family_id,
+      data.member_type,
+      data.name,
+      data.relationship,
+      data.mobile,
+      data.occupation,
+      data.dob,
+      data.gender,
+      data.door_no,
+      data.street,
+      data.district,
+      data.state,
+      data.pincode,
+      data.photo
+    ]
+  );
+  return result.insertId;
 };
 
 /**
@@ -64,8 +66,8 @@ exports.getByFamilyId = async (familyId) => {
       FIELD(member_type, 'parent', 'child'),
       created_at
   `;
-  const [rows] = await db.promise().query(sql, [familyId]);
-  return [rows];
+  const [rows] = await db.query(sql, [familyId]);
+  return rows;
 };
 
 /**

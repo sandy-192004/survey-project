@@ -1,12 +1,13 @@
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "disneyTorn@123",
-  database: "admin_db",
+  password: "sandhiya@sowmiya2004",
+  database: "survey_app",
   // socketPath: '/tmp/mysql.sock',
-  port:'3306'
+  port:'3306',
+
 });
 
 
@@ -20,5 +21,8 @@ db.getConnection((err, connection) => {
 });
 
 
+
 module.exports = db;
+
+
 
