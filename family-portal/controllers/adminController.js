@@ -1,251 +1,488 @@
-const Admin = require("../models/admin");
-const Child = require("../models/Child");
+
+const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
-
-exports.dashboard = (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 9;
-
-  Admin.getAll(page, limit, (err, data) => {
-    if (err) return res.status(500).send("Server Error");
-
-    Admin.getDropdownOptions((err2, dropdowns) => {
-      if (err2) return res.status(500).send("Server Error");
-
-      res.render("admin/dashboard", {
-        results: data.results,
-        totalPages: data.totalPages,
-        currentPage: page,
-        searchValue: "",
-        selectedState: "",
-        selectedDistrict: "",
-        states: dropdowns.states,
-        districts: dropdowns.districts
-      });
-    });
-  });
-};
-
-exports.search = (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 9;
-
-  const filters = {
-    input: req.query.q || "",
-    selectedState: req.query.state || "",
-    selectedDistrict: req.query.district || ""
-  };
-
-  Admin.searchMembers(filters, page, limit, (err, data) => {
-    if (err) return res.status(500).send("Server Error");
-
-    Admin.getDropdownOptions((err2, dropdowns) => {
-      if (err2) return res.status(500).send("Server Error");
-
-      res.render("admin/dashboard", {
-        results: data.results,
-        totalPages: data.totalPages,
-        currentPage: page,
-        searchValue: filters.input,
-        selectedState: filters.selectedState,
-        selectedDistrict: filters.selectedDistrict,
-        states: dropdowns.states,
-        districts: dropdowns.districts
-      });
-    });
-  });
-};
-
-exports.viewMember = (req, res) => {
-  const id = req.params.id;
-  const updated = req.query.updated === 'true';
-  Admin.getMemberById(id, (err, member) => {
-    if (err) throw err;
-    if (!member) return res.send("No member found with that ID.");
-
-    Admin.getChildrenByParentId(id, (err2, children) => {
-      if (err2) throw err2;
-      res.render("admin/view", { member, children: children || [], updated });
-    });
-  });
-};
-
-exports.editMember = (req, res) => {
-  const id = req.params.id;
-  const message = req.query.message;
-  Admin.getMemberById(id, (err, member) => {
-    if (err) throw err;
-    if (!member) return res.send("No member found with that ID.");
-
-    // For the sample data structure, wife info is in the same record
-    // Create a wife object from the member data
-    const wife = member.wife_name ? {
-      id: member.id + '_wife', // Temporary ID for wife
-      name: member.wife_name,
-      mobile: member.mobile,
-      email: member.email,
-      occupation: '',
-      door_no: member.door_no,
-      street: member.street,
-      district: member.district,
-      state: member.state,
-      pincode: member.pincode
-    } : null;
-
-    Child.getByParent(id, (err, children) => {
-      if (err) {
-        console.error("Error fetching children:", err);
-        children = [];
-      }
-      const message = req.query.message || null;
-      res.render("admin/edit", { parent: member, wife, children, message });
-    });
-  });
-};
-
-exports.updateMember = (req, res) => {
-  const id = req.params.id;
-
-  // Handle photo uploads
-  const husbandPhoto = req.files ? req.files.find(file => file.fieldname === 'husband_photo') : null;
-  const wifePhoto = req.files ? req.files.find(file => file.fieldname === 'wife_photo') : null;
-  const childPhotos = req.files ? req.files.filter(file => file.fieldname.startsWith('children[') && file.fieldname.endsWith('][photo]')) : [];
-
-  const parentData = { ...req.body };
-
-  // Update photo filenames if new photos uploaded
-  if (husbandPhoto) {
-    parentData.husband_photo = husbandPhoto.filename;
-  }
-  if (wifePhoto) {
-    parentData.wife_photo = wifePhoto.filename;
-  }
-
-  Admin.updateMember(id, parentData, err => {
-    if (err) {
-      console.error("DB Error updating parent:", err.message);
-      return res.redirect("/admin/dashboard");
-    }
-
-    // Get existing children to know which to delete
-    Child.getByParent(id, (err, existingChildren) => {
-      if (err) {
-        console.error("DB Error getting children:", err.message);
-        return res.redirect("/admin/dashboard");
-      }
-
-      const existingIds = existingChildren.map(c => c.child_id);
-
-      const childrenData = req.body.children || {};
-      const childKeys = Object.keys(childrenData).sort((a, b) => parseInt(a) - parseInt(b));
-
-      let processed = 0;
-      const total = childKeys.length;
-
-      if (total === 0) {
-        // No children in form, delete all existing
-        deleteRemoved(existingIds, () => {
-          res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
-        });
-      } else {
-        childKeys.forEach((key) => {
-          const child = childrenData[key];
-          const childId = child.id;
-          const childPhoto = childPhotos.find(photo => {
-            const match = photo.fieldname.match(/children\[(\d+)\]\[photo\]/);
-            return match && match[1] === key;
-          });
-          const childData = {
-            name: child.name,
-            occupation: child.occupation,
-            dob: child.dob && child.dob !== '' ? child.dob : null,
-            gender: child.gender,
-            photo: childPhoto ? childPhoto.filename : null
-          };
-
-          if (childId) {
-            // Update existing child
-            Child.update(childId, childData, (err) => {
-              if (err) console.error("Update child error:", err);
-              processed++;
-              if (processed === total) {
-                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
-                const toDelete = existingIds.filter(id => !formIds.includes(id));
-                deleteRemoved(toDelete, () => {
-                  res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
-                });
-              }
-            });
-          } else {
-            // Insert new child
-            childData.parent_id = id;
-            Child.create(childData, (err) => {
-              if (err) console.error("Create child error:", err);
-              processed++;
-              if (processed === total) {
-                const formIds = childKeys.map(k => childrenData[k].id).filter(id => id);
-                const toDelete = existingIds.filter(id => !formIds.includes(id));
-                deleteRemoved(toDelete, () => {
-                  res.redirect("/admin/edit/" + id + "?message=Family details updated successfully!");
-                });
-              }
-            });
-          }
-        });
-      }
-    });
-  });
-};
-
-exports.addChild = (req, res) => {
-  const childData = req.body;
-
-  if (req.files && req.files.photo) {
-    childData.photo = req.files.photo[0].filename;
-  }
-  Child.create(childData, (err, result) => {
-    if (err) {
-      console.error("Error adding child:", err);
-      return res.status(500).send("Error adding child");
-    }
-    res.redirect("/admin/edit/" + childData.parent_id + "?message=Child added successfully");
-  });
-};
-
-
-function deleteRemoved(ids, callback) {
-  if (ids.length === 0) return callback();
-  let deleted = 0;
-  ids.forEach(id => {
-    Child.delete(id, (err) => {
-      if (err) console.error("Delete child error:", err);
-      deleted++;
-      if (deleted === ids.length) callback();
-    });
-  });
-}
-
+const Admin = require("../models/admin");
+const Child = require("../models/Child");
 
 function loadDropdownOptions() {
   try {
     const filePath = path.join(__dirname, "../public/data/india-states-districts.json");
     const data = fs.readFileSync(filePath, "utf8");
     const jsonData = JSON.parse(data);
-
     const states = Object.keys(jsonData);
     const districts = [];
-    Object.keys(jsonData).forEach(state => {
+    states.forEach(state => {
       districts.push(...jsonData[state]);
     });
-    const uniqueDistricts = [...new Set(districts)];
-
-    console.log("States loaded:", states.slice(0, 5)); // Log first 5 states
-    console.log("Districts loaded:", uniqueDistricts.slice(0, 5)); // Log first 5 districts
-
-    return { states, districts: uniqueDistricts };
+    return {
+      states,
+      districts: [...new Set(districts)]
+    };
   } catch (error) {
-    console.error("Error loading dropdown options from JSON:", error);
+    console.error("Error loading dropdown options:", error);
     return { states: [], districts: [] };
   }
 }
+
+// =======================
+// ADMIN DASHBOARD
+// =======================
+exports.dashboard = async (req, res) => {
+  try {
+    const q = req.query.q || "";
+    const state = req.query.state || "";
+    const district = req.query.district || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = 9;
+    const offset = (page - 1) * limit;
+
+    const { states, districts } = loadDropdownOptions();
+
+    let sql = `
+      SELECT
+        fm.family_id AS id,
+        fm.name,
+        fm.district,
+        fm.state,
+        fm.occupation,
+        (
+          SELECT COUNT(*)
+          FROM family_members c
+          WHERE c.family_id = fm.family_id AND c.member_type = 'child'
+        ) AS children_count
+      FROM family_members fm
+      WHERE fm.member_type = 'parent'
+      AND fm.id = (
+        SELECT MIN(id)
+        FROM family_members
+        WHERE family_id = fm.family_id AND member_type = 'parent'
+      )
+    `;
+    const params = [];
+    const countParams = [];
+
+    if (q) {
+      sql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
+      const like = `%${q}%`;
+      params.push(like, like, like);
+      countParams.push(like, like, like);
+    }
+
+    if (state) {
+      sql += " AND fm.state = ?";
+      params.push(state);
+      countParams.push(state);
+    }
+
+    if (district) {
+      sql += " AND fm.district = ?";
+      params.push(district);
+      countParams.push(district);
+    }
+
+    let countSql = `SELECT COUNT(DISTINCT fm.family_id) AS total FROM family_members fm WHERE fm.member_type = 'parent' AND fm.id = (SELECT MIN(id) FROM family_members WHERE family_id = fm.family_id AND member_type = 'parent')`;
+
+    if (q) {
+      countSql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
+    }
+
+    if (state) {
+      countSql += " AND fm.state = ?";
+    }
+
+    if (district) {
+      countSql += " AND fm.district = ?";
+    }
+
+    sql += " ORDER BY fm.family_id LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    console.log('Dashboard: About to execute query');
+    const [rows] = await db.promise().query(sql, params);
+    const [countResult] = await db.promise().query(countSql, countParams);
+    const totalPages = Math.ceil(countResult[0].total / limit);
+
+    console.log('Dashboard query results:', rows.length, 'rows');
+    console.log('Total pages:', totalPages);
+    console.log('First row:', rows[0]);
+
+    res.render("admin/dashboard", {
+      results: rows,
+      states,
+      districts,
+      selectedState: state,
+      selectedDistrict: district,
+      searchValue: q,
+      totalPages,
+      currentPage: page,
+      updated: req.query.updated === "true"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// SEARCH (same view, safe)
+// =======================
+exports.search = async (req, res) => {
+  try {
+    const q = req.query.q || "";
+    const state = req.query.state || "";
+    const district = req.query.district || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = 9;
+    const offset = (page - 1) * limit;
+
+    const { states, districts } = loadDropdownOptions();
+
+    let sql = `
+      SELECT
+        fm.family_id AS id,
+        fm.name,
+        fm.district,
+        fm.state,
+        fm.occupation,
+        (
+          SELECT COUNT(*)
+          FROM family_members c
+          WHERE c.family_id = fm.family_id AND c.member_type = 'child'
+        ) AS children_count
+      FROM family_members fm
+      WHERE fm.member_type = 'parent'
+      AND fm.id = (
+        SELECT MIN(id)
+        FROM family_members
+        WHERE family_id = fm.family_id AND member_type = 'parent'
+      )
+    `;
+    const params = [];
+    const countParams = [];
+
+    if (q) {
+      sql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
+      const like = `%${q}%`;
+      params.push(like, like, like);
+      countParams.push(like, like, like);
+    }
+
+    if (state) {
+      sql += " AND fm.state = ?";
+      params.push(state);
+      countParams.push(state);
+    }
+
+    if (district) {
+      sql += " AND fm.district = ?";
+      params.push(district);
+      countParams.push(district);
+    }
+
+    let countSql = `SELECT COUNT(DISTINCT fm.family_id) AS total FROM family_members fm WHERE fm.member_type = 'parent' AND fm.id = (SELECT MIN(id) FROM family_members WHERE family_id = fm.family_id AND member_type = 'parent')`;
+
+    if (q) {
+      countSql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
+    }
+
+    if (state) {
+      countSql += " AND fm.state = ?";
+    }
+
+    if (district) {
+      countSql += " AND fm.district = ?";
+    }
+
+    sql += " ORDER BY fm.family_id LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    const [rows] = await db.promise().query(sql, params);
+    const [countResult] = await db.promise().query(countSql, countParams);
+    const totalPages = Math.ceil(countResult[0].total / limit);
+
+    res.render("admin/dashboard", {
+      results: rows,
+      states,
+      districts,
+      selectedState: state,
+      selectedDistrict: district,
+      searchValue: q,
+      totalPages,
+      currentPage: page
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// VIEW FAMILY MEMBERS
+// =======================
+exports.viewMember = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    const [members] = await FamilyMember.getByFamilyId(familyId);
+
+    const parents = members.filter(m => m.member_type === "parent");
+    const children = members.filter(m => m.member_type === "child");
+
+    // Assuming first parent is husband, second is wife if exists
+    const husband = parents.find(p => p.relationship === "husband") || parents[0];
+    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+
+    const member = {
+      family_id: familyId,
+      husband_name: husband ? husband.name : "",
+      wife_name: wife ? wife.name : "",
+      mobile: husband ? husband.mobile : "",
+      occupation: husband ? husband.occupation : "",
+      door_no: husband ? husband.door_no : "",
+      street: husband ? husband.street : "",
+      district: husband ? husband.district : "",
+      state: husband ? husband.state : "",
+      pincode: husband ? husband.pincode : "",
+      husband_photo: husband ? husband.photo : "",
+      wife_photo: wife ? wife.photo : ""
+    };
+
+    res.render("admin/view", {
+      member,
+      children,
+      updated: req.query.updated === "true"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// EDIT FAMILY MEMBERS
+// =======================
+exports.editMember = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    const [members] = await FamilyMember.getByFamilyId(familyId);
+
+    const parents = members.filter(m => m.member_type === "parent");
+    const children = members.filter(m => m.member_type === "child");
+
+    // Assuming first parent is husband, second is wife if exists
+    const parent = parents.find(p => p.relationship === "husband") || parents[0];
+    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+
+    // Format children for the view
+    const formattedChildren = children.map(c => ({
+      child_id: c.id,
+      child_name: c.name,
+      occupation: c.occupation,
+      date_of_birth: c.dob,
+      photo: c.photo
+    }));
+
+    res.render("admin/edit", {
+      familyId,
+      parent: parent ? {
+        id: parent.id,
+        husband_name: parent.name,
+        mobile: parent.mobile,
+        occupation: parent.occupation,
+        door_no: parent.door_no,
+        street: parent.street,
+        district: parent.district,
+        state: parent.state,
+        pincode: parent.pincode,
+        husband_photo: parent.photo
+      } : null,
+      wife: wife ? {
+        name: wife.name,
+        mobile: wife.mobile,
+        occupation: wife.occupation,
+        door_no: wife.door_no,
+        street: wife.street,
+        district: wife.district,
+        state: wife.state,
+        pincode: wife.pincode,
+        photo: wife.photo
+      } : null,
+      children: formattedChildren,
+      message: req.query.message || null
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// UPDATE FAMILY
+// =======================
+exports.updateMember = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    // Get existing members
+    const [members] = await FamilyMember.getByFamilyId(familyId);
+    const parents = members.filter(m => m.member_type === "parent");
+    const children = members.filter(m => m.member_type === "child");
+
+    // Find husband and wife
+    const husband = parents.find(p => p.relationship === "husband") || parents[0];
+    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+
+    // Handle photo uploads
+    const uploadedFiles = {};
+    if (req.files) {
+      req.files.forEach(file => {
+        uploadedFiles[file.fieldname] = file.filename;
+      });
+    }
+
+    // Update husband
+    if (husband) {
+      const husbandData = {
+        name: req.body.name,
+        mobile: req.body.mobile,
+        occupation: req.body.occupation,
+        door_no: req.body.door_no,
+        street: req.body.street,
+        district: req.body.district,
+        state: req.body.state,
+        pincode: req.body.pincode,
+        photo: uploadedFiles.husband_photo || husband.photo
+      };
+      await FamilyMember.update(husband.id, husbandData);
+    }
+
+    // Handle wife
+    if (req.body.wife_name) {
+      const wifeData = {
+        family_id: familyId,
+        member_type: "parent",
+        name: req.body.wife_name,
+        relationship: "wife",
+        mobile: req.body.wife_mobile || "",
+        occupation: req.body.wife_occupation || "",
+        door_no: req.body.wife_door_no || "",
+        street: req.body.wife_street || "",
+        district: req.body.wife_district || "",
+        state: req.body.wife_state || "",
+        pincode: req.body.wife_pincode || "",
+        photo: uploadedFiles.wife_photo || (wife ? wife.photo : null)
+      };
+
+      if (wife) {
+        // Update existing wife
+        await FamilyMember.update(wife.id, wifeData);
+      } else {
+        // Insert new wife
+        await FamilyMember.create(wifeData);
+      }
+    }
+
+    // Handle children updates and inserts
+    if (req.body.children) {
+      const childKeys = Object.keys(req.body.children).sort();
+
+      for (const key of childKeys) {
+        const child = req.body.children[key];
+        if (child.name) { // Process any child with a name
+          const childPhotoKey = `children[${key}][photo]`;
+          const childPhoto = uploadedFiles[childPhotoKey] || null;
+
+          if (child.id) {
+            // Update existing child
+            const childData = {
+              name: child.name,
+              occupation: child.occupation || "",
+              dob: child.dob,
+              gender: child.gender || ""
+            };
+            if (childPhoto) {
+              childData.photo = childPhoto;
+            }
+
+            const sql = "UPDATE family_members SET name = ?, occupation = ?, dob = ?, gender = ?" + (childData.photo ? ", photo = ?" : "") + " WHERE id = ?";
+            const params = [childData.name, childData.occupation, childData.dob, childData.gender];
+            if (childData.photo) params.push(childData.photo);
+            params.push(child.id);
+            await db.promise().query(sql, params);
+          } else {
+            // Insert new child (added via + Add Child button)
+            const fullChildData = {
+              family_id: familyId,
+              member_type: "child",
+              name: child.name,
+              relationship: "child",
+              mobile: "",
+              occupation: child.occupation || "",
+              dob: child.dob,
+              gender: child.gender || "",
+              door_no: "",
+              street: "",
+              district: "",
+              state: "",
+              pincode: "",
+              photo: childPhoto
+            };
+
+            await FamilyMember.create(fullChildData);
+          }
+        }
+      }
+    }
+
+    // Redirect to dashboard with success message
+    res.redirect("/admin/dashboard?updated=true");
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// ADD CHILD
+// =======================
+exports.addChild = async (req, res) => {
+  try {
+    const familyId = req.body.family_id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    await FamilyMember.create({
+      family_id: familyId,
+      member_type: "child",
+      name: req.body.name,
+      relationship: "child",
+      mobile: req.body.mobile || "",
+      occupation: req.body.occupation || "",
+      dob: req.body.dob,
+      gender: req.body.gender,
+      door_no: "",
+      street: "",
+      district: "",
+      state: "",
+      pincode: "",
+      photo: req.files && req.files.photo
+        ? req.files.photo[0].filename
+        : null
+    });
+
+    res.redirect("/admin/dashboard?updated=true");
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
