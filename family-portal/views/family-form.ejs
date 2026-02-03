@@ -194,11 +194,11 @@
         img.src = e.target.result;
         img.style.display = 'block';
 
-        // Display file size
+        // Display file size and accepted formats
         const sizeElement = document.getElementById(previewId.replace('_preview', '_size'));
         if (sizeElement) {
           const sizeKB = (file.size / 1024).toFixed(2);
-          sizeElement.textContent = `Size: ${sizeKB} KB`;
+          sizeElement.textContent = `Size: ${sizeKB} KB | Accepted formats: JPEG, WebP`;
         }
       }
       reader.readAsDataURL(file);
