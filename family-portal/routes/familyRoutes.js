@@ -1,11 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
-
+const upload = require("../middleware/upload");
+const { isLoggedIn } = require("../middleware/auth");
 const controller = require("../controllers/familyController");
 const exportCtrl = require("../controllers/exportController");
-const { isLoggedIn } = require("../middleware/auth");
 const { processUpload } = require("../middleware/upload");
 
 
@@ -35,8 +33,12 @@ router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", isLoggedIn, controller.getMyFamilyJson);
+router.get("/family/edit/:id", isLoggedIn, controller.editForm);
+router.post("/family/update/:id", isLoggedIn, processUpload, controller.updateFamily);
+router.get("/family/delete/:id", isLoggedIn, controller.deleteFamily);
 
 // ================== CHILD MANAGEMENT ==================
+router.get("/add-child", isLoggedIn, controller.showAddChild);
 router.post("/add-child", isLoggedIn, processUpload, controller.addChild);
 router.get("/get-children/:userId", isLoggedIn, controller.getChildren);
 router.get("/get-child/:id", isLoggedIn, controller.getChild);

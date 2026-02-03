@@ -1,9 +1,8 @@
-# TODO: Add Camera Capture and File Size Display to Family Form
+# Fix Merge Conflict and Architectural Corruption
 
 ## Tasks
-- [ ] Update views/family-form.ejs to add "Select Photo" and "Capture Photo" buttons for husband, wife, and child photos
-- [ ] Modify handlePhotoSelect function to display file size for selected photos
-- [ ] Add camera capture functionality using getUserMedia API
-- [ ] Update public/js/family.js addChild function to include photo buttons for dynamically added children
-- [ ] Update child modal in family-form.ejs to use photo buttons
-- [ ] Test camera functionality and form submission
+- [ ] Clean familyController.js: Remove duplicates, fix syntax, async/await only, remove Person model, add session checks, standardize uploads, use families.user_id
+- [ ] Fix my-family.ejs: Remove duplicates, add undefined checks, image fallbacks, no crashes on empty data
+- [ ] Test login → dashboard → family flow
+- [ ] Verify uploads work
+- [ ] Check EJS renders without errors

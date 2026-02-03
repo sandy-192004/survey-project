@@ -6,13 +6,15 @@ exports.getAll = (page, limit, callback) => {
   const offset = (page - 1) * limit;
 
   const sql = `
-    SELECT f.id AS id, p.husband_name AS name, fm_w.name AS wife_name, fm_h.mobile, fm_h.occupation,
-           fm_h.district, fm_h.state
+    SELECT f.id AS id, fm_husband.name AS name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
+           fm_husband.door_no, fm_husband.street, fm_husband.district, fm_husband.state, fm_husband.pincode,
+           fm_husband.photo AS husband_photo, fm_wife.photo AS wife_photo, COUNT(fm_child.id) AS children_count
     FROM families f
-    JOIN persons p ON f.id = p.family_id
-    LEFT JOIN family_members fm_h ON f.id = fm_h.family_id AND fm_h.relationship = 'husband'
-    LEFT JOIN family_members fm_w ON f.id = fm_w.family_id AND fm_w.relationship = 'wife'
-    ORDER BY p.husband_name ASC
+    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband' AND fm_husband.member_type = 'parent'
+    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife' AND fm_wife.member_type = 'parent'
+    LEFT JOIN family_members fm_child ON f.id = fm_child.family_id AND fm_child.member_type = 'child'
+    GROUP BY f.id, fm_husband.name, fm_wife.name, fm_husband.mobile, fm_husband.occupation, fm_husband.door_no, fm_husband.street, fm_husband.district, fm_husband.state, fm_husband.pincode, fm_husband.photo, fm_wife.photo
+    ORDER BY fm_husband.name ASC
     LIMIT ? OFFSET ?
   `;
 
@@ -36,30 +38,33 @@ exports.searchMembers = async (filters, page, limit) => {
   const params = [];
 
   let sql = `
-    SELECT f.id AS id, p.husband_name AS name, fm_w.name AS wife_name, fm_h.mobile, fm_h.occupation,
-           fm_h.district, fm_h.state
+    SELECT f.id AS id, p.husband_name AS name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
+           fm_husband.district, fm_husband.state, COUNT(fm_child.id) AS children_count
     FROM families f
     JOIN persons p ON f.id = p.family_id
-    LEFT JOIN family_members fm_h ON f.id = fm_h.family_id AND fm_h.relationship = 'husband'
-    LEFT JOIN family_members fm_w ON f.id = fm_w.family_id AND fm_w.relationship = 'wife'
+    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband' AND fm_husband.member_type = 'parent'
+    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife' AND fm_wife.member_type = 'parent'
+    LEFT JOIN family_members fm_child ON f.id = fm_child.family_id AND fm_child.member_type = 'child'
     WHERE 1=1
   `;
 
   if (input) {
-    sql += " AND (p.husband_name LIKE ? OR fm_h.mobile LIKE ? OR fm_h.occupation LIKE ?)";
+    sql += " AND (p.husband_name LIKE ? OR fm_husband.mobile LIKE ? OR fm_husband.occupation LIKE ?)";
     const like = `%${input}%`;
     params.push(like, like, like);
   }
 
   if (selectedState) {
-    sql += " AND fm_h.state = ?";
+    sql += " AND fm_husband.state = ?";
     params.push(selectedState);
   }
 
   if (selectedDistrict) {
-    sql += " AND fm_h.district = ?";
+    sql += " AND fm_husband.district = ?";
     params.push(selectedDistrict);
   }
+
+  sql += " GROUP BY f.id, p.husband_name, fm_wife.name, fm_husband.mobile, fm_husband.occupation, fm_husband.district, fm_husband.state";
 
   const countSql = `SELECT COUNT(*) AS total FROM (${sql}) x`;
 
@@ -84,41 +89,44 @@ exports.getDropdownOptions = (callback) => {
   });
 };
 
-exports.getMemberById = async (id) => {
+
+
+
+
+
+exports.getMemberById = (id, callback) => {
   const sql = `
-    SELECT f.id AS family_id, p.husband_name, fm_w.name AS wife_name, fm_h.mobile, fm_h.occupation,
-           fm_h.door_no, fm_h.street, fm_h.district, fm_h.state, fm_h.pincode, fm_h.photo AS husband_photo, fm_w.photo AS wife_photo
+    SELECT f.id AS family_id, fm_husband.name AS husband_name, fm_wife.name AS wife_name, fm_husband.mobile, fm_husband.occupation,
+           fm_husband.door_no, fm_husband.street, fm_husband.district, fm_husband.state, fm_husband.pincode,
+           fm_husband.photo AS husband_photo, fm_wife.photo AS wife_photo
     FROM families f
-    JOIN persons p ON f.id = p.family_id
-    LEFT JOIN family_members fm_h ON f.id = fm_h.family_id AND fm_h.relationship = 'husband'
-    LEFT JOIN family_members fm_w ON f.id = fm_w.family_id AND fm_w.relationship = 'wife'
+    LEFT JOIN family_members fm_husband ON f.id = fm_husband.family_id AND fm_husband.relationship = 'husband' AND fm_husband.member_type = 'parent'
+    LEFT JOIN family_members fm_wife ON f.id = fm_wife.family_id AND fm_wife.relationship = 'wife' AND fm_wife.member_type = 'parent'
     WHERE f.id = ?
   `;
-  const [results] = await db.query(sql, [id]);
-  if (results.length === 0) return null;
-  return results[0];
-};
-
-exports.updateMember = (id, data, callback) => {
-  // Update persons table for husband_name
-  const updatePersonSql = 'UPDATE persons SET husband_name = ? WHERE family_id = ?';
-  db.query(updatePersonSql, [data.name, id], (err) => {
+  db.query(sql, [id], (err, results) => {
     if (err) return callback(err);
-
-    // Update family_members for husband
-    const updateHusbandSql = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ?';
-    db.query(updateHusbandSql, [data.name, data.mobile, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, id, 'husband'], (err2) => {
-      if (err2) return callback(err2);
-
-      // Update family_members for wife
-      const updateWifeSql = 'UPDATE family_members SET name = ?, photo = ? WHERE family_id = ? AND relationship = ?';
-      db.query(updateWifeSql, [data.wife_name, data.wife_photo, id, 'wife'], callback);
-    });
+    if (results.length === 0) return callback(null, null);
+    callback(null, results[0]);
   });
 };
 
-exports.getChildrenByParentId = async (parentId) => {
-  const sql = 'SELECT * FROM children WHERE family_id = ?';
-  const [results] = await db.query(sql, [parentId]);
-  return results;
+exports.updateMember = (id, data, callback) => {
+  // Update husband family_member
+  const sqlHusband = 'UPDATE family_members SET name = ?, mobile = ?, occupation = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?, photo = ? WHERE family_id = ? AND relationship = ? AND member_type = ?';
+  const husbandParams = [data.name, data.mobile, data.occupation, data.door_no, data.street, data.district, data.state, data.pincode, data.husband_photo, id, 'husband', 'parent'];
+  db.query(sqlHusband, husbandParams, (err) => {
+    if (err) return callback(err);
+
+    // Update wife family_member
+    const sqlWife = 'UPDATE family_members SET name = ?, photo = ? WHERE family_id = ? AND relationship = ? AND member_type = ?';
+    const wifeParams = [data.wife_name, data.wife_photo, id, 'wife', 'parent'];
+    db.query(sqlWife, wifeParams, callback);
+  });
 };
+
+exports.getChildrenByParentId = (parentId, callback) => {
+  const sql = 'SELECT id AS child_id, name AS child_name, occupation, dob AS date_of_birth, gender, photo FROM family_members WHERE family_id = ? AND member_type = ?';
+  db.query(sql, [parentId, 'child'], callback);
+};
+

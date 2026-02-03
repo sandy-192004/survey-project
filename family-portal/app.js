@@ -9,7 +9,9 @@ const db = require("./config/db");
 
 const app = express();
 
-// ================== APP CONFIG ==================
+
+
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -39,6 +41,7 @@ app.use(
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
+
 
 // ================== ERROR HANDLER ==================
 app.use((err, req, res, next) => {
