@@ -2,166 +2,83 @@
 <html>
 <head>
   <title>Edit Family Member</title>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
   <style>
-    :root {
-      --brown-main: #5a3e1b;
-      --brown-dark: #3b2610;
-      --brown-light: #c8b08a;
-      --cream-bg: #f8f4ee;
-    }
-
-    body {
-      background: var(--cream-bg);
-      font-family: "Times New Roman", serif;
-    }
-
-    /* Header */
     .edit-header {
-      background: linear-gradient(135deg, var(--brown-main), var(--brown-dark));
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 1.8rem 0;
-      margin-bottom: 1.5rem;
-    }
-
-    .edit-header h1 {
-      font-weight: bold;
-    }
-
-    /* Form Container */
-    .edit-form {
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.15);
-      padding: 1.8rem;
+      padding: 2rem 0;
       margin-bottom: 2rem;
     }
-
-    /* Section */
+    .edit-form {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .current-photo {
+      max-width: 150px;
+      max-height: 150px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 3px solid #667eea;
+    }
     .form-section {
-      margin-bottom: 1.8rem;
-      padding-bottom: 1.2rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
       border-bottom: 1px solid #eee;
     }
-
     .form-section:last-child {
       border-bottom: none;
     }
-
     .section-title {
-      color: var(--brown-main);
-      font-weight: bold;
+      color: #667eea;
       margin-bottom: 1rem;
-    }
-
-    /* Photo */
-    .current-photo {
-      max-width: 140px;
-      max-height: 140px;
-      border-radius: 10px;
-      object-fit: cover;
-      border: 3px solid var(--brown-main);
-    }
-
-    /* Buttons */
-    .btn-primary {
-      background: var(--brown-main);
-      border-color: var(--brown-main);
-    }
-
-    .btn-primary:hover {
-      background: var(--brown-dark);
-      border-color: var(--brown-dark);
-    }
-
-    .btn-outline-secondary {
-      border-color: var(--brown-main);
-      color: var(--brown-main);
-    }
-
-    .btn-outline-secondary:hover {
-      background: var(--brown-main);
-      color: white;
-    }
-
-    /* Mobile Optimization */
-    @media (max-width: 768px) {
-      .edit-header {
-        padding: 1.4rem 0;
-        text-align: center;
-      }
-
-      .edit-header h1 {
-        font-size: 1.6rem;
-      }
-
-      .edit-form {
-        padding: 1.3rem;
-      }
-
-      .btn-lg {
-        width: 100%;
-        margin-bottom: 0.7rem;
-      }
-
-      .current-photo {
-        max-width: 110px;
-        max-height: 110px;
-      }
+      font-weight: bold;
     }
   </style>
 </head>
-
 <body>
 
-<!-- HEADER -->
 <div class="edit-header">
   <div class="container">
-    <h1>
-      <i class="fas fa-user-edit me-2"></i>
-      Edit Family Member
-    </h1>
-    <p class="mb-0">Update details for <strong><%= member.name %></strong></p>
+    <div class="row">
+      <div class="col-12">
+        <h1><i class="fas fa-user-edit me-3"></i>Edit Family Member</h1>
+        <p class="mb-0">Update the details for <%= member.name %></p>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- FORM -->
 <div class="container">
   <div class="edit-form">
-
     <form method="POST" action="/family/update/<%= memberId %>" enctype="multipart/form-data">
 
-      <!-- BASIC INFO -->
+      <!-- Basic Information -->
       <div class="form-section">
         <h4 class="section-title">
           <i class="fas fa-info-circle me-2"></i>Basic Information
         </h4>
-
         <div class="row">
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Name *</label>
             <input type="text" class="form-control" name="name" value="<%= member.name %>" required>
           </div>
-
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Mobile</label>
             <input type="tel" class="form-control" name="mobile" value="<%= member.mobile || '' %>">
           </div>
         </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
+        <div class="row mt-3">
+          <div class="col-md-6">
             <label class="form-label">Occupation</label>
             <input type="text" class="form-control" name="occupation" value="<%= member.occupation || '' %>">
           </div>
-
           <% if (member.member_type === 'child') { %>
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Relationship</label>
             <select class="form-control" name="relationship">
               <option value="son" <%= member.relationship === 'son' ? 'selected' : '' %>>Son</option>
@@ -172,24 +89,21 @@
         </div>
       </div>
 
-      <!-- CHILD DETAILS -->
+      <!-- Child-specific fields -->
       <% if (member.member_type === 'child') { %>
       <div class="form-section">
         <h4 class="section-title">
           <i class="fas fa-child me-2"></i>Child Details
         </h4>
-
         <div class="row">
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" name="dob"
-              value="<%= member.dob ? new Date(member.dob).toISOString().split('T')[0] : '' %>">
+            <input type="date" class="form-control" name="dob" value="<%= member.dob ? new Date(member.dob).toISOString().split('T')[0] : '' %>">
           </div>
-
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Gender</label>
             <select class="form-control" name="gender">
-              <option value="">Select</option>
+              <option value="">Select Gender</option>
               <option value="male" <%= member.gender === 'male' ? 'selected' : '' %>>Male</option>
               <option value="female" <%= member.gender === 'female' ? 'selected' : '' %>>Female</option>
             </select>
@@ -198,73 +112,72 @@
       </div>
       <% } %>
 
-      <!-- ADDRESS -->
-      <% if (member.member_type !== 'child') { %>
+      <!-- Address Information -->
       <div class="form-section">
         <h4 class="section-title">
-          <i class="fas fa-map-marker-alt me-2"></i>Address
+          <i class="fas fa-map-marker-alt me-2"></i>Address Information
         </h4>
-
         <div class="row">
-          <div class="col-md-4 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Door No</label>
             <input type="text" class="form-control" name="door_no" value="<%= member.door_no || '' %>">
           </div>
-
-          <div class="col-md-4 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Street</label>
             <input type="text" class="form-control" name="street" value="<%= member.street || '' %>">
           </div>
-
-          <div class="col-md-4 mb-3">
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-4">
+            <label class="form-label">District</label>
+            <input type="text" class="form-control" name="district" value="<%= member.district || '' %>">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">State</label>
+            <input type="text" class="form-control" name="state" value="<%= member.state || '' %>">
+          </div>
+          <div class="col-md-4">
             <label class="form-label">Pincode</label>
             <input type="text" class="form-control" name="pincode" value="<%= member.pincode || '' %>">
           </div>
         </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">District</label>
-            <input type="text" class="form-control" name="district" value="<%= member.district || '' %>">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">State</label>
-            <input type="text" class="form-control" name="state" value="<%= member.state || '' %>">
-          </div>
-        </div>
       </div>
-      <% } %>
 
-      <!-- PHOTO -->
+      <!-- Photo Upload -->
       <div class="form-section">
         <h4 class="section-title">
           <i class="fas fa-camera me-2"></i>Photo
         </h4>
-
-        <div class="row align-items-center">
-          <div class="col-md-6 mb-3">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="form-label">Upload New Photo</label>
             <input type="file" class="form-control" name="photo" accept="image/*">
             <small class="text-muted">Leave empty to keep current photo</small>
           </div>
-
-          <div class="col-md-6 text-center">
+          <div class="col-md-6">
             <% if (member.photo) { %>
-              <img src="/uploads/<%= member.photo %>" class="current-photo">
+              <label class="form-label">Current Photo</label>
+              <div>
+                <img src="/uploads/<%= member.photo.startsWith('parents/') || member.photo.startsWith('children/') ? member.photo : (member.member_type === 'parent' ? 'parents/' : 'children/') + member.photo %>"
+                     class="current-photo img-fluid"
+                     alt="Current photo">
+              </div>
               <input type="hidden" name="current_photo" value="<%= member.photo %>">
             <% } else { %>
-              <i class="fas fa-user-circle fa-4x text-muted"></i>
+              <div class="text-muted">
+                <i class="fas fa-user-circle fa-3x"></i>
+                <p>No photo uploaded</p>
+              </div>
             <% } %>
           </div>
         </div>
       </div>
 
-      <!-- ACTIONS -->
+      <!-- Action Buttons -->
       <div class="text-center">
-        <button type="submit" class="btn btn-primary btn-lg me-2">
-          <i class="fas fa-save me-2"></i>Update
+        <button type="submit" class="btn btn-primary btn-lg me-3">
+          <i class="fas fa-save me-2"></i>Update Member
         </button>
-
         <a href="/my-family" class="btn btn-outline-secondary btn-lg">
           <i class="fas fa-times me-2"></i>Cancel
         </a>
@@ -273,8 +186,9 @@
     </form>
   </div>
 
+  <!-- Add Another Child Section (only for child members) -->
   <% if (member.member_type === 'child') { %>
-  <div class="text-center mb-4">
+  <div class="text-center">
     <a href="/add-child" class="btn btn-success btn-lg">
       <i class="fas fa-plus me-2"></i>Add Another Child
     </a>
