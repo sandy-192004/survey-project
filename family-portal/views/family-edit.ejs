@@ -1,287 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Edit Family Member</title>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Family</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+  <!-- Brown Theme -->
   <style>
     :root {
-      --brown-main: #5a3e1b;
-      --brown-dark: #3b2610;
-      --brown-light: #c8b08a;
-      --cream-bg: #f8f4ee;
+      --brown-main: #6f4e37;
+      --brown-light: #f5efe9;
+      --brown-border: #d6c2b3;
     }
 
     body {
-      background: var(--cream-bg);
-      font-family: "Times New Roman", serif;
+      background-color: var(--brown-light);
     }
 
-    /* Header */
-    .edit-header {
-      background: linear-gradient(135deg, var(--brown-main), var(--brown-dark));
-      color: white;
-      padding: 1.8rem 0;
-      margin-bottom: 1.5rem;
-    }
-
-    .edit-header h1 {
-      font-weight: bold;
-    }
-
-    /* Form Container */
-    .edit-form {
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.15);
-      padding: 1.8rem;
-      margin-bottom: 2rem;
-    }
-
-    /* Section */
-    .form-section {
-      margin-bottom: 1.8rem;
-      padding-bottom: 1.2rem;
-      border-bottom: 1px solid #eee;
-    }
-
-    .form-section:last-child {
-      border-bottom: none;
-    }
-
-    .section-title {
+    h3, h5 {
       color: var(--brown-main);
-      font-weight: bold;
-      margin-bottom: 1rem;
+      font-weight: 600;
     }
 
-    /* Photo */
-    .current-photo {
-      max-width: 140px;
-      max-height: 140px;
+    .card {
+      border: 1px solid var(--brown-border);
       border-radius: 10px;
-      object-fit: cover;
-      border: 3px solid var(--brown-main);
+      margin-bottom: 15px;
     }
 
-    /* Buttons */
     .btn-primary {
-      background: var(--brown-main);
+      background-color: var(--brown-main);
       border-color: var(--brown-main);
     }
 
     .btn-primary:hover {
-      background: var(--brown-dark);
-      border-color: var(--brown-dark);
+      background-color: #5a3f2c;
+      border-color: #5a3f2c;
     }
 
-    .btn-outline-secondary {
+    .form-control:focus {
       border-color: var(--brown-main);
-      color: var(--brown-main);
+      box-shadow: 0 0 0 0.2rem rgba(111, 78, 55, 0.25);
     }
 
-    .btn-outline-secondary:hover {
-      background: var(--brown-main);
-      color: white;
-    }
-
-    /* Mobile Optimization */
-    @media (max-width: 768px) {
-      .edit-header {
-        padding: 1.4rem 0;
-        text-align: center;
-      }
-
-      .edit-header h1 {
-        font-size: 1.6rem;
-      }
-
-      .edit-form {
-        padding: 1.3rem;
-      }
-
-      .btn-lg {
-        width: 100%;
-        margin-bottom: 0.7rem;
-      }
-
-      .current-photo {
-        max-width: 110px;
-        max-height: 110px;
-      }
+    .img-thumbnail {
+      max-height: 150px;
+      object-fit: cover;
+      display: none;
+      margin-top: 8px;
     }
   </style>
 </head>
+<body class="container-fluid mt-4">
 
-<body>
-
-<!-- HEADER -->
-<div class="edit-header">
-  <div class="container">
-    <h1>
-      <i class="fas fa-user-edit me-2"></i>
-      Edit Family Member
-    </h1>
-    <p class="mb-0">Update details for <strong><%= member.name %></strong></p>
-  </div>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+  <h3 class="mb-3 mb-md-0">Edit Family</h3>
+  <a href="/my-family" class="btn btn-secondary">Back to My Family</a>
 </div>
 
-<!-- FORM -->
-<div class="container">
-  <div class="edit-form">
-
-    <form method="POST" action="/family/update/<%= memberId %>" enctype="multipart/form-data">
-
-      <!-- BASIC INFO -->
-      <div class="form-section">
-        <h4 class="section-title">
-          <i class="fas fa-info-circle me-2"></i>Basic Information
-        </h4>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Name *</label>
-            <input type="text" class="form-control" name="name" value="<%= member.name %>" required>
+<form id="editFamilyForm" enctype="multipart/form-data">
+  <div class="row g-2">
+    <div class="col-12">
+      <div class="card p-3">
+        <div class="row g-2">
+          <div class="col-12 col-md-6">
+            <h5 class="mb-3 small">Parent Details</h5>
+            <input class="form-control mb-2 small" name="husband_name" placeholder="Husband Name" required>
+            <input class="form-control mb-2 small" name="wife_name" placeholder="Wife Name">
+            <input class="form-control mb-2 small" name="wife_mobile" placeholder="Wife Mobile" type="tel">
+            <input class="form-control mb-2 small" name="wife_occupation" placeholder="Wife Occupation">
+            <input class="form-control mb-2 small" name="husband_mobile" placeholder="Husband Mobile" type="tel">
+            <input class="form-control mb-2 small" name="husband_occupation" placeholder="Husband Occupation">
           </div>
 
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Mobile</label>
-            <input type="tel" class="form-control" name="mobile" value="<%= member.mobile || '' %>">
+          <div class="col-12 col-md-6">
+            <h5 class="mb-3 small">Photos</h5>
+            <div class="mb-3">
+              <label class="form-label small">Husband Photo</label>
+              <input type="file" class="form-control small" name="husband_photo" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
+              <img id="husband_preview" class="img-thumbnail">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Wife Photo</label>
+              <input type="file" class="form-control small" name="wife_photo" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
+              <img id="wife_preview" class="img-thumbnail">
+            </div>
           </div>
         </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Occupation</label>
-            <input type="text" class="form-control" name="occupation" value="<%= member.occupation || '' %>">
+        <h5 class="mt-4 mb-3 small">Address</h5>
+        <div class="row g-2">
+          <div class="col-12 col-md-6">
+            <input class="form-control mb-2 small" name="door_no" placeholder="Door No">
+            <input class="form-control mb-2 small" name="street" placeholder="Street">
           </div>
-
-          <% if (member.member_type === 'child') { %>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Relationship</label>
-            <select class="form-control" name="relationship">
-              <option value="son" <%= member.relationship === 'son' ? 'selected' : '' %>>Son</option>
-              <option value="daughter" <%= member.relationship === 'daughter' ? 'selected' : '' %>>Daughter</option>
+          <div class="col-12 col-md-6">
+            <select class="form-control mb-2 small" name="state" id="state">
+              <option value="">Select State</option>
             </select>
-          </div>
-          <% } %>
-        </div>
-      </div>
-
-      <!-- CHILD DETAILS -->
-      <% if (member.member_type === 'child') { %>
-      <div class="form-section">
-        <h4 class="section-title">
-          <i class="fas fa-child me-2"></i>Child Details
-        </h4>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" name="dob"
-              value="<%= member.dob ? new Date(member.dob).toISOString().split('T')[0] : '' %>">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Gender</label>
-            <select class="form-control" name="gender">
-              <option value="">Select</option>
-              <option value="male" <%= member.gender === 'male' ? 'selected' : '' %>>Male</option>
-              <option value="female" <%= member.gender === 'female' ? 'selected' : '' %>>Female</option>
+            <select class="form-control mb-2 small" name="district" id="district">
+              <option value="">Select District</option>
             </select>
           </div>
         </div>
-      </div>
-      <% } %>
 
-      <!-- ADDRESS -->
-      <% if (member.member_type !== 'child') { %>
-      <div class="form-section">
-        <h4 class="section-title">
-          <i class="fas fa-map-marker-alt me-2"></i>Address
-        </h4>
+        <input class="form-control mb-3 small" name="pincode" placeholder="Pincode" type="text">
 
-        <div class="row">
-          <div class="col-md-4 mb-3">
-            <label class="form-label">Door No</label>
-            <input type="text" class="form-control" name="door_no" value="<%= member.door_no || '' %>">
-          </div>
-
-          <div class="col-md-4 mb-3">
-            <label class="form-label">Street</label>
-            <input type="text" class="form-control" name="street" value="<%= member.street || '' %>">
-          </div>
-
-          <div class="col-md-4 mb-3">
-            <label class="form-label">Pincode</label>
-            <input type="text" class="form-control" name="pincode" value="<%= member.pincode || '' %>">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">District</label>
-            <input type="text" class="form-control" name="district" value="<%= member.district || '' %>">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">State</label>
-            <input type="text" class="form-control" name="state" value="<%= member.state || '' %>">
-          </div>
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Update Family</button>
         </div>
       </div>
-      <% } %>
-
-      <!-- PHOTO -->
-      <div class="form-section">
-        <h4 class="section-title">
-          <i class="fas fa-camera me-2"></i>Photo
-        </h4>
-
-        <div class="row align-items-center">
-          <div class="col-md-6 mb-3">
-            <input type="file" class="form-control" name="photo" accept="image/*">
-            <small class="text-muted">Leave empty to keep current photo</small>
-          </div>
-
-          <div class="col-md-6 text-center">
-            <% if (member.photo) { %>
-              <img src="/uploads/<%= member.photo %>" class="current-photo">
-              <input type="hidden" name="current_photo" value="<%= member.photo %>">
-            <% } else { %>
-              <i class="fas fa-user-circle fa-4x text-muted"></i>
-            <% } %>
-          </div>
-        </div>
-      </div>
-
-      <!-- ACTIONS -->
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary btn-lg me-2">
-          <i class="fas fa-save me-2"></i>Update
-        </button>
-
-        <a href="/my-family" class="btn btn-outline-secondary btn-lg">
-          <i class="fas fa-times me-2"></i>Cancel
-        </a>
-      </div>
-
-    </form>
+    </div>
   </div>
+</form>
 
-  <% if (member.member_type === 'child') { %>
-  <div class="text-center mb-4">
-    <a href="/add-child" class="btn btn-success btn-lg">
-      <i class="fas fa-plus me-2"></i>Add Another Child
-    </a>
-  </div>
-  <% } %>
-</div>
+<script src="/js/family.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function handlePhotoSelect(input, previewId) {
+    if(input.files && input.files[0]){
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const img = document.getElementById(previewId);
+        img.src = e.target.result;
+        img.style.display = 'block';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // Load existing family data
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const res = await fetch("/my-family-json");
+      const data = await res.json();
+
+      if (data.success && data.members) {
+        // Find parents
+        const husband = data.members.find(m => m.relationship === 'husband');
+        const wife = data.members.find(m => m.relationship === 'wife');
+
+        if (husband) {
+          document.querySelector('input[name="husband_name"]').value = husband.name || '';
+          document.querySelector('input[name="husband_mobile"]').value = husband.mobile || '';
+          document.querySelector('input[name="husband_occupation"]').value = husband.occupation || '';
+
+          if (husband.photo) {
+            document.getElementById('husband_preview').src = '/uploads/' + husband.photo;
+            document.getElementById('husband_preview').style.display = 'block';
+          }
+        }
+
+        if (wife) {
+          document.querySelector('input[name="wife_name"]').value = wife.name || '';
+          document.querySelector('input[name="wife_mobile"]').value = wife.mobile || '';
+          document.querySelector('input[name="wife_occupation"]').value = wife.occupation || '';
+
+          if (wife.photo) {
+            document.getElementById('wife_preview').src = '/' + wife.photo;
+            document.getElementById('wife_preview').style.display = 'block';
+          }
+        }
+
+        // Address fields
+        document.querySelector('input[name="door_no"]').value = husband?.door_no || wife?.door_no || '';
+        document.querySelector('input[name="street"]').value = husband?.street || wife?.street || '';
+        document.querySelector('select[name="state"]').value = husband?.state || wife?.state || '';
+        document.querySelector('select[name="district"]').value = husband?.district || wife?.district || '';
+        document.querySelector('input[name="pincode"]').value = husband?.pincode || wife?.pincode || '';
+      }
+    } catch (err) {
+      console.error("Error loading family data:", err);
+    }
+  });
+
+  document.getElementById('editFamilyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    try {
+      const res = await fetch('/update-family', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Family updated successfully!',
+          confirmButtonColor: '#6f4e37'
+        }).then(() => {
+          window.location.href = '/my-family';
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: result.message || 'Failed to update family',
+          confirmButtonColor: '#6f4e37'
+        });
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Network error occurred',
+        confirmButtonColor: '#6f4e37'
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
