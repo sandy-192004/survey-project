@@ -8,7 +8,7 @@
 
 <div class="container py-4">
 
-<% if (updated) { %>
+<% if (locals.updated) { %>
   <div class="alert alert-success alert-dismissible fade show" role="alert">
     Family details updated successfully!
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -18,6 +18,7 @@
 <%- include("search-filter-form") %>
 
 <div class="mb-3">
+  <a href="/family-form" class="btn btn-primary">Add Family</a> <!-- Newly added button to add family -->
   <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
   <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
 </div>

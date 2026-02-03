@@ -32,7 +32,7 @@ exports.getAll = (page, limit, callback) => {
   });
 };
 
-exports.searchMembers = async (filters, page, limit) => {
+exports.searchMembers = (filters, page, limit, callback) => {
   const { input, selectedState, selectedDistrict } = filters;
   const offset = (page - 1) * limit;
   const params = [];
@@ -68,14 +68,19 @@ exports.searchMembers = async (filters, page, limit) => {
 
   const countSql = `SELECT COUNT(*) AS total FROM (${sql}) x`;
 
-  const [countResult] = await db.query(countSql, params);
-  const totalPages = Math.ceil(countResult[0].total / limit);
+  db.query(countSql, params, (err, countResult) => {
+    if (err) return callback(err);
 
-  sql += " ORDER BY p.husband_name ASC LIMIT ? OFFSET ?";
-  params.push(limit, offset);
+    const totalPages = Math.ceil(countResult[0].total / limit);
 
-  const [results] = await db.query(sql, params);
-  return { results, totalPages };
+    sql += " ORDER BY p.husband_name ASC LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    db.query(sql, params, (err2, results) => {
+      if (err2) return callback(err2);
+      callback(null, { results, totalPages });
+    });
+  });
 };
 
 exports.getDropdownOptions = (callback) => {

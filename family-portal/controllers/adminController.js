@@ -210,7 +210,8 @@ exports.search = async (req, res) => {
       selectedDistrict: district,
       searchValue: q,
       totalPages,
-      currentPage: page
+      currentPage: page,
+      updated: false
     });
 
   } catch (err) {
