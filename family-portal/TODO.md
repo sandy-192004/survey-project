@@ -1,0 +1,2 @@
+- [ ] Update adminController.js viewMember function to add husband_gender and wife_gender to the member object
+- [ ] Update views/admin/view.ejs to display gender for husband and wife in their respective cards

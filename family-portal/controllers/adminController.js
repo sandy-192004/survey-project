@@ -241,6 +241,8 @@ exports.viewMember = async (req, res) => {
       family_id: familyId,
       husband_name: husband ? husband.name : "",
       wife_name: wife ? wife.name : "",
+      husband_gender: husband ? husband.gender : "",
+      wife_gender: wife ? wife.gender : "",
       mobile: husband ? husband.mobile : "",
       occupation: husband ? husband.occupation : "",
       door_no: husband ? husband.door_no : "",
