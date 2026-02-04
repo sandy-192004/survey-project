@@ -361,115 +361,116 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("familyForm");
   if (form) {
     form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
-    const formData = new FormData(form);
-    const members = [];
+      const formData = new FormData(form);
+      const members = [];
 
-    // Add husband
-    const husbandName = formData.get("husband_name");
-    if (husbandName) {
-      members.push({
-        member_type: "parent",
-        name: husbandName,
-        relationship: "husband",
-        gender: formData.get("parent[husband_gender]") || "male",
-        mobile: formData.get("parent[mobile]") || null,
-        occupation: formData.get("parent[occupation]") || null,
-        door_no: formData.get("parent[door_no]") || null,
-        street: formData.get("parent[street]") || null,
-        district: formData.get("parent[district]") || null,
-        state: formData.get("parent[state]") || null,
-        pincode: formData.get("parent[pincode]") || null
-      });
-    }
-
-    // Add wife
-    const wifeName = formData.get("parent[wife_name]");
-    if (wifeName) {
-      members.push({
-        member_type: "parent",
-        name: wifeName,
-        relationship: "wife",
-        gender: formData.get("parent[wife_gender]") || "female",
-        mobile: formData.get("parent[mobile_wife]") || null,
-        occupation: formData.get("parent[occupation_wife]") || null,
-        door_no: formData.get("parent[door_no]") || null,
-        street: formData.get("parent[street]") || null,
-        district: formData.get("parent[district]") || null,
-        state: formData.get("parent[state]") || null,
-        pincode: formData.get("parent[pincode]") || null
-      });
-    }
-
-    // Add children
-    const childrenContainer = document.getElementById("children");
-    const childCards = childrenContainer.querySelectorAll(".child-card");
-    childCards.forEach((card, index) => {
-      const childName = formData.get(`children[${index}][name]`);
-      if (childName) {
+      // Add husband
+      const husbandName = formData.get("husband_name");
+      if (husbandName) {
         members.push({
-          member_type: "child",
-          name: childName,
-          relationship: formData.get(`children[${index}][relationship]`) || null,
-          dob: formData.get(`children[${index}][dob]`) || null,
-          gender: formData.get(`children[${index}][gender]`) || null,
-          occupation: formData.get(`children[${index}][occupation]`) || null,
-          door_no: formData.get(`children[${index}][door_no]`) || null,
-          street: formData.get(`children[${index}][street]`) || null,
-          district: formData.get(`children[${index}][district]`) || null,
-          state: formData.get(`children[${index}][state]`) || null,
-          pincode: formData.get(`children[${index}][pincode]`) || null,
-          use_parent_address: formData.get(`children[${index}][use_parent_address]`) === "true"
+          member_type: "parent",
+          name: husbandName,
+          relationship: "husband",
+          gender: formData.get("parent[husband_gender]") || "male",
+          mobile: formData.get("parent[mobile]") || null,
+          occupation: formData.get("parent[occupation]") || null,
+          door_no: formData.get("parent[door_no]") || null,
+          street: formData.get("parent[street]") || null,
+          district: formData.get("parent[district]") || null,
+          state: formData.get("parent[state]") || null,
+          pincode: formData.get("parent[pincode]") || null
         });
+      }
+
+      // Add wife
+      const wifeName = formData.get("parent[wife_name]");
+      if (wifeName) {
+        members.push({
+          member_type: "parent",
+          name: wifeName,
+          relationship: "wife",
+          gender: formData.get("parent[wife_gender]") || "female",
+          mobile: formData.get("parent[mobile_wife]") || null,
+          occupation: formData.get("parent[occupation_wife]") || null,
+          door_no: formData.get("parent[door_no]") || null,
+          street: formData.get("parent[street]") || null,
+          district: formData.get("parent[district]") || null,
+          state: formData.get("parent[state]") || null,
+          pincode: formData.get("parent[pincode]") || null
+        });
+      }
+
+      // Add children
+      const childrenContainer = document.getElementById("children");
+      const childCards = childrenContainer.querySelectorAll(".child-card");
+      childCards.forEach((card, index) => {
+        const childName = formData.get(`children[${index}][name]`);
+        if (childName) {
+          members.push({
+            member_type: "child",
+            name: childName,
+            relationship: formData.get(`children[${index}][relationship]`) || null,
+            dob: formData.get(`children[${index}][dob]`) || null,
+            gender: formData.get(`children[${index}][gender]`) || null,
+            occupation: formData.get(`children[${index}][occupation]`) || null,
+            door_no: formData.get(`children[${index}][door_no]`) || null,
+            street: formData.get(`children[${index}][street]`) || null,
+            district: formData.get(`children[${index}][district]`) || null,
+            state: formData.get(`children[${index}][state]`) || null,
+            pincode: formData.get(`children[${index}][pincode]`) || null,
+            use_parent_address: formData.get(`children[${index}][use_parent_address]`) === "true"
+          });
+        }
+      });
+
+      // Append JSON data
+      formData.append("members", JSON.stringify(members));
+      formData.append("husband_name", husbandName);
+
+      try {
+        const response = await fetch("/save-family", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (err) {
+          console.error("Server did NOT return JSON. Raw response:", text);
+          alert("Server error: Invalid response from server. Check backend.");
+          return;
+        }
+
+        if (result.success && result.exists) {
+          window.location.href = "/my-family";
+        } else if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Family Saved Successfully!',
+            text: 'Your family details including children have been saved.',
+            showConfirmButton: false,
+            timer: 3000
+          }).then(() => {
+            window.location.href = "/dashboard";
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Save Family',
+            text: result.message || 'An error occurred'
+          });
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Server not reachable");
       }
     });
-
-    // Append JSON data
-    formData.append("members", JSON.stringify(members));
-    formData.append("husband_name", husbandName);
-
-    try {
-      const response = await fetch("/save-family", {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
-
-      const text = await response.text();
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch (err) {
-        console.error("Server did NOT return JSON. Raw response:", text);
-        alert("Server error: Invalid response from server. Check backend.");
-        return;
-      }
-
-      if (result.success && result.exists) {
-        window.location.href = "/my-family";
-      } else if (result.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Family Saved Successfully!',
-          text: 'Your family details including children have been saved.',
-          showConfirmButton: false,
-          timer: 3000
-        }).then(() => {
-          window.location.href = "/dashboard";
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed to Save Family',
-          text: result.message || 'An error occurred'
-        });
-      }
-    } catch (error) {
-      console.error("Network error:", error);
-      alert("Server not reachable");
-    }
-  });
+  }
 });
 
 // ================== EDIT POPUP AND MODAL HANDLING ==================
@@ -506,8 +507,21 @@ async function showEditPopup(relationship, memberId, element) {
     }
 
     popupContent += `<p><strong>Gender:</strong> ${member.gender || '-'}</p>
-      <p><strong>Address:</strong> ${[member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-'}</p>
-    </div>`;
+      <p><strong>Address:</strong> ${[member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-'}</p>`;
+
+    if (member.photo && member.photo.trim() !== '') {
+      let photoSrc = member.photo;
+      const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/);
+      if (sizeMatch) photoSrc = sizeMatch[1];
+      if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
+      if (photoSrc.startsWith('uploads/')) {
+        popupContent += `<p><img src="/${photoSrc}" class="img-fluid" style="max-height: 100px;"></p>`;
+      } else {
+        popupContent += `<p><img src="/uploads/${photoSrc}" class="img-fluid" style="max-height: 100px;"></p>`;
+      }
+    }
+
+    popupContent += `</div>`;
 
     // Show popup with options
     if (typeof Swal !== 'undefined') {
@@ -580,21 +594,45 @@ async function openEditModal(relationship, memberId) {
 
     // Populate form with member data
     const form = document.getElementById(formId);
-    form.querySelector('[name="name"]').value = member.name || '';
-    form.querySelector('[name="mobile"]').value = member.mobile || '';
-    form.querySelector('[name="occupation"]').value = member.occupation || '';
-    form.querySelector('[name="door_no"]').value = member.door_no || '';
-    form.querySelector('[name="street"]').value = member.street || '';
-    form.querySelector('[name="pincode"]').value = member.pincode || '';
-    form.querySelector('[name="state"]').value = member.state || '';
-    form.querySelector('[name="district"]').value = member.district || '';
+    if (form) {
+      const nameInput = form.querySelector('[name="name"]');
+      if (nameInput) nameInput.value = member.name || '';
 
-    // Handle child-specific fields
-    if (relationship === 'child') {
-      form.querySelector('[name="member_id"]').value = memberId;
-      form.querySelector('[name="dob"]').value = member.dob ? new Date(member.dob).toISOString().split('T')[0] : '';
-      form.querySelector('[name="gender"]').value = member.gender || '';
-      form.querySelector('[name="relationship"]').value = member.relationship || '';
+      const mobileInput = form.querySelector('[name="mobile"]');
+      if (mobileInput) mobileInput.value = member.mobile || '';
+
+      const occupationInput = form.querySelector('[name="occupation"]');
+      if (occupationInput) occupationInput.value = member.occupation || '';
+
+      const doorNoInput = form.querySelector('[name="door_no"]');
+      if (doorNoInput) doorNoInput.value = member.door_no || '';
+
+      const streetInput = form.querySelector('[name="street"]');
+      if (streetInput) streetInput.value = member.street || '';
+
+      const pincodeInput = form.querySelector('[name="pincode"]');
+      if (pincodeInput) pincodeInput.value = member.pincode || '';
+
+      const stateInput = form.querySelector('[name="state"]');
+      if (stateInput) stateInput.value = member.state || '';
+
+      const districtInput = form.querySelector('[name="district"]');
+      if (districtInput) districtInput.value = member.district || '';
+
+      // Handle child-specific fields
+      if (relationship === 'child') {
+        const memberIdInput = form.querySelector('[name="member_id"]');
+        if (memberIdInput) memberIdInput.value = memberId;
+
+        const dobInput = form.querySelector('[name="dob"]');
+        if (dobInput) dobInput.value = member.dob ? new Date(member.dob).toISOString().split('T')[0] : '';
+
+        const genderInput = form.querySelector('[name="gender"]');
+        if (genderInput) genderInput.value = member.gender || '';
+
+        const relationshipInput = form.querySelector('[name="relationship"]');
+        if (relationshipInput) relationshipInput.value = member.relationship || '';
+      }
     }
 
     // Handle photo preview

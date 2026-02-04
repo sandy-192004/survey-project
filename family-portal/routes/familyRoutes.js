@@ -40,9 +40,14 @@ router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", controller.getMyFamilyJson);
 
+// Add child route
+router.post("/add-child", isLoggedIn, upload.single('photo'), controller.addChild);
+
 // Edit routes
 router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
 router.get("/edit-form/:id", isLoggedIn, controller.editForm);
+router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
+router.get("/get-child/:id", isLoggedIn, controller.getChild);
 router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
 router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
 router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);

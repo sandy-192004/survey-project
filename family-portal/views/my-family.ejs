@@ -138,11 +138,6 @@
   <!-- HEADER -->
   <div class="family-header">
     My Family
-    <div style="position: absolute; top: 10px; right: 20px;">
-      <a href="/family-edit" class="btn btn-light btn-sm">
-        <i class="fas fa-edit"></i> Edit Family
-      </a>
-    </div>
   </div>
 
   <div class="container mt-4">
@@ -165,21 +160,9 @@
 
           <div class="member-card">
             <% if (member.relationship === 'husband') { %>
-              <i class="fas fa-edit edit-icon edit-husband-btn"
-                 onclick="openEditModal('husband', '<%= member.id %>')"
-                 data-id="<%= member.id %>"
-                 data-name="<%= member.name %>"
-                 data-mobile="<%= member.mobile || '' %>"
-                 data-occupation="<%= member.occupation || '' %>"
-                 data-photo="<%= member.photo || '' %>"></i>
+              <button type="button" class="edit-icon" onclick="openEditModal('husband', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
             <% } else if (member.relationship === 'wife') { %>
-              <i class="fas fa-edit edit-icon edit-wife-btn"
-                 onclick="openEditModal('wife', '<%= member.id %>')"
-                 data-id="<%= member.id %>"
-                 data-name="<%= member.name %>"
-                 data-mobile="<%= member.mobile || '' %>"
-                 data-occupation="<%= member.occupation || '' %>"
-                 data-photo="<%= member.photo || '' %>"></i>
+              <button type="button" class="edit-icon" onclick="openEditModal('wife', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
             <% } %>
 
             <div class="member-info">
@@ -230,7 +213,7 @@
         <% if (member.member_type === 'child') { %>
 
           <div class="member-card">
-            <i class="fas fa-edit edit-icon" onclick="openEditModal('child', '<%= member.id %>')"></i>
+            <button type="button" class="edit-icon" onclick="openEditModal('child', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
 
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
