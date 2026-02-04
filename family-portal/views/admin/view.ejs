@@ -31,6 +31,7 @@
           <p><strong>Name:</strong> <%= member.husband_name %></p>
           <p><strong>Mobile:</strong> <%= member.mobile %></p>
           <p><strong>Occupation:</strong> <%= member.occupation %></p>
+          <p><strong>Gender:</strong> <%= member.husband_gender %></p>
           <h6>Address</h6>
           <p><strong>Door No:</strong> <%= member.door_no %></p>
           <p><strong>Street:</strong> <%= member.street %></p>
@@ -58,6 +59,7 @@
           <p><strong>Name:</strong> <%= member.wife_name %></p>
           <p><strong>Mobile:</strong> <%= member.mobile %></p>
           <p><strong>Occupation:</strong> <%= member.occupation %></p>
+          <p><strong>Gender:</strong> <%= member.wife_gender %></p>
           <h6>Address</h6>
           <p><strong>Door No:</strong> <%= member.door_no %></p>
           <p><strong>Street:</strong> <%= member.street %></p>
@@ -83,6 +85,7 @@
       <div class="border p-2 mb-2 d-flex">
         <div class="flex-grow-1">
           <p><strong>Name:</strong> <%= child.name %></p>
+          <p><strong>Relationship:</strong> <%= child.relationship %></p>
           <p><strong>Occupation:</strong> <%= child.occupation %></p>
           <p><strong>Date of Birth:</strong>
             <%= child.dob && new Date(child.dob).toString() !== 'Invalid Date' ? new Date(child.dob).toLocaleDateString('en-IN', {
@@ -92,6 +95,12 @@
             }) : 'N/A' %>
           </p>
           <p><strong>Gender:</strong> <%= child.gender %></p>
+          <h6>Address</h6>
+          <p><strong>Door No:</strong> <%= child.door_no %></p>
+          <p><strong>Street:</strong> <%= child.street %></p>
+          <p><strong>District:</strong> <%= child.district %></p>
+          <p><strong>State:</strong> <%= child.state %></p>
+          <p><strong>Pincode:</strong> <%= child.pincode %></p>
         </div>
         <% if (child.photo) { %>
           <div class="ms-3">
