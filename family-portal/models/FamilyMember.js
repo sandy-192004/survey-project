@@ -34,7 +34,7 @@ exports.create = async (data) => {
  */
 exports.update = async (memberId, memberData) => {
   const sql = "UPDATE family_members SET ? WHERE id = ?";
-  await db.promise().query(sql, [memberData, memberId]);
+  await db.query(sql, [memberData, memberId]);
 };
 
 /**

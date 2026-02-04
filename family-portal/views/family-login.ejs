@@ -127,9 +127,17 @@
         function toggleForms() {
             const loginForm = document.getElementById('loginForm');
             const signupForm = document.getElementById('signupForm');
-            
+
             loginForm.classList.toggle('d-none');
             signupForm.classList.toggle('d-none');
+        }
+
+        // Check for registration success message
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('registered') === 'true') {
+            alert('Registration successful! Please log in with your credentials.');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         // Validate signup form

@@ -99,8 +99,8 @@ exports.dashboard = async (req, res) => {
     params.push(limit, offset);
 
     console.log('Dashboard: About to execute query');
-    const [rows] = await db.promise().query(sql, params);
-    const [countResult] = await db.promise().query(countSql, countParams);
+    const [rows] = await db.query(sql, params);
+    const [countResult] = await db.query(countSql, countParams);
     const totalPages = Math.ceil(countResult[0].total / limit);
 
     console.log('Dashboard query results:', rows.length, 'rows');
@@ -198,8 +198,8 @@ exports.search = async (req, res) => {
     sql += " ORDER BY fm.family_id LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
-    const [rows] = await db.promise().query(sql, params);
-    const [countResult] = await db.promise().query(countSql, countParams);
+    const [rows] = await db.query(sql, params);
+    const [countResult] = await db.query(countSql, countParams);
     const totalPages = Math.ceil(countResult[0].total / limit);
 
     res.render("admin/dashboard", {
@@ -227,7 +227,7 @@ exports.viewMember = async (req, res) => {
     const familyId = req.params.id;
     const FamilyMember = require("../models/FamilyMember");
 
-    const [members] = await FamilyMember.getByFamilyId(familyId);
+    const members = await FamilyMember.getByFamilyId(familyId);
 
     const parents = members.filter(m => m.member_type === "parent");
     const children = members.filter(m => m.member_type === "child");
@@ -271,7 +271,7 @@ exports.editMember = async (req, res) => {
     const familyId = req.params.id;
     const FamilyMember = require("../models/FamilyMember");
 
-    const [members] = await FamilyMember.getByFamilyId(familyId);
+    const members = await FamilyMember.getByFamilyId(familyId);
 
     const parents = members.filter(m => m.member_type === "parent");
     const children = members.filter(m => m.member_type === "child");
@@ -333,7 +333,7 @@ exports.updateMember = async (req, res) => {
     const FamilyMember = require("../models/FamilyMember");
 
     // Get existing members
-    const [members] = await FamilyMember.getByFamilyId(familyId);
+    const members = await FamilyMember.getByFamilyId(familyId);
     const parents = members.filter(m => m.member_type === "parent");
     const children = members.filter(m => m.member_type === "child");
 
@@ -417,7 +417,7 @@ exports.updateMember = async (req, res) => {
             const params = [childData.name, childData.occupation, childData.dob, childData.gender];
             if (childData.photo) params.push(childData.photo);
             params.push(child.id);
-            await db.promise().query(sql, params);
+            await db.query(sql, params);
           } else {
             // Insert new child (added via + Add Child button)
             const fullChildData = {
