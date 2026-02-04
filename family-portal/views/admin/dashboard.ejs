@@ -1,65 +1,392 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - Family Portal</title>
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #8B4513;
+      --secondary-color: #ecbd7bd5;
+
+      --success-color: #16A34A;
+      --warning-color: #F59E0B;
+      --danger-color: #DC2626;
+
+      --light-bg: #F4F6F8;
+      --card-bg: #FFFFFF;
+
+      --text-primary: #e8ebef;
+      --text-secondary: #2d1e1ed8;
+
+      --light-brown-color: #f8f6f5;
+
+      --card-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      --card-shadow-hover: 0 14px 30px rgba(0,0,0,0.12);
+    }
+
+   body {
+  font-family: 'Inter', sans-serif;
+  background: url("/images/tem.jpg");
+  background-size: cover;
+  margin: 0;
+}
+    .header {
+      background: rgba(255, 255, 255, 0.623);
+      border-radius: 14px;
+      padding: 0.9rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .header h1 {
+      color: var(--primary-color);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+      gap: 3rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 250, 250, 0.615);
+      padding: 0.7rem;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+      transition: 0.25s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin: 0 auto 0.5rem;
+    }
+
+    .families { background: var(--primary-color); }
+    .members { background: var(--secondary-color); }
+    .children { background: var(--success-color); }
+    .recent { background: var(--warning-color); }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    /* Search */
+    .search-section {
+      background: rgba(255, 255, 255, 0.693);
+      padding: 1.5rem;
+      border-radius: 5px;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* Cards */
+    .family-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 280px));
+      gap: 8rem;
+      justify-content: center;
+    }
+
+    .family-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      transition: 0.25s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .family-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .edit-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      z-index: 10;
+    }
+
+    .edit-btn:hover {
+      background: var(--secondary-color);
+    }
+
+    .family-card-header {
+      background: linear-gradient(135deg, #8B4513, #c9896b);
+      padding: 1rem;
+      color: white;
+    }
+
+    .family-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin: 0;
+    }
+
+    .family-card-body {
+      padding: 1.25rem;
+    }
+
+    .family-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .info-item {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .info-item i {
+      color: var(--primary-color);
+    }
+
+    .children-badge {
+      grid-column: span 2;
+      background: var(--light-brown-color);
+      color: var(--primary-color);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+
+    .family-actions {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .btn-action {
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 0.35rem 0.7rem;
+      border: none;
+    }
+
+    .btn-edit {
+      background: var(--success-color);
+      color: white;
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: var(--danger-color);
+      border: 1px solid var(--danger-color);
+    }
+
+    /* Bottom */
+    .bottom-section {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+    }
+
+    .btn-export {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      margin: 0.25rem;
+      display: inline-flex;
+      gap: 0.3rem;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .pagination .page-link {
+      border-radius: 8px;
+      color: var(--primary-color);
+      border: none;
+    }
+
+    .page-item.active .page-link {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    @media(max-width:768px) {
+      .family-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body class="bg-light">
 
-<div class="container py-4">
+<body>
+<div class="container-fluid p-4">
 
-<% if (updated) { %>
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    Family details updated successfully!
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  <div class="header">
+    <div>
+      <h1><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
+      <p class="subtitle">Manage and monitor family registrations</p>
+    </div>
+    <div class="export-buttons">
+      <a href="/admin/export/excel" class="btn-export" style="background:var(--success-color)">
+        <i class="fas fa-file-excel"></i> Excel
+      </a>
+      <a href="/admin/export/pdf" class="btn-export" style="background:var(--danger-color)">
+        <i class="fas fa-file-pdf"></i> PDF
+      </a>
+    </div>
   </div>
-<% } %>
 
-<%- include("search-filter-form") %>
+  <% if (stats) { %>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon families"><i class="fas fa-users"></i></div>
+      <div class="stat-value"><%= stats.totalFamilies %></div>
+      <div class="stat-label">Families</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon members"><i class="fas fa-user-friends"></i></div>
+      <div class="stat-value"><%= stats.totalMembers %></div>
+      <div class="stat-label">Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon children"><i class="fas fa-child"></i></div>
+      <div class="stat-value"><%= stats.totalChildren %></div>
+      <div class="stat-label">Children</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon recent"><i class="fas fa-calendar-plus"></i></div>
+      <div class="stat-value"><%= stats.recentFamilies %></div>
+      <div class="stat-label">Recent</div>
+    </div>
+  </div>
+  <% } %>
 
-<div class="mb-3">
-  <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
-  <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
-</div>
+  <div class="search-section">
+    <%- include("search-filter-form") %>
+  </div>
 
-  <p>Debug: Results count: <%= results.length %></p>
+  <% if (message) { %>
+  <div class="alert alert-info text-center" role="alert">
+    <%= message %>
+  </div>
+  <% } %>
 
-  <div class="row g-4">
+  <div class="family-grid">
     <% results.forEach(member => { %>
-      <div class="col-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title"><%= member.name %></h5>
-            <p class="text-muted mb-1"><%= member.district %>, <%= member.state %></p>
-            <small><%= member.occupation %></small>
-            <p class="text-muted mb-1">Children: <%= member.children_count || 0 %></p>
-            <div class="mt-3">
-              <a href="/admin/view/<%= member.id %>" class="btn btn-primary btn-sm">View</a>
-              <a href="/admin/edit/<%= member.id %>" class="btn btn-secondary btn-sm">Edit</a>
+      <div class="family-card" onclick="window.location='/admin/view/<%= member.id %>'">
+        <button class="edit-btn" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
+          <i class="fas fa-pencil"></i>
+        </button>
+        <div class="family-card-header">
+          <h5 class="family-name">
+            <i class="fas fa-user-circle"></i> <%= member.name %>
+          </h5>
+        </div>
+        <div class="family-card-body">
+          <div class="family-info">
+            <div class="info-item"><i class="fas fa-map-marker-alt"></i><%= member.district %>, <%= member.state %></div>
+            <div class="info-item"><i class="fas fa-briefcase"></i><%= member.occupation %></div>
+            <div class="children-badge">
+              <i class="fas fa-child"></i> <%= member.children_count || 0 %> Children
             </div>
+          </div>
+
+          <div class="family-actions">
+            <button class="btn btn-action btn-delete"
+              onclick="event.stopPropagation(); if(confirm('Delete this family?')) location='/admin/delete/<%= member.id %>'">
+              Delete
+            </button>
           </div>
         </div>
       </div>
     <% }) %>
   </div>
 
-  <% if (totalPages > 1) { %>
-  <nav class="mt-4">
-    <ul class="pagination justify-content-center">
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-          <a class="page-link"
-             href="?page=<%= i %>&q=<%= searchValue %>&state=<%= selectedState %>&district=<%= selectedDistrict %>">
-            <%= i %>
-          </a>
-        </li>
-      <% } %>
-    </ul>
-  </nav>
-  <% } %>
+  <div class="bottom-section">
+    <% if (totalPages > 1) { %>
+    <nav>
+      <ul class="pagination justify-content-center mt-3">
+        <% for(let i=1;i<=totalPages;i++){ %>
+          <li class="page-item <%= i===currentPage?'active':'' %>">
+            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+    <% } %>
+  </div>
 
 </div>
-</body>
-</html>
- 
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
