@@ -231,14 +231,22 @@ function handleSameAddressCheck(childIndex) {
     doorNo.value = parentDoorNo;
     street.value = parentStreet;
     state.value = parentState;
-    district.value = parentDistrict;
     pincode.value = parentPincode;
 
-    // Set readonly instead of disabled
+    // Load districts for the selected state
+    loadDistrictsForChild(childIndex);
+    // After loading districts, set the district value
+    setTimeout(() => {
+      district.value = parentDistrict;
+    }, 100);
+
+    // Make inputs readonly but keep selects enabled for form submission
     doorNo.readOnly = true;
     street.readOnly = true;
-    state.disabled = true; // Keep select as disabled since readonly doesn't work well for selects
-    district.disabled = true;
+    state.style.pointerEvents = 'none'; // Prevent interaction
+    state.style.opacity = '0.6'; // Visual indication
+    district.style.pointerEvents = 'none';
+    district.style.opacity = '0.6';
     pincode.readOnly = true;
 
     // Set flag
@@ -253,8 +261,10 @@ function handleSameAddressCheck(childIndex) {
 
     doorNo.readOnly = false;
     street.readOnly = false;
-    state.disabled = false;
-    district.disabled = false;
+    state.style.pointerEvents = 'auto';
+    state.style.opacity = '1';
+    district.style.pointerEvents = 'auto';
+    district.style.opacity = '1';
     pincode.readOnly = false;
 
     // Reset flag
