@@ -241,10 +241,8 @@ exports.search = async (req, res) => {
       currentPage: page,
 
       stats: stats,
-      message: req.query.message || null
-
+      message: req.query.message || null,
       updated: false
-
     });
 
   } catch (err) {
