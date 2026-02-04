@@ -82,6 +82,38 @@
   </div>
 </nav>
 
+<!-- Mobile Sidebar Offcanvas -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="navbar-nav">
+      <li class="nav-item mb-2">
+        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#familyCheckModal">
+          <i class="bi bi-people-fill"></i> Family
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link" href="/pooja-booking">
+          <i class="bi bi-calendar-heart"></i> Pooja Booking
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link" href="/profile">
+          <i class="bi bi-person-circle"></i> Profile
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/logout">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
 <!-- Welcome Section (ONLY ONE BUTTON NOW) -->
 <div class="container mt-5">
   <div class="row">
@@ -160,8 +192,7 @@ $("#familyBtn").on("click", function () {
       // Family exists → go to My Family page
       window.location.href = "/my-family";
     } else {
-      // ❌ NO REDIRECT HERE
-      // ✅ SHOW POPUP ON DASHBOARD ITSELF
+      
       showFamilyModal(
         "No Details Found",
         "No family details found. Please add your family details.",

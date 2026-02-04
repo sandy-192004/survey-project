@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard - Family Portal</title>
+  <title>Admin View- Family Portal</title>
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,144 +18,73 @@
     :root {
       --primary-color: #8B4513;
       --secondary-color: #ecbd7bd5;
-
       --success-color: #16A34A;
       --warning-color: #F59E0B;
       --danger-color: #DC2626;
-
-      --light-bg: #F4F6F8;
-      --card-bg: #FFFFFF;
-
-      --text-primary: #e8ebef;
-      --text-secondary: #2d1e1ed8;
-
-      --light-brown-color: #f8f6f5;
-
-      --card-shadow: 0 8px 20px rgba(0,0,0,0.08);
-      --card-shadow-hover: 0 14px 30px rgba(0,0,0,0.12);
+      --text-secondary: #ffffffd8;
+      --card-shadow: 0 8px 20px rgba(6, 5, 5, 0.08);
+      --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.12);
     }
 
-   body {
-  font-family: 'Inter', sans-serif;
-  background: url("/images/tem.jpg");
-  background-size: cover;
-  margin: 0;
-}
+    body {
+      font-family: 'Inter', sans-serif;
+      background: url("/images/tem.jpg") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      
+    }
+
     .header {
-      background: rgba(255, 255, 255, 0.623);
+      background: #faf7f79c;
+       color: #070606;
       border-radius: 14px;
-      padding: 0.9rem;
+      padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
       box-shadow: var(--card-shadow);
       display: flex;
       justify-content: space-between;
       align-items: center;
+
     }
 
-    .export-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .header h1 {
-      color: var(--primary-color);
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .subtitle {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* Stats */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-      gap: 3rem;
-      margin-bottom: 3.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+       color: #0a0a0a;
     }
 
     .stat-card {
-      background: rgba(255, 250, 250, 0.615);
-      padding: 0.7rem;
-      border-radius: 8px;
+      background: #faf7f79c;
+      padding: 1rem;
+      border-radius: 10px;
       text-align: center;
       box-shadow: var(--card-shadow);
-      transition: 0.25s;
+       color: #000000;
     }
 
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--card-shadow-hover);
-    }
-
-    .stat-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      margin: 0 auto 0.5rem;
-    }
-
-    .families { background: var(--primary-color); }
-    .members { background: var(--secondary-color); }
-    .children { background: var(--success-color); }
-    .recent { background: var(--warning-color); }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-    }
-
-    /* Search */
-    .search-section {
-      background: rgba(255, 255, 255, 0.693);
-      padding: 1.5rem;
-      border-radius: 5px;
-      margin-bottom: 2rem;
-      box-shadow: var(--card-shadow);
-    }
-
-    /* Cards */
     .family-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 280px));
-      gap: 8rem;
-      justify-content: center;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
     }
 
     .family-card {
-      background: var(--card-bg);
+      background: #faf7f79c;
       border-radius: 14px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
-      transition: 0.25s;
       cursor: pointer;
       position: relative;
-    }
-
-    .family-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--card-shadow-hover);
     }
 
     .edit-btn {
       position: absolute;
       top: 10px;
       right: 10px;
-      background: var(--primary-color);
-      color: white;
+      background: #803535;
+      color: rgb(255, 255, 255);
       border: none;
       border-radius: 50%;
       width: 30px;
@@ -164,125 +93,90 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 0.8rem;
       z-index: 10;
     }
 
     .edit-btn:hover {
-      background: var(--secondary-color);
+      background: #803535;
+    }
+
+    .delete-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: #803535;
+      color: rgb(255, 255, 255);
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .delete-btn:hover {
+      background: #c82333;
     }
 
     .family-card-header {
-      background: linear-gradient(135deg, #8B4513, #c9896b);
-      padding: 1rem;
-      color: white;
-    }
-
-    .family-name {
-      font-size: 1.05rem;
-      font-weight: 600;
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      margin: 0;
+      background: linear-gradient(135deg, #8B4513, #c19879);
+      padding: 0.75rem;
+      color: #ffffff;
     }
 
     .family-card-body {
-      padding: 1.25rem;
-    }
-
-    .family-info {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .info-item {
-      display: flex;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .info-item i {
-      color: var(--primary-color);
+      padding: 1rem;
+      color: rgb(0, 0, 0);
     }
 
     .children-badge {
-      grid-column: span 2;
-      background: var(--light-brown-color);
+      background: #f8f6f5;
       color: var(--primary-color);
       padding: 0.35rem 0.7rem;
       border-radius: 999px;
       font-size: 0.75rem;
-      font-weight: 600;
-      display: inline-flex;
-      gap: 0.3rem;
+      display: inline-block;
       margin-top: 0.5rem;
     }
 
-    .family-actions {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-    }
-
-    .btn-action {
-      font-size: 0.8rem;
-      font-weight: 600;
-      border-radius: 6px;
-      padding: 0.35rem 0.7rem;
-      border: none;
-    }
-
-    .btn-edit {
-      background: var(--success-color);
-      color: white;
-    }
-
-    .btn-delete {
-      background: transparent;
-      color: var(--danger-color);
-      border: 1px solid var(--danger-color);
-    }
-
-    /* Bottom */
-    .bottom-section {
+    /* Pagination Styles */
+    .pagination {
       margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid #e5e7eb;
-      text-align: center;
-    }
-
-    .btn-export {
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      color: white;
-      font-weight: 600;
-      text-decoration: none;
-      margin: 0.25rem;
-      display: inline-flex;
-      gap: 0.3rem;
-      align-items: center;
-      font-size: 0.85rem;
+      margin-bottom: 2rem;
     }
 
     .pagination .page-link {
-      border-radius: 8px;
       color: var(--primary-color);
-      border: none;
+      background-color: rgba(255, 255, 255, 0.9);
+      border: 2px solid var(--primary-color);
+      border-radius: 50px;
+      padding: 0.25rem 0.5rem;
+      margin: 0 0.125rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.1s ease;
+      box-shadow: var(--card-shadow);
     }
 
-    .page-item.active .page-link {
-      background: var(--primary-color);
-      color: white;
+    .pagination .page-link:hover {
+      background-color: var(--primary-color);
+      color: rgb(19, 19, 19);
+      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
     }
 
-    @media(max-width:768px) {
-      .family-grid {
-        grid-template-columns: 1fr;
-      }
+    .pagination .page-item.active .page-link {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: rgb(0, 0, 0);
+      box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    }
+
+    .pagination .page-item.disabled .page-link {
+      color: #6c757d;
+      background-color: #e9ecef;
+      border-color: #dee2e6;
     }
   </style>
 </head>
@@ -290,119 +184,172 @@
 <body>
 <div class="container-fluid p-4">
 
-
+  <!-- HEADER -->
   <div class="header">
     <div>
-      <h1><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
-      <p class="subtitle">Manage and monitor family registrations</p>
+      <h4 class="fw-bold mb-0" style="color: #8B4513;">
+        <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
+      </h4>
+      <small style="color: rgb(0, 0, 0);">Manage and monitor family registrations</small>
     </div>
+
     <div class="dropdown">
-      <button class="btn-export" style="background:var(--primary-color); font-size: 1.2rem; padding: 0.5rem 0.75rem;" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        ⋮
-      </button>
-      <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+      <button class="btn btn-lg" style="color:  #8B4513;" data-bs-toggle="dropdown">⋮</button>
+      <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
         <li><a class="dropdown-item" href="/admin/export/pdf"><i class="fas fa-file-pdf"></i> PDF</a></li>
       </ul>
     </div>
-
-<% if (locals.updated) { %>
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    Family details updated successfully!
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-
   </div>
 
+  <!-- ALERT -->
+  <% if (locals.updated) { %>
+  <div class="alert alert-success alert-dismissible fade show mb-4">
+    Family details updated successfully!
+    <button class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <% } %>
+
+  <% if (locals.deleted) { %>
+  <div class="alert alert-danger alert-dismissible fade show mb-4">
+    Family deleted successfully!
+    <button class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <% } %>
+
+  <!-- STATS -->
   <% if (stats) { %>
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon families"><i class="fas fa-users"></i></div>
-      <div class="stat-value"><%= stats.totalFamilies %></div>
-      <div class="stat-label">Families</div>
+      <i class="fas fa-users fa-2x text-primary"></i>
+      <h4><%= stats.totalFamilies %></h4>
+      <small>Families</small>
     </div>
     <div class="stat-card">
-      <div class="stat-icon members"><i class="fas fa-user-friends"></i></div>
-      <div class="stat-value"><%= stats.totalMembers %></div>
-      <div class="stat-label">Members</div>
+      <i class="fas fa-user-friends fa-2x text-success"></i>
+      <h4><%= stats.totalMembers %></h4>
+      <small>Members</small>
     </div>
     <div class="stat-card">
-      <div class="stat-icon children"><i class="fas fa-child"></i></div>
-      <div class="stat-value"><%= stats.totalChildren %></div>
-      <div class="stat-label">Children</div>
+      <i class="fas fa-child fa-2x text-warning"></i>
+      <h4><%= stats.totalChildren %></h4>
+      <small>Children</small>
     </div>
     <div class="stat-card">
-      <div class="stat-icon recent"><i class="fas fa-calendar-plus"></i></div>
-      <div class="stat-value"><%= stats.recentFamilies %></div>
-      <div class="stat-label">Recent</div>
+      <i class="fas fa-calendar-plus fa-2x text-danger"></i>
+      <h4><%= stats.recentFamilies %></h4>
+      <small>Recent</small>
     </div>
   </div>
   <% } %>
-<% } %>
 
-  <div class="search-section">
-    <%- include("search-filter-form") %>
+  <!-- SEARCH -->
+  <div class="card mb-4" style="background-color: #faf7f79c;">
+    <div class="card-body">
+      <%- include("search-filter-form") %>
+    </div>
   </div>
 
-<div class="mb-3">
-  <a href="/family-form" class="btn btn-primary">Add Family</a> <!-- Newly added button to add family -->
-  <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
-  <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
-</div>
-
-
-  <% if (message) { %>
-  <div class="alert alert-info text-center" role="alert">
-    <%= message %>
+  <!-- ACTION BUTTONS -->
+  <div class="mb-4 d-flex gap-2">
+    <a href="/family-form" class="btn btn-primary">Add Family</a>
   </div>
-  <% } %>
 
+  <!-- FAMILY CARDS -->
   <div class="family-grid">
     <% results.forEach(member => { %>
-      <div class="family-card" onclick="window.location='/admin/view/<%= member.id %>'">
-        <button class="edit-btn" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
-          <i class="fas fa-pencil"></i>
-        </button>
-        <div class="family-card-header">
-          <h5 class="family-name">
-            <i class="fas fa-user-circle"></i> <%= member.name %>
-          </h5>
-        </div>
-        <div class="family-card-body">
-          <div class="family-info">
-            <div class="info-item"><i class="fas fa-map-marker-alt"></i><%= member.district %>, <%= member.state %></div>
-            <div class="info-item"><i class="fas fa-briefcase"></i><%= member.occupation %></div>
-            <div class="children-badge">
-              <i class="fas fa-child"></i> <%= member.children_count || 0 %> Children
-            </div>
-          </div>
-
-          <div class="family-actions">
-            <button class="btn btn-action btn-delete"
-              onclick="event.stopPropagation(); if(confirm('Delete this family?')) location='/admin/delete/<%= member.id %>'">
-              Delete
-            </button>
-          </div>
-        </div>
+    <div class="family-card" onclick="location='/admin/view/<%= member.id %>'">
+      <button class="edit-btn" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
+        <i class="fas fa-pencil-alt"></i>
+      </button>
+      <button class="delete-btn" onclick="event.stopPropagation(); confirmDelete( member.id , '<%= member.name %>')">
+        DELETE
+      </button>
+      <div class="family-card-header">
+        <strong><i class="fas fa-user-circle"></i> <%= member.name %></strong>
       </div>
+      <div class="family-card-body">
+        <p><i class="fas fa-map-marker-alt"></i> <%= member.district %>, <%= member.state %></p>
+        <p><i class="fas fa-briefcase"></i> <%= member.occupation %></p>
+        <span class="children-badge">
+          <i class="fas fa-child"></i> <%= member.children_count || 0 %> Children
+        </span>
+      </div>
+    </div>
     <% }) %>
   </div>
 
-  <div class="bottom-section">
-    <% if (totalPages > 1) { %>
-    <nav>
-      <ul class="pagination justify-content-center mt-3">
-        <% for(let i=1;i<=totalPages;i++){ %>
-          <li class="page-item <%= i===currentPage?'active':'' %>">
-            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-          </li>
-        <% } %>
-      </ul>
-    </nav>
+  <!-- PAGINATION -->
+<% if (totalPages > 1) { %>
+<nav class="d-flex justify-content-center mt-3">
+  <ul class="pagination pagination-sm align-items-center">
+
+    <!-- Back button -->
+    <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+      <a class="page-link" href="?page=<%= currentPage - 1 %>">
+        &laquo; Back
+      </a>
+    </li>
+
+    <!-- Page numbers -->
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+        <a class="page-link" href="?page=<%= i %>">
+          <%= i %>
+        </a>
+      </li>
     <% } %>
-  </div>
+
+    <!-- Next button -->
+    <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+      <a class="page-link" href="?page=<%= currentPage + 1 %>">
+        Next &raquo;
+      </a>
+    </li>
+
+  </ul>
+</nav>
+<% } %>
 
 </div>
 
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteMessage">Sure you want to delete the family?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let deleteFamilyId = null;
+
+function confirmDelete(familyId, familyName) {
+  deleteFamilyId = familyId;
+  document.getElementById('deleteMessage').textContent = 'Sure you want to delete the family "' + familyName + '"?';
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+  deleteModal.show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+  if (deleteFamilyId) {
+    // Redirect to delete endpoint
+    window.location.href = '/admin/delete/' + deleteFamilyId;
+  }
+});
+</script>
 </body>
-</html> 
+</html>
