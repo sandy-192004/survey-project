@@ -543,9 +543,9 @@ exports.showFamilyEdit = async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    // Get parent members for this user
+    // Get all family members for this user
     const [members] = await db.query(
-      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ? AND fm.member_type = 'parent'",
+      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ?",
       [userId]
     );
 
@@ -753,5 +753,25 @@ exports.updateWife = async (req, res) => {
   }
 };
 
-// Alias for editForm to match the route
-exports.editForm = exports.showMemberEdit;
+// Get member data for edit (JSON response for AJAX)
+exports.editForm = async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const userId = req.session.user.id;
+
+    // Get the specific member
+    const [members] = await db.query(
+      "SELECT * FROM family_members WHERE id = ? AND family_id IN (SELECT id FROM families WHERE user_id = ?)",
+      [memberId, userId]
+    );
+
+    if (members.length === 0) {
+      return res.json({ success: false, message: "Member not found" });
+    }
+
+    res.json({ success: true, member: members[0] });
+  } catch (err) {
+    console.error("Edit form error:", err);
+    res.json({ success: false, message: "Failed to load member data" });
+  }
+};

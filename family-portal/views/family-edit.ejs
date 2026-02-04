@@ -140,9 +140,9 @@
 
           <div class="member-card">
             <% if (member.relationship === 'husband') { %>
-              <i class="fas fa-edit edit-icon" onclick="openHusbandEditModal(<%= member.id %>)"></i>
+              <i class="fas fa-edit edit-icon" onclick="showEditPopupForEditPage('husband', <%= member.id %>)"></i>
             <% } else if (member.relationship === 'wife') { %>
-              <i class="fas fa-edit edit-icon" onclick="openWifeEditModal(<%= member.id %>)"></i>
+              <i class="fas fa-edit edit-icon" onclick="showEditPopupForEditPage('wife', <%= member.id %>)"></i>
             <% } %>
 
             <div class="member-info">
@@ -190,7 +190,7 @@
         <% if (member.member_type === 'child') { %>
 
           <div class="member-card">
-            <i class="fas fa-edit edit-icon" onclick="openChildEditModal(<%= member.id %>)"></i>
+            <i class="fas fa-edit edit-icon" onclick="showEditPopupForEditPage('<%= member.relationship %>', <%= member.id %>)"></i>
 
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
@@ -417,6 +417,71 @@
           img.style.display = 'block';
         }
         reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // Show edit popup for family-edit page
+    async function showEditPopupForEditPage(relationship, memberId) {
+      try {
+        // Fetch member data
+        const response = await fetch(`/edit-form/${memberId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load member data'
+          });
+          return;
+        }
+
+        const member = data.member;
+
+        // Build popup content
+        let popupContent = `<div style="text-align: center;">
+          <h4>${member.name}</h4>
+          <p><strong>Relationship:</strong> ${member.relationship}</p>
+          <p><strong>Mobile:</strong> ${member.mobile || '-'}</p>
+          <p><strong>Occupation:</strong> ${member.occupation || '-'}</p>`;
+
+        if (member.dob) {
+          popupContent += `<p><strong>DOB:</strong> ${new Date(member.dob).toISOString().split('T')[0]}</p>`;
+        }
+
+        popupContent += `<p><strong>Gender:</strong> ${member.gender || '-'}</p>
+          <p><strong>Address:</strong> ${[member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-'}</p>
+        </div>`;
+
+        // Show popup with options
+        Swal.fire({
+          title: 'Member Details',
+          html: popupContent,
+          showCancelButton: true,
+          confirmButtonText: 'Edit Details',
+          cancelButtonText: 'Close',
+          confirmButtonColor: '#8B4513',
+          cancelButtonColor: '#6c757d'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Proceed to open edit modal
+            if (relationship === 'husband') {
+              openHusbandEditModal(memberId);
+            } else if (relationship === 'wife') {
+              openWifeEditModal(memberId);
+            } else if (relationship === 'son' || relationship === 'daughter') {
+              openChildEditModal(memberId);
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error showing edit popup:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to show edit popup'
+        });
       }
     }
 

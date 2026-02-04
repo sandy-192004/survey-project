@@ -138,6 +138,11 @@
   <!-- HEADER -->
   <div class="family-header">
     My Family
+    <div style="position: absolute; top: 10px; right: 20px;">
+      <a href="/family-edit" class="btn btn-light btn-sm">
+        <i class="fas fa-edit"></i> Edit Family
+      </a>
+    </div>
   </div>
 
   <div class="container mt-4">
@@ -159,7 +164,23 @@
         <% if (member.member_type === 'parent') { %>
 
           <div class="member-card">
-            <i class="fas fa-edit edit-icon" onclick="window.location.href='/family-edit'"></i>
+            <% if (member.relationship === 'husband') { %>
+              <i class="fas fa-edit edit-icon edit-husband-btn"
+                 onclick="openEditModal('husband', '<%= member.id %>')"
+                 data-id="<%= member.id %>"
+                 data-name="<%= member.name %>"
+                 data-mobile="<%= member.mobile || '' %>"
+                 data-occupation="<%= member.occupation || '' %>"
+                 data-photo="<%= member.photo || '' %>"></i>
+            <% } else if (member.relationship === 'wife') { %>
+              <i class="fas fa-edit edit-icon edit-wife-btn"
+                 onclick="openEditModal('wife', '<%= member.id %>')"
+                 data-id="<%= member.id %>"
+                 data-name="<%= member.name %>"
+                 data-mobile="<%= member.mobile || '' %>"
+                 data-occupation="<%= member.occupation || '' %>"
+                 data-photo="<%= member.photo || '' %>"></i>
+            <% } %>
 
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
@@ -209,7 +230,7 @@
         <% if (member.member_type === 'child') { %>
 
           <div class="member-card">
-            <i class="fas fa-edit edit-icon" onclick="window.location.href='/member-edit/<%= member.id %>'"></i>
+            <i class="fas fa-edit edit-icon" onclick="openEditModal('child', '<%= member.id %>')"></i>
 
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
@@ -563,172 +584,7 @@
     </div>
   </div>
 
-  <!-- HUSBAND EDIT MODAL -->
-  <div class="modal fade" id="husbandEditModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
-          <h5 class="modal-title">Edit Husband Details</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="husbandEditForm" enctype="multipart/form-data">
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Name</label>
-                <input class="form-control mb-2" name="name" placeholder="Husband Name" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Mobile</label>
-                <input class="form-control mb-2" name="mobile" placeholder="Mobile Number" type="tel">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Occupation</label>
-                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Photo</label>
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'husbandEditPreview')">
-                <img id="husbandEditPreview" class="img-thumbnail" style="max-height: 100px; display: none;">
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 
-  <!-- WIFE EDIT MODAL -->
-  <div class="modal fade" id="wifeEditModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
-          <h5 class="modal-title">Edit Wife Details</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="wifeEditForm" enctype="multipart/form-data">
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Name</label>
-                <input class="form-control mb-2" name="name" placeholder="Wife Name" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Mobile</label>
-                <input class="form-control mb-2" name="mobile" placeholder="Mobile Number" type="tel">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Occupation</label>
-                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Photo</label>
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'wifeEditPreview')">
-                <img id="wifeEditPreview" class="img-thumbnail" style="max-height: 100px; display: none;">
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- CHILD EDIT MODAL -->
-  <div class="modal fade" id="childEditModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
-          <h5 class="modal-title">Edit Child Details</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="childEditForm" enctype="multipart/form-data">
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Name</label>
-                <input class="form-control mb-2" name="name" placeholder="Child Name" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" class="form-control mb-2" name="dob">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Gender</label>
-                <select class="form-control mb-2" name="gender">
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Occupation</label>
-                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">Relationship</label>
-                <select class="form-control mb-2" name="relationship">
-                  <option value="">Relationship</option>
-                  <option value="son">Son</option>
-                  <option value="daughter">Daughter</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Photo</label>
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'childEditPreview')">
-                <img id="childEditPreview" class="img-thumbnail" style="max-height: 100px; display: none;">
-              </div>
-            </div>
-            <!-- Address Section -->
-            <h6 class="mt-3 mb-2">Address</h6>
-            <div class="row">
-              <div class="col-md-6">
-                <input class="form-control mb-2" name="door_no" placeholder="Door No">
-              </div>
-              <div class="col-md-6">
-                <input class="form-control mb-2" name="street" placeholder="Street">
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-4">
-                <input class="form-control mb-2" name="pincode" placeholder="Pincode" pattern="[0-9]{6}" title="Enter 6-digit pincode">
-              </div>
-              <div class="col-md-4">
-                <select class="form-control mb-2" name="state" id="childEditState">
-                  <option value="">Select State</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <select class="form-control mb-2" name="district" id="childEditDistrict">
-                  <option value="">Select District</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/family.js"></script>

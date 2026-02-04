@@ -20,21 +20,20 @@ router.post("/login", controller.login);
 router.get("/register", controller.showRegister);
 router.post("/register", controller.register);
 router.get("/logout", controller.logout);
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 04ffd0088f4ea691d2aef3a9322ce0757ed199c3
+
+
 router.get("/dashboard", isLoggedIn, controller.dashboard);
 
 // ================== FAMILY FORM ==================
-<<<<<<< HEAD
+
 router.get("/family-form", isLoggedIn, controller.showForm);
 router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
-=======
+
 router.get("/family-form", controller.showForm);
 router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
->>>>>>> 04ffd0088f4ea691d2aef3a9322ce0757ed199c3
+
 
 // ================== FAMILY MANAGEMENT ==================
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
@@ -42,6 +41,7 @@ router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", controller.getMyFamilyJson);
 
 // Edit routes
+router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
 router.get("/edit-form/:id", isLoggedIn, controller.editForm);
 router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
 router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
