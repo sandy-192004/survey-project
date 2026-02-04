@@ -9,27 +9,37 @@ const { isLoggedIn } = require("../middleware/auth");
 const { processUpload } = require("../middleware/upload");
 
 
-// ================== EXPORT ROUTES ==================
+
 router.get("/export/excel", exportCtrl.excel);
 router.get("/export/pdf", exportCtrl.pdf);
 
-// ================== AUTH ==================
+
 router.get("/", controller.showLogin);
 router.get("/login", controller.showLogin);
 router.post("/login", controller.login);
 router.get("/register", controller.showRegister);
 router.post("/register", controller.register);
 router.get("/logout", controller.logout);
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 04ffd0088f4ea691d2aef3a9322ce0757ed199c3
 router.get("/dashboard", isLoggedIn, controller.dashboard);
 
 // ================== FAMILY FORM ==================
+<<<<<<< HEAD
 router.get("/family-form", isLoggedIn, controller.showForm);
 router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
+=======
+router.get("/family-form", controller.showForm);
+router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
+>>>>>>> 04ffd0088f4ea691d2aef3a9322ce0757ed199c3
 
 // ================== FAMILY MANAGEMENT ==================
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
-router.get("/my-family-json", isLoggedIn, controller.getMyFamilyJson);
+router.get("/my-family-json", controller.getMyFamilyJson);
 
 // Edit routes
 router.get("/edit-form/:id", isLoggedIn, controller.editForm);

@@ -39,6 +39,19 @@ exports.dashboard = async (req, res) => {
 
     const { states, districts } = loadDropdownOptions();
 
+    // Calculate stats
+    const [totalFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent'");
+    const [totalMembersResult] = await db.query("SELECT COUNT(*) AS total FROM family_members");
+    const [totalChildrenResult] = await db.query("SELECT COUNT(*) AS total FROM family_members WHERE member_type = 'child'");
+    const [recentFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+
+    const stats = {
+      totalFamilies: totalFamiliesResult[0].total,
+      totalMembers: totalMembersResult[0].total,
+      totalChildren: totalChildrenResult[0].total,
+      recentFamilies: recentFamiliesResult[0].total
+    };
+
     let sql = `
       SELECT
         fm.family_id AS id,
@@ -116,7 +129,9 @@ exports.dashboard = async (req, res) => {
       searchValue: q,
       totalPages,
       currentPage: page,
-      updated: req.query.updated === "true"
+      updated: req.query.updated === "true",
+      stats: stats,
+      message: req.query.message || null
     });
 
   } catch (err) {
@@ -202,6 +217,19 @@ exports.search = async (req, res) => {
     const [countResult] = await db.query(countSql, countParams);
     const totalPages = Math.ceil(countResult[0].total / limit);
 
+    // Calculate stats for search as well
+    const [totalFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent'");
+    const [totalMembersResult] = await db.query("SELECT COUNT(*) AS total FROM family_members");
+    const [totalChildrenResult] = await db.query("SELECT COUNT(*) AS total FROM family_members WHERE member_type = 'child'");
+    const [recentFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+
+    const stats = {
+      totalFamilies: totalFamiliesResult[0].total,
+      totalMembers: totalMembersResult[0].total,
+      totalChildren: totalChildrenResult[0].total,
+      recentFamilies: recentFamiliesResult[0].total
+    };
+
     res.render("admin/dashboard", {
       results: rows,
       states,
@@ -210,7 +238,13 @@ exports.search = async (req, res) => {
       selectedDistrict: district,
       searchValue: q,
       totalPages,
-      currentPage: page
+      currentPage: page,
+
+      stats: stats,
+      message: req.query.message || null,
+
+      updated: false
+
     });
 
   } catch (err) {
@@ -219,9 +253,9 @@ exports.search = async (req, res) => {
   }
 };
 
-// =======================
+
 // VIEW FAMILY MEMBERS
-// =======================
+
 exports.viewMember = async (req, res) => {
   try {
     const familyId = req.params.id;
@@ -240,6 +274,8 @@ exports.viewMember = async (req, res) => {
       family_id: familyId,
       husband_name: husband ? husband.name : "",
       wife_name: wife ? wife.name : "",
+      husband_gender: husband ? husband.gender : "",
+      wife_gender: wife ? wife.gender : "",
       mobile: husband ? husband.mobile : "",
       occupation: husband ? husband.occupation : "",
       door_no: husband ? husband.door_no : "",

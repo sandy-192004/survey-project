@@ -24,7 +24,8 @@ exports.searchFamilies = (req, res) => {
       searchValue: "",
       currentPage: 1,
       totalPages: 0,
-      user: req.user
+      user: req.user,
+      updated: false
     });
   }
 
@@ -46,7 +47,8 @@ exports.searchFamilies = (req, res) => {
           searchValue: q,
           currentPage: 1,
           totalPages: 0,
-          user: req.user
+          user: req.user,
+          updated: false
         });
       }
 
@@ -63,7 +65,8 @@ exports.searchFamilies = (req, res) => {
         searchValue: q,
         currentPage: page,
         totalPages: data.totalPages,
-        user: req.user
+        user: req.user,
+        updated: false
       });
     }
   );
