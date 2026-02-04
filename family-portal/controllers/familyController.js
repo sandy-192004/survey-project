@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 /* ================= AUTH ================= */
 
@@ -212,14 +214,29 @@ exports.saveFamily = async (req, res) => {
         if (member_type === 'parent') {
           if (relationship === 'husband') {
             const husbandFiles = req.files['parent[husband_photo]'];
-            if (husbandFiles && husbandFiles[0]) photoPath = `parents/${husbandFiles[0].filename}`;
+            if (husbandFiles && husbandFiles[0]) {
+              photoPath = `parents/${husbandFiles[0].filename}`;
+              const filePath = path.join('uploads', photoPath);
+              const stats = fs.statSync(filePath);
+              photoPath = `${photoPath}(${stats.size})`;
+            }
           } else if (relationship === 'wife') {
             const wifeFiles = req.files['parent[wife_photo]'];
-            if (wifeFiles && wifeFiles[0]) photoPath = `parents/${wifeFiles[0].filename}`;
+            if (wifeFiles && wifeFiles[0]) {
+              photoPath = `parents/${wifeFiles[0].filename}`;
+              const filePath = path.join('uploads', photoPath);
+              const stats = fs.statSync(filePath);
+              photoPath = `${photoPath}(${stats.size})`;
+            }
           }
         } else if (member_type === 'child') {
           const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
-          if (childFiles && childFiles[0]) photoPath = `children/${childFiles[0].filename}`;
+          if (childFiles && childFiles[0]) {
+            photoPath = `children/${childFiles[0].filename}`;
+            const filePath = path.join('uploads', photoPath);
+            const stats = fs.statSync(filePath);
+            photoPath = `${photoPath}(${stats.size})`;
+          }
         }
       }
 
@@ -332,6 +349,9 @@ exports.viewFamily = async (req, res) => {
 /* ================= MY FAMILY JSON (For AJAX Fetch) ================= */
 exports.getMyFamilyJson = async (req, res) => {
   try {
+    if (!req.session.user) {
+      return res.json({ success: false });
+    }
     const userId = req.session.user.id;
 
     const [familyRows] = await db.query(
@@ -368,7 +388,13 @@ exports.addChild = async (req, res) => {
     const userId = req.session.user.id;
 
     const { name, dob, gender, occupation, relationship, door_no, street, pincode, state, district } = req.body;
-    const photoPath = req.files && req.files['photo'] && req.files['photo'][0] ? `children/${req.files['photo'][0].filename}` : null;
+    let photoPath = null;
+    if (req.files && req.files['photo'] && req.files['photo'][0]) {
+      photoPath = `children/${req.files['photo'][0].filename}`;
+      const filePath = path.join('uploads', photoPath);
+      const stats = fs.statSync(filePath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
     const validRelationship = relationship || 'other';
 
     // Get family_id from families table
@@ -464,7 +490,13 @@ exports.updateChild = async (req, res) => {
   try {
     const id = req.params.id;
     const { name, dob, gender, occupation, relationship, address } = req.body;
-    const photoPath = req.file ? `children/${req.file.filename}` : null;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `children/${req.file.filename}`;
+      const filePath = path.join('uploads', photoPath);
+      const stats = fs.statSync(filePath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
 
     let sql, params;
 
@@ -566,9 +598,15 @@ exports.updateFamily = async (req, res) => {
     if (req.files) {
       if (req.files['husband_photo'] && req.files['husband_photo'][0]) {
         husbandPhotoPath = `parents/${req.files['husband_photo'][0].filename}`;
+        const filePath = path.join('uploads', husbandPhotoPath);
+        const stats = fs.statSync(filePath);
+        husbandPhotoPath = `${husbandPhotoPath}(${stats.size})`;
       }
       if (req.files['wife_photo'] && req.files['wife_photo'][0]) {
         wifePhotoPath = `parents/${req.files['wife_photo'][0].filename}`;
+        const filePath = path.join('uploads', wifePhotoPath);
+        const stats = fs.statSync(filePath);
+        wifePhotoPath = `${wifePhotoPath}(${stats.size})`;
       }
     }
 
@@ -610,7 +648,13 @@ exports.updateMember = async (req, res) => {
     const memberId = req.params.id;
     const userId = req.session.user.id;
     const { name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode } = req.body;
-    const photoPath = req.file ? `parents/${req.file.filename}` : null;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `parents/${req.file.filename}`;
+      const filePath = path.join('uploads', photoPath);
+      const stats = fs.statSync(filePath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
 
     // Verify the member belongs to the user
     const [members] = await db.query(

@@ -38,12 +38,15 @@ router.get("/add-family", (req, res) => {
 });
 
 // View and Edit routes
-router.get("/view/:id", controller.viewMember);8
+router.get("/view/:id", controller.viewMember);
 router.get("/edit/:id", controller.editMember);
 router.post("/edit/:id", upload.any(), controller.updateMember);
 router.post("/add-child", upload.fields([{ name: 'photo', maxCount: 1 }]), controller.addChild);
 
 router.get("/export/excel", exportController.exportToExcel);
 router.get("/export/pdf", exportController.exportToPdf);
+
+// Delete family
+router.get("/delete/:id", controller.deleteFamily);
 
 module.exports = router;

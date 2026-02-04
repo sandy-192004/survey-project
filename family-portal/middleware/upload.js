@@ -30,26 +30,61 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
-    const allowedMimes = ['image/jpeg', 'image/webp'];
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/tiff'];
     if (!allowedMimes.includes(file.mimetype)) {
-      cb(new Error("Only JPEG and WebP image formats are allowed"), false);
+      cb(new Error("Only JPEG, PNG, WebP, GIF, and TIFF image formats are allowed"), false);
     } else {
       cb(null, true);
     }
   }
 });
 
-const resizeImage = async (filePath, width, height) => {
+const resizeImage = async (filePath) => {
   await sharp(filePath)
-    .resize(width, height, {
-      fit: 'cover',
-      position: 'center'
+    .resize(500, 500, {
+      fit: 'inside',      // keeps aspect ratio (better than 'cover')
+      withoutEnlargement: true
     })
-    .jpeg({ quality: 90 })
+    .jpeg({ quality: 85 }) // Start with reasonable quality
     .toFile(filePath + '_resized');
 
-  // Replace original with resized
   fs.renameSync(filePath + '_resized', filePath);
+};
+
+const compressImageToSize = async (filePath, maxSizeKB = 250) => {
+  const maxSizeBytes = maxSizeKB * 1024;
+  let quality = 80; // Start slightly lower
+  let currentSize = fs.statSync(filePath).size;
+
+  const metadata = await sharp(filePath).metadata();
+  const format = metadata.format;
+
+  while (currentSize > maxSizeBytes && quality >= 10) {
+    let tempPath = filePath + '_compressed';
+
+    let sharpInstance = sharp(filePath);
+
+    if (format === 'jpeg' || format === 'jpg') {
+      sharpInstance = sharpInstance.jpeg({ quality });
+    }
+    else if (format === 'png') {
+      // Convert PNG to JPEG (best way to reduce size)
+      sharpInstance = sharpInstance.jpeg({ quality });
+    }
+    else if (format === 'webp') {
+      sharpInstance = sharpInstance.webp({ quality });
+    }
+    else {
+      // Convert all other formats to JPEG
+      sharpInstance = sharpInstance.jpeg({ quality });
+    }
+
+    await sharpInstance.toFile(tempPath);
+    fs.renameSync(tempPath, filePath);
+
+    currentSize = fs.statSync(filePath).size;
+    quality -= 10; // Reduce step-by-step
+  }
 };
 
 const processUpload = (req, res, next) => {
@@ -79,9 +114,15 @@ const processUpload = (req, res, next) => {
       for (const field in req.files) {
         for (const file of req.files[field]) {
           try {
-            await resizeImage(file.path, 500, 500);
+            await resizeImage(file.path);
+            // Check file size after resizing
+            const stats = fs.statSync(file.path);
+            const fileSizeKB = stats.size / 1024;
+            if (fileSizeKB > 250) {
+              await compressImageToSize(file.path, 250);
+            }
           } catch (error) {
-            console.error('Error resizing image:', error);
+            console.error('Error processing image:', error);
             // Continue without failing the upload
           }
         }

@@ -182,6 +182,9 @@
 
             <% if (member.photo && member.photo.trim() !== "") { %>
               <% let photoSrc = member.photo; %>
+              <% // Remove size from photo path if present %>
+              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
                 <img src="/<%= photoSrc %>" class="member-photo">
@@ -234,6 +237,9 @@
 
             <% if (member.photo && member.photo.trim() !== "") { %>
               <% let photoSrc = member.photo; %>
+              <% // Remove size from photo path if present %>
+              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
                 <img src="/<%= photoSrc %>" class="member-photo">

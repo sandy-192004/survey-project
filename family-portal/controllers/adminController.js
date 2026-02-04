@@ -39,17 +39,20 @@ exports.dashboard = async (req, res) => {
 
     const { states, districts } = loadDropdownOptions();
 
-    // Calculate stats
-    const [totalFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent'");
-    const [totalMembersResult] = await db.query("SELECT COUNT(*) AS total FROM family_members");
-    const [totalChildrenResult] = await db.query("SELECT COUNT(*) AS total FROM family_members WHERE member_type = 'child'");
-    const [recentFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    // Calculate stats with optimized single query
+    const [statsResult] = await db.query(`
+      SELECT
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
+        (SELECT COUNT(*) FROM family_members) AS totalMembers,
+        (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS recentFamilies
+    `);
 
     const stats = {
-      totalFamilies: totalFamiliesResult[0].total,
-      totalMembers: totalMembersResult[0].total,
-      totalChildren: totalChildrenResult[0].total,
-      recentFamilies: recentFamiliesResult[0].total
+      totalFamilies: statsResult[0].totalFamilies,
+      totalMembers: statsResult[0].totalMembers,
+      totalChildren: statsResult[0].totalChildren,
+      recentFamilies: statsResult[0].recentFamilies
     };
 
     let sql = `
@@ -217,17 +220,20 @@ exports.search = async (req, res) => {
     const [countResult] = await db.query(countSql, countParams);
     const totalPages = Math.ceil(countResult[0].total / limit);
 
-    // Calculate stats for search as well
-    const [totalFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent'");
-    const [totalMembersResult] = await db.query("SELECT COUNT(*) AS total FROM family_members");
-    const [totalChildrenResult] = await db.query("SELECT COUNT(*) AS total FROM family_members WHERE member_type = 'child'");
-    const [recentFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    // Calculate stats for search as well with optimized single query
+    const [statsResult] = await db.query(`
+      SELECT
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
+        (SELECT COUNT(*) FROM family_members) AS totalMembers,
+        (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS recentFamilies
+    `);
 
     const stats = {
-      totalFamilies: totalFamiliesResult[0].total,
-      totalMembers: totalMembersResult[0].total,
-      totalChildren: totalChildrenResult[0].total,
-      recentFamilies: recentFamiliesResult[0].total
+      totalFamilies: statsResult[0].totalFamilies,
+      totalMembers: statsResult[0].totalMembers,
+      totalChildren: statsResult[0].totalChildren,
+      recentFamilies: statsResult[0].recentFamilies
     };
 
     res.render("admin/dashboard", {
@@ -241,7 +247,7 @@ exports.search = async (req, res) => {
       currentPage: page,
 
       stats: stats,
-      message: req.query.message || null
+      message: req.query.message || null,
 
       updated: false
 
@@ -516,6 +522,25 @@ exports.addChild = async (req, res) => {
     });
 
     res.redirect("/admin/dashboard?updated=true");
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// DELETE FAMILY
+// =======================
+exports.deleteFamily = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    // Delete all members of the family
+    await db.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
+
+    res.redirect("/admin/dashboard?message=Family deleted successfully");
 
   } catch (err) {
     console.error(err);
