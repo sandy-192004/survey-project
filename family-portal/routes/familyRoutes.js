@@ -9,19 +9,19 @@ const { isLoggedIn } = require("../middleware/auth");
 const { processUpload } = require("../middleware/upload");
 
 
-// ================== EXPORT ROUTES ==================
+
 router.get("/export/excel", exportCtrl.excel);
 router.get("/export/pdf", exportCtrl.pdf);
 
-// ================== AUTH ==================
-router.get("/", controller.showForm);
+
+router.get("/", controller.showLogin);
 router.get("/login", controller.showLogin);
 router.post("/login", controller.login);
 router.get("/register", controller.showRegister);
 router.post("/register", controller.register);
 router.get("/logout", controller.logout);
 
-// ================== DASHBOARD ==================
+
 router.get("/dashboard", isLoggedIn, controller.dashboard);
 
 // ================== FAMILY CHECK ==================

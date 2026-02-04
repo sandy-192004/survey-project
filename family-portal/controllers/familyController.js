@@ -349,6 +349,9 @@ exports.viewFamily = async (req, res) => {
 /* ================= MY FAMILY JSON (For AJAX Fetch) ================= */
 exports.getMyFamilyJson = async (req, res) => {
   try {
+    if (!req.session.user) {
+      return res.json({ success: false });
+    }
     const userId = req.session.user.id;
 
     const [familyRows] = await db.query(

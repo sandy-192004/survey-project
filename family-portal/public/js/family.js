@@ -473,3 +473,250 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// ================== EDIT MODAL HANDLING ==================
+async function openEditModal(relationship, memberId) {
+  try {
+    // Fetch member data
+    const response = await fetch(`/my-family-json`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      alert('Failed to load member data');
+      return;
+    }
+
+    // Find the specific member
+    const member = result.members.find(m => m.id == memberId);
+    if (!member) {
+      alert('Member not found');
+      return;
+    }
+
+    // Determine modal and form based on relationship
+    let modalId, formId, photoPreviewId;
+    if (relationship === 'husband') {
+      modalId = 'husbandEditModal';
+      formId = 'husbandEditForm';
+      photoPreviewId = 'husbandPhotoPreview';
+    } else if (relationship === 'wife') {
+      modalId = 'wifeEditModal';
+      formId = 'wifeEditForm';
+      photoPreviewId = 'wifePhotoPreview';
+    } else if (relationship === 'child') {
+      modalId = 'childEditModal';
+      formId = 'childEditForm';
+      photoPreviewId = 'childPhotoPreview';
+    } else {
+      alert('Unknown relationship type');
+      return;
+    }
+
+    // Populate form with member data
+    const form = document.getElementById(formId);
+    form.querySelector('[name="name"]').value = member.name || '';
+    form.querySelector('[name="mobile"]').value = member.mobile || '';
+    form.querySelector('[name="occupation"]').value = member.occupation || '';
+    form.querySelector('[name="door_no"]').value = member.door_no || '';
+    form.querySelector('[name="street"]').value = member.street || '';
+    form.querySelector('[name="pincode"]').value = member.pincode || '';
+    form.querySelector('[name="state"]').value = member.state || '';
+    form.querySelector('[name="district"]').value = member.district || '';
+
+    // Handle child-specific fields
+    if (relationship === 'child') {
+      form.querySelector('[name="member_id"]').value = memberId;
+      form.querySelector('[name="dob"]').value = member.dob ? new Date(member.dob).toISOString().split('T')[0] : '';
+      form.querySelector('[name="gender"]').value = member.gender || '';
+      form.querySelector('[name="relationship"]').value = member.relationship || '';
+    }
+
+    // Handle photo preview
+    const photoPreview = document.getElementById(photoPreviewId);
+    if (member.photo && member.photo.trim() !== '') {
+      let photoSrc = member.photo;
+      const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/);
+      if (sizeMatch) photoSrc = sizeMatch[1];
+      if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
+      if (photoSrc.startsWith('uploads/')) {
+        photoPreview.src = '/' + photoSrc;
+      } else {
+        photoPreview.src = '/uploads/' + photoSrc;
+      }
+      photoPreview.style.display = 'block';
+    } else {
+      photoPreview.style.display = 'none';
+    }
+
+    // Load states for the modal
+    if (relationship === 'husband') {
+      await loadStatesForModal('husbandState', 'husbandDistrict', member.state, member.district);
+    } else if (relationship === 'wife') {
+      await loadStatesForModal('wifeState', 'wifeDistrict', member.state, member.district);
+    } else if (relationship === 'child') {
+      await loadStatesForModal('editChildState', 'editChildDistrict', member.state, member.district);
+    }
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    modal.show();
+
+  } catch (error) {
+    console.error('Error opening edit modal:', error);
+    alert('Failed to open edit modal');
+  }
+}
+
+async function loadStatesForModal(stateSelectId, districtSelectId, selectedState, selectedDistrict) {
+  const stateSelect = document.getElementById(stateSelectId);
+  const districtSelect = document.getElementById(districtSelectId);
+
+  try {
+    const res = await fetch("/data/india-states-districts.json");
+    const indiaData = await res.json();
+
+    // Clear existing options
+    stateSelect.innerHTML = '<option value="">Select State</option>';
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+
+    // Add states
+    Object.keys(indiaData).forEach(state => {
+      const option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      if (state === selectedState) option.selected = true;
+      stateSelect.appendChild(option);
+    });
+
+    // Load districts if state is selected
+    if (selectedState && indiaData[selectedState]) {
+      indiaData[selectedState].forEach(district => {
+        const option = document.createElement("option");
+        option.value = district;
+        option.textContent = district;
+        if (district === selectedDistrict) option.selected = true;
+        districtSelect.appendChild(option);
+      });
+    }
+
+    // Add change event listener
+    stateSelect.addEventListener("change", function () {
+      const selectedState = this.value;
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+
+      if (selectedState && indiaData[selectedState]) {
+        indiaData[selectedState].forEach(district => {
+          const option = document.createElement("option");
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error("Error loading states for modal:", error);
+  }
+}
+
+// ================== EDIT FORM SUBMISSION ==================
+document.addEventListener("DOMContentLoaded", () => {
+  // Husband edit form
+  const husbandEditForm = document.getElementById("husbandEditForm");
+  if (husbandEditForm) {
+    husbandEditForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await submitEditForm('husbandEditForm', 'husbandEditModal', 'husband');
+    });
+  }
+
+  // Wife edit form
+  const wifeEditForm = document.getElementById("wifeEditForm");
+  if (wifeEditForm) {
+    wifeEditForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await submitEditForm('wifeEditForm', 'wifeEditModal', 'wife');
+    });
+  }
+
+  // Child edit form
+  const childEditForm = document.getElementById("childEditForm");
+  if (childEditForm) {
+    childEditForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const memberId = childEditForm.querySelector('[name="member_id"]').value;
+      await submitEditForm('childEditForm', 'childEditModal', 'child', memberId);
+    });
+  }
+});
+
+async function submitEditForm(formId, modalId, type, memberId) {
+  const form = document.getElementById(formId);
+  const formData = new FormData(form);
+
+  // Add member type
+  formData.append('member_type', type === 'child' ? 'child' : 'parent');
+
+  try {
+    let url, method;
+    if (type === 'husband' || type === 'wife') {
+      url = '/update-family';
+      method = 'POST';
+    } else {
+      // For children, use the memberId passed as parameter
+      url = `/update-child/${memberId}`;
+      method = 'PUT';
+    }
+
+    const response = await fetch(url, {
+      method: method,
+      body: formData,
+      credentials: 'include'
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+      modal.hide();
+
+      // Show success message
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated Successfully!',
+          text: 'Member details have been updated.',
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+          // Reload page to show updated data
+          window.location.reload();
+        });
+      } else {
+        alert('Updated Successfully!');
+        window.location.reload();
+      }
+    } else {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: result.message || 'An error occurred'
+        });
+      } else {
+        alert('Update Failed: ' + (result.message || 'An error occurred'));
+      }
+    }
+  } catch (error) {
+    console.error("Update error:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Network Error',
+      text: 'Failed to connect to server'
+    });
+  }
+}
