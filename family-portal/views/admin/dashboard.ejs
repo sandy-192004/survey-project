@@ -290,6 +290,7 @@
 <body>
 <div class="container-fluid p-4">
 
+
   <div class="header">
     <div>
       <h1><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
@@ -303,6 +304,12 @@
         <i class="fas fa-file-pdf"></i> PDF
       </a>
     </div>
+
+<% if (locals.updated) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Family details updated successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
   </div>
 
   <% if (stats) { %>
@@ -330,9 +337,17 @@
   </div>
   <% } %>
 
+
   <div class="search-section">
     <%- include("search-filter-form") %>
   </div>
+
+<div class="mb-3">
+  <a href="/family-form" class="btn btn-primary">Add Family</a> <!-- Newly added button to add family -->
+  <a href="/admin/export/excel" class="btn btn-success">Export to Excel</a>
+  <a href="/admin/export/pdf" class="btn btn-danger">Export to PDF</a>
+</div>
+
 
   <% if (message) { %>
   <div class="alert alert-info text-center" role="alert">

@@ -61,6 +61,11 @@ const processUpload = (req, res, next) => {
     { name: 'children[2][photo]', maxCount: 1 },
     { name: 'children[3][photo]', maxCount: 1 },
     { name: 'children[4][photo]', maxCount: 1 },
+    { name: 'children[5][photo]', maxCount: 1 },
+    { name: 'children[6][photo]', maxCount: 1 },
+    { name: 'children[7][photo]', maxCount: 1 },
+    { name: 'children[8][photo]', maxCount: 1 },
+    { name: 'children[9][photo]', maxCount: 1 },
     { name: 'photo', maxCount: 1 },
     { name: 'husband_photo', maxCount: 1 },
     { name: 'wife_photo', maxCount: 1 }

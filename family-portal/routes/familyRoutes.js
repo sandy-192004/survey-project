@@ -14,7 +14,7 @@ router.get("/export/excel", exportCtrl.excel);
 router.get("/export/pdf", exportCtrl.pdf);
 
 // ================== AUTH ==================
-router.get("/", controller.showLogin);
+router.get("/", controller.showForm);
 router.get("/login", controller.showLogin);
 router.post("/login", controller.login);
 router.get("/register", controller.showRegister);
@@ -28,13 +28,13 @@ router.get("/dashboard", isLoggedIn, controller.dashboard);
 router.get("/family", isLoggedIn, controller.familyCheck);
 
 // ================== FAMILY FORM ==================
-router.get("/family-form", isLoggedIn, controller.showForm);
+router.get("/family-form", controller.showForm);
 router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
 
 // ================== FAMILY MANAGEMENT ==================
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
-router.get("/my-family-json", isLoggedIn, controller.getMyFamilyJson);
+router.get("/my-family-json", controller.getMyFamilyJson);
 
 // ================== CHILD MANAGEMENT ==================
 router.post("/add-child", isLoggedIn, processUpload, controller.addChild);
