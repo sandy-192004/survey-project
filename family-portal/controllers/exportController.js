@@ -81,12 +81,7 @@ exports.pdf = async (req, res, next) => {
 exports.exportToExcel = async (req, res) => {
   try {
     // Get all rows from family_members table
-    const data = await new Promise((resolve, reject) => {
-      db.query('SELECT * FROM family_members ORDER BY family_id, member_type', (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
-      });
-    });
+    const [data] = await db.query('SELECT * FROM family_members ORDER BY family_id, member_type');
     console.log('Excel export: Fetched', data.length, 'rows from family_members');
 
     const workbook = new ExcelJS.Workbook();
@@ -131,12 +126,7 @@ exports.exportToExcel = async (req, res) => {
 exports.exportToPdf = async (req, res) => {
   try {
     // Get all rows from family_members table
-    const data = await new Promise((resolve, reject) => {
-      db.query('SELECT * FROM family_members ORDER BY family_id, member_type', (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
-      });
-    });
+    const [data] = await db.query('SELECT * FROM family_members ORDER BY family_id, member_type');
     console.log('PDF export: Fetched', data.length, 'rows from family_members');
 
     const doc = new PDFDocument();
