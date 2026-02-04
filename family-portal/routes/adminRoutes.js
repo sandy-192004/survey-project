@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const controller = require("../controllers/adminController");
+const familyController = require("../controllers/familyController"); // Newly added import for family controller
 
 const exportController = require("../controllers/exportController");
 
@@ -31,8 +32,13 @@ router.get("/dashboard", controller.dashboard);
 // Search
 router.get("/search", controller.search);
 
+// Add Family - Reuse existing User-side form and logic
+router.get("/add-family", (req, res) => {
+  res.redirect("/family-form"); // Newly added route to reuse existing User add family form
+});
+
 // View and Edit routes
-router.get("/view/:id", controller.viewMember);
+router.get("/view/:id", controller.viewMember);8
 router.get("/edit/:id", controller.editMember);
 router.post("/edit/:id", upload.any(), controller.updateMember);
 router.post("/add-child", upload.fields([{ name: 'photo', maxCount: 1 }]), controller.addChild);

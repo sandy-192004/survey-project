@@ -51,15 +51,47 @@ function addChild() {
       <option value="son">Son</option>
       <option value="daughter">Daughter</option>
     </select>
-    <div class="d-flex gap-2 mb-2">
-      <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('child_${childIndex}')">Select Photo</button>
-      <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('child_${childIndex}')">Capture Photo</button>
+
+    <h6 class="mt-3 mb-2 small">Address</h6>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="sameAddressCheck_${childIndex}" onchange="handleSameAddressCheck(${childIndex})">
+      <label class="form-check-label" for="sameAddressCheck_${childIndex}">
+        Same as Parent Address
+      </label>
     </div>
-    <input type="file" id="child_${childIndex}_file" class="form-control small d-none" name="children[${childIndex}][photo]" accept="image/*" onchange="handlePhotoSelect(this, 'child_${childIndex}_preview')">
-    <div id="child_${childIndex}_size" class="small text-muted"></div>
-    <img id="child_${childIndex}_preview" class="img-thumbnail">
+    <input type="hidden" name="children[${childIndex}][use_parent_address]" id="use_parent_address_${childIndex}" value="false">
+    <div class="row g-2 mb-2">
+      <div class="col-12 col-md-6">
+        <input class="form-control mb-2 small" name="children[${childIndex}][door_no]" id="child_${childIndex}_door_no" placeholder="Door No">
+        <input class="form-control mb-2 small" name="children[${childIndex}][street]" id="child_${childIndex}_street" placeholder="Street">
+      </div>
+      <div class="col-12 col-md-6">
+        <select class="form-control mb-2 small" name="children[${childIndex}][state]" id="child_${childIndex}_state" onchange="loadDistrictsForChild(${childIndex})">
+          <option value="">Select State</option>
+        </select>
+        <select class="form-control mb-2 small" name="children[${childIndex}][district]" id="child_${childIndex}_district">
+          <option value="">Select District</option>
+        </select>
+      </div>
+    </div>
+    <input class="form-control mb-2 small" name="children[${childIndex}][pincode]" id="child_${childIndex}_pincode" placeholder="Pincode" type="text">
+
+    <h6 class="mt-3 mb-2 small">Photo</h6>
+    <input type="file" id="child_${childIndex}_file" class="form-control small d-none" name="children[${childIndex}][photo]" accept="image/*" onchange="handleChildPhotoSelect(this, ${childIndex})">
+    <div id="child_${childIndex}_file_info" class="small text-muted d-flex align-items-center">
+      <span id="child_${childIndex}_file_name"></span>
+      <span id="child_${childIndex}_file_size"></span>
+      <i id="child_${childIndex}_delete" class="bi bi-trash ms-2 text-danger" style="cursor: pointer; display: none;" onclick="deleteChildPhoto(${childIndex})"></i>
+    </div>
+    <div id="child_${childIndex}_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('child_${childIndex}')">
+      <span class="text-muted">Click to upload or capture photo</span>
+    </div>
   </div>`;
   container.insertAdjacentHTML("beforeend", html);
+
+  // Load states for this child
+  loadStatesForChild(childIndex);
+
   childIndex++;
 }
 
@@ -177,6 +209,140 @@ async function loadStatesForChildModal() {
   }
 }
 
+// ================== CHILD ADDRESS AND PHOTO FUNCTIONS ==================
+
+function handleSameAddressCheck(childIndex) {
+  const checkbox = document.getElementById(`sameAddressCheck_${childIndex}`);
+  const hiddenFlag = document.getElementById(`use_parent_address_${childIndex}`);
+  const doorNo = document.getElementById(`child_${childIndex}_door_no`);
+  const street = document.getElementById(`child_${childIndex}_street`);
+  const state = document.getElementById(`child_${childIndex}_state`);
+  const district = document.getElementById(`child_${childIndex}_district`);
+  const pincode = document.getElementById(`child_${childIndex}_pincode`);
+
+  if (checkbox.checked) {
+    // Copy parent address
+    const parentDoorNo = document.querySelector('input[name="parent[door_no]"]').value;
+    const parentStreet = document.querySelector('input[name="parent[street]"]').value;
+    const parentState = document.querySelector('select[name="parent[state]"]').value;
+    const parentDistrict = document.querySelector('select[name="parent[district]"]').value;
+    const parentPincode = document.querySelector('input[name="parent[pincode]"]').value;
+
+    doorNo.value = parentDoorNo;
+    street.value = parentStreet;
+    state.value = parentState;
+    district.value = parentDistrict;
+    pincode.value = parentPincode;
+
+    // Set readonly instead of disabled
+    doorNo.readOnly = true;
+    street.readOnly = true;
+    state.disabled = true; // Keep select as disabled since readonly doesn't work well for selects
+    district.disabled = true;
+    pincode.readOnly = true;
+
+    // Set flag
+    hiddenFlag.value = "true";
+  } else {
+    // Clear and enable inputs
+    doorNo.value = '';
+    street.value = '';
+    state.value = '';
+    district.value = '';
+    pincode.value = '';
+
+    doorNo.readOnly = false;
+    street.readOnly = false;
+    state.disabled = false;
+    district.disabled = false;
+    pincode.readOnly = false;
+
+    // Reset flag
+    hiddenFlag.value = "false";
+  }
+}
+
+async function loadStatesForChild(childIndex) {
+  const stateSelect = document.getElementById(`child_${childIndex}_state`);
+  if (!stateSelect || stateSelect.options.length > 1) return; // Already loaded
+
+  try {
+    const res = await fetch("/data/india-states-districts.json");
+    const indiaData = await res.json();
+
+    Object.keys(indiaData).forEach(state => {
+      const option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading states for child:", error);
+  }
+}
+
+function loadDistrictsForChild(childIndex) {
+  const stateSelect = document.getElementById(`child_${childIndex}_state`);
+  const districtSelect = document.getElementById(`child_${childIndex}_district`);
+  const selectedState = stateSelect.value;
+
+  districtSelect.innerHTML = '<option value="">Select District</option>';
+
+  if (selectedState && indiaData[selectedState]) {
+    indiaData[selectedState].forEach(district => {
+      const option = document.createElement("option");
+      option.value = district;
+      option.textContent = district;
+      districtSelect.appendChild(option);
+    });
+  }
+}
+
+function handleChildPhotoSelect(input, childIndex) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit. Please choose a smaller file.');
+      input.value = '';
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only JPEG and WebP formats are allowed.');
+      input.value = '';
+      return;
+    }
+
+    const fileNameSpan = document.getElementById(`child_${childIndex}_file_name`);
+    const fileSizeSpan = document.getElementById(`child_${childIndex}_file_size`);
+    const deleteIcon = document.getElementById(`child_${childIndex}_delete`);
+    const placeholder = document.getElementById(`child_${childIndex}_placeholder`);
+
+    fileNameSpan.textContent = file.name;
+    fileSizeSpan.textContent = ` – ${(file.size / 1024).toFixed(2)} KB`;
+    deleteIcon.style.display = 'inline';
+    placeholder.style.display = 'none';
+  }
+}
+
+function deleteChildPhoto(childIndex) {
+  const fileInput = document.getElementById(`child_${childIndex}_file`);
+  const fileNameSpan = document.getElementById(`child_${childIndex}_file_name`);
+  const fileSizeSpan = document.getElementById(`child_${childIndex}_file_size`);
+  const deleteIcon = document.getElementById(`child_${childIndex}_delete`);
+  const placeholder = document.getElementById(`child_${childIndex}_placeholder`);
+
+  fileInput.value = '';
+  fileNameSpan.textContent = '';
+  fileSizeSpan.textContent = '';
+  deleteIcon.style.display = 'none';
+  placeholder.style.display = 'flex';
+}
+
 // ================== FORM SUBMIT ==================
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("familyForm");
@@ -239,7 +405,13 @@ document.addEventListener("DOMContentLoaded", () => {
           relationship: formData.get(`children[${index}][relationship]`) || null,
           dob: formData.get(`children[${index}][dob]`) || null,
           gender: formData.get(`children[${index}][gender]`) || null,
-          occupation: formData.get(`children[${index}][occupation]`) || null
+          occupation: formData.get(`children[${index}][occupation]`) || null,
+          door_no: formData.get(`children[${index}][door_no]`) || null,
+          street: formData.get(`children[${index}][street]`) || null,
+          district: formData.get(`children[${index}][district]`) || null,
+          state: formData.get(`children[${index}][state]`) || null,
+          pincode: formData.get(`children[${index}][pincode]`) || null,
+          use_parent_address: formData.get(`children[${index}][use_parent_address]`) === "true"
         });
       }
     });
