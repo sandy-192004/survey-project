@@ -295,13 +295,14 @@
       <h1><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
       <p class="subtitle">Manage and monitor family registrations</p>
     </div>
-    <div class="export-buttons">
-      <a href="/admin/export/excel" class="btn-export" style="background:var(--success-color)">
-        <i class="fas fa-file-excel"></i> Excel
-      </a>
-      <a href="/admin/export/pdf" class="btn-export" style="background:var(--danger-color)">
-        <i class="fas fa-file-pdf"></i> PDF
-      </a>
+    <div class="dropdown">
+      <button class="btn-export" style="background:var(--primary-color); font-size: 1.2rem; padding: 0.5rem 0.75rem;" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        ⋮
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+        <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
+        <li><a class="dropdown-item" href="/admin/export/pdf"><i class="fas fa-file-pdf"></i> PDF</a></li>
+      </ul>
     </div>
   </div>
 
