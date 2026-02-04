@@ -22,6 +22,7 @@ app.use(express.json());
 // Static assets
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 // ================== SESSION ==================
 app.use(
