@@ -531,6 +531,142 @@ exports.addChild = async (req, res) => {
 };
 
 // =======================
+// CREATE FAMILY (Admin)
+// =======================
+exports.createFamily = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    console.log("📥 Received Body:", req.body);
+    console.log("📎 Received Files:", req.files);
+
+    let { husband_name, members } = req.body;
+
+    if (typeof members === "string") {
+      try {
+        members = JSON.parse(members);
+      } catch (e) {
+        console.error("Failed to parse members JSON:", e);
+        members = [];
+      }
+    }
+
+    if (!Array.isArray(members)) members = [];
+
+    await connection.beginTransaction();
+
+    // Generate a unique family_id for admin-created families
+    const familyId = `ADMIN-${Date.now()}`;
+
+    // Step 3: Insert family members
+    for (let i = 0; i < members.length; i++) {
+      const m = members[i];
+      const {
+        member_type,
+        name,
+        relationship,
+        mobile,
+        occupation,
+        dob,
+        gender,
+        door_no,
+        street,
+        district,
+        state,
+        pincode
+      } = m;
+
+      // Default gender for husband
+      let finalGender = gender;
+      if (relationship === 'husband' && !gender) {
+        finalGender = 'Male';
+      }
+
+      if (!name || !relationship) continue;
+
+      // Handle file uploads
+      let photoPath = null;
+      if (req.files) {
+        if (member_type === 'parent') {
+          if (relationship === 'husband') {
+            const husbandFiles = req.files['parent[husband_photo]'];
+            if (husbandFiles && husbandFiles[0]) {
+              photoPath = `parents/${husbandFiles[0].filename}`;
+              const filePath = path.join('uploads', photoPath);
+              const stats = fs.statSync(filePath);
+              photoPath = `${photoPath}(${stats.size})`;
+            }
+          } else if (relationship === 'wife') {
+            const wifeFiles = req.files['parent[wife_photo]'];
+            if (wifeFiles && wifeFiles[0]) {
+              photoPath = `parents/${wifeFiles[0].filename}`;
+              const filePath = path.join('uploads', photoPath);
+              const stats = fs.statSync(filePath);
+              photoPath = `${photoPath}(${stats.size})`;
+            }
+          }
+        } else if (member_type === 'child') {
+          const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
+          if (childFiles && childFiles[0]) {
+            photoPath = `children/${childFiles[0].filename}`;
+            const filePath = path.join('uploads', photoPath);
+            const stats = fs.statSync(filePath);
+            photoPath = `${photoPath}(${stats.size})`;
+          }
+        }
+      }
+
+      await connection.query(
+        `INSERT INTO family_members
+         (family_id, member_type, name, relationship, mobile, occupation,
+          dob, gender, door_no, street, district, state, pincode, photo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          familyId,
+          member_type || "child",
+          name,
+          relationship,
+          mobile || null,
+          occupation || null,
+          dob || null,
+          gender || null,
+          door_no || null,
+          street || null,
+          district || null,
+          state || null,
+          pincode || null,
+          photoPath
+        ]
+      );
+    }
+
+    await connection.commit();
+
+    res.json({
+      success: true,
+      message: "Family details saved successfully!",
+      familyId
+    });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error("SAVE FAMILY ERROR");
+    console.error("Message:", err.message);
+    console.error("SQL:", err.sqlMessage);
+    console.error("Stack:", err.stack);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to save family data",
+      error: err.message,
+      sql: err.sqlMessage
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+// =======================
 // DELETE FAMILY
 // =======================
 exports.deleteFamily = async (req, res) => {
