@@ -22,32 +22,35 @@ router.post("/register", controller.register);
 router.get("/logout", controller.logout);
 
 
+
+
 router.get("/dashboard", isLoggedIn, controller.dashboard);
 
-// ================== FAMILY CHECK ==================
-router.get("/family", isLoggedIn, controller.familyCheck);
-
 // ================== FAMILY FORM ==================
+
+router.get("/family-form", isLoggedIn, controller.showForm);
+router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
+
 router.get("/family-form", controller.showForm);
 router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
+
 
 // ================== FAMILY MANAGEMENT ==================
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", controller.getMyFamilyJson);
 
-// ================== CHILD MANAGEMENT ==================
-router.post("/add-child", isLoggedIn, processUpload, controller.addChild);
-router.get("/get-children/:userId", isLoggedIn, controller.getChildren);
-router.get("/get-child/:id", isLoggedIn, controller.getChild);
-router.put("/update-child/:id", isLoggedIn, processUpload, controller.updateChild);
-router.delete("/delete-child/:id", isLoggedIn, controller.deleteChild);
+// Add child route
+router.post("/add-child", isLoggedIn, upload.single('photo'), controller.addChild);
 
-// ================== PARENT EDIT ==================
+// Edit routes
 router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
-router.post("/update-family", isLoggedIn, processUpload, controller.updateFamily);
+router.get("/edit-form/:id", isLoggedIn, controller.editForm);
 router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
-router.post("/update-member/:id", isLoggedIn, processUpload, controller.updateMember);
+router.get("/get-child/:id", isLoggedIn, controller.getChild);
+router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
+router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
+router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
 
 // ================== DELETE FAMILY ==================
 router.delete("/delete-family", isLoggedIn, controller.deleteFamily);
