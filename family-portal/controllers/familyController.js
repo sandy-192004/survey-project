@@ -690,3 +690,45 @@ exports.updateMember = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to update member", error: err.message });
   }
 };
+
+/* ================= DELETE FAMILY ================= */
+
+exports.deleteFamily = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const userId = req.session.user.id;
+
+    await connection.beginTransaction();
+
+    // Get family_id for the user
+    const [familyRows] = await connection.query(
+      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
+
+    if (familyRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: "Family not found" });
+    }
+
+    const familyId = familyRows[0].id;
+
+    // Delete family members first (due to foreign key constraint)
+    await connection.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
+
+    // Delete the family
+    await connection.query("DELETE FROM families WHERE id = ?", [familyId]);
+
+    await connection.commit();
+
+    res.json({ success: true, message: "Family deleted successfully" });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error("Delete family error:", err);
+    res.status(500).json({ success: false, message: "Failed to delete family", error: err.message });
+  } finally {
+    connection.release();
+  }
+};

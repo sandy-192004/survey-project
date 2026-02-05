@@ -49,6 +49,9 @@ router.post("/update-family", isLoggedIn, processUpload, controller.updateFamily
 router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
 router.post("/update-member/:id", isLoggedIn, processUpload, controller.updateMember);
 
+// ================== DELETE FAMILY ==================
+router.delete("/delete-family", isLoggedIn, controller.deleteFamily);
+
 // ================== PLACEHOLDERS ==================
 router.get("/pooja-booking", (req, res) => {
   res.send("Pooja booking feature coming soon!");

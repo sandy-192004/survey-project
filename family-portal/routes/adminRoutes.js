@@ -47,6 +47,6 @@ router.get("/export/excel", exportController.exportToExcel);
 router.get("/export/pdf", exportController.exportToPdf);
 
 // Delete family
-router.get("/delete/:id", controller.deleteFamily);
+router.post("/delete/:id", controller.deleteFamily);
 
 module.exports = router;

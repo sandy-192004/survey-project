@@ -43,8 +43,9 @@
       margin-bottom: 1.5rem;
       box-shadow: var(--card-shadow);
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      position: relative;
 
     }
 
@@ -78,6 +79,12 @@
       overflow: hidden;
       cursor: pointer;
       position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .family-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--card-shadow-hover);
     }
 
     .edit-btn {
@@ -194,7 +201,7 @@
       <small style="color: rgb(0, 0, 0);">Manage and monitor family registrations</small>
     </div>
 
-    <div class="dropdown">
+    <div class="dropdown" style="position: absolute; right: 1.5rem;">
       <button class="btn btn-lg" style="color:  #8B4513;" data-bs-toggle="dropdown">⋮</button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
@@ -340,17 +347,21 @@ let deleteFamilyId = null;
 
 function confirmDelete(familyId, familyName) {
   deleteFamilyId = familyId;
-  document.getElementById('deleteMessage').textContent = 'Sure you want to delete the family "' + familyName + '"?';
+  document.getElementById('deleteMessage').textContent = 'Sure you want to delete the Family?';
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
   deleteModal.show();
 }
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
   if (deleteFamilyId) {
-    // Redirect to delete endpoint
-    window.location.href = '/admin/delete/' + deleteFamilyId;
+    // Create a form to POST to delete endpoint
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/delete/' + deleteFamilyId;
+    document.body.appendChild(form);
+    form.submit();
   }
 });
 </script>
 </body>
-</html>
+</html> 
