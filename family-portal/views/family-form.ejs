@@ -110,7 +110,127 @@
     <div class="card p-3">
       <div class="row g-2">
         <div class="col-12 col-md-6">
+
+          <h5 class="mb-3 small">Husband Details</h5>
+          <input class="form-control mb-2 small" name="husband_name" placeholder="Husband Name" required>
+          <select class="form-control mb-2 small" name="parent[husband_gender]">
+            <option value="male" selected>Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select><!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><% if (addChildMode) { %>Add Child<% } else { %>Add Family<% } %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Brown Theme -->
+  <style>
+    :root {
+      --brown-main: #6f4e37;
+      --brown-light: #f5efe9;
+      --brown-border: #d6c2b3;
+    }
+
+    body {
+      background-color: var(--brown-light);
+    }
+
+    h3, h5 {
+      color: var(--brown-main);
+      font-weight: 600;
+    }
+
+    .card {
+      border: 1px solid var(--brown-border);
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .btn-primary {
+      background-color: var(--brown-main);
+      border-color: var(--brown-main);
+    }
+
+    .btn-primary:hover {
+      background-color: #5a3f2c;
+      border-color: #5a3f2c;
+    }
+
+    .form-control:focus {
+      border-color: var(--brown-main);
+      box-shadow: 0 0 0 0.2rem rgba(111, 78, 55, 0.25);
+    }
+
+    .img-thumbnail {
+      max-height: 150px;
+      object-fit: cover;
+      display: none;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body class="container-fluid mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+  <h3 class="mb-3 mb-md-0"><% if (addChildMode) { %>Add Child<% } else { %>Add Family<% } %></h3>
+</div>
+
+<% if (addChildMode) { %>
+<form method="POST" action="/add-child" enctype="multipart/form-data">
+<% } else { %>
+<form id="familyForm" enctype="multipart/form-data">
+<% } %>
+
+<% if (addChildMode) { %>
+<div class="row g-2">
+  <div class="col-12">
+    <div class="card p-3">
+      <h5 class="mb-3 small">Child Details</h5>
+      <div class="row g-2">
+        <div class="col-12 col-md-6">
+          <input class="form-control mb-2 small" name="name" placeholder="Child Name" required>
+          <input type="date" class="form-control mb-2 small" name="dob">
+          <select class="form-control mb-2 small" name="gender">
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-6">
+          <input class="form-control mb-2 small" name="occupation" placeholder="Occupation">
+        </div>
+      </div>
+
+      <h5 class="mt-4 mb-3 small">Photo</h5>
+      <div class="d-flex gap-2 mb-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('child')">Select Photo</button>
+        <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('child')">Capture Photo</button>
+      </div>
+      <input type="file" id="child_file" class="form-control small d-none" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'child_preview')">
+      <div id="child_size" class="small text-muted"></div>
+      <img id="child_preview" class="img-thumbnail">
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Add Child</button>
+      </div>
+    </div>
+  </div>
+</div>
+<% } else { %>
+<div class="row g-2">
+  <div class="col-12">
+    <div class="card p-3">
+      <div class="row g-2">
+        <div class="col-12 col-md-6">
+          <h5 class="mb-3 small">Parent Details</h5>
+
           <h5 class="mb-3 small">Husband</h5>
+
           <input class="form-control mb-2 small" name="husband_name" placeholder="Husband Name" required>
           <select class="form-control mb-2 small" name="parent[husband_gender]">
             <option value="male" selected>Male</option>
@@ -392,6 +512,238 @@
         <div id="childPhotoPlaceholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('modal_child')">
           <span class="text-muted">Click to upload or capture photo</span>
         </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveChild()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="saveSuccessModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Success</h5>
+      </div>
+
+<script src="/js/family.js"></script>
+
+</body>
+</html>
+          <input class="form-control mb-2 small" name="parent[mobile]" placeholder="Husband Mobile" type="tel">
+          <input class="form-control mb-2 small" name="parent[occupation]" placeholder="Husband occupation">
+        </div>
+
+        <div class="col-12 col-md-6">
+          <h5 class="mb-3 small">Wife Details</h5>
+          <input class="form-control mb-2 small" name="parent[wife_name]" placeholder="Wife Name">
+          <select class="form-control mb-2 small" name="parent[wife_gender]">
+            <option value="female" selected>Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
+          </select>
+          <input class="form-control mb-2 small" name="parent[mobile_wife]" placeholder="Wife Mobile" type="tel">
+          <input class="form-control mb-2 small" name="parent[occupation_wife]" placeholder="Wife Occupation">
+        </div>
+      </div>
+
+      <div class="row g-2 mt-3">
+        <div class="col-12">
+          <h5 class="mb-3 small">Photos</h5>
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label small">Husband Photo</label>
+              <div class="d-flex gap-2 mb-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('husband')">Select Photo</button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('husband')">Capture Photo</button>
+              </div>
+              <input type="file" id="husband_file" class="form-control small d-none" name="parent[husband_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
+              <div id="husband_size" class="small text-muted"></div>
+              <img id="husband_preview" class="img-thumbnail">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label small">Wife Photo</label>
+              <div class="d-flex gap-2 mb-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('wife')">Select Photo</button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('wife')">Capture Photo</button>
+              </div>
+              <input type="file" id="wife_file" class="form-control small d-none" name="parent[wife_photo]" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
+              <div id="wife_size" class="small text-muted"></div>
+              <img id="wife_preview" class="img-thumbnail">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h5 class="mt-4 mb-3 small">Address</h5>
+      <div class="row g-2">
+        <div class="col-12 col-md-6">
+          <input class="form-control mb-2 small" name="parent[door_no]" placeholder="Door No">
+          <input class="form-control mb-2 small" name="parent[street]" placeholder="Street">
+        </div>
+        <div class="col-12 col-md-6">
+          <select class="form-control mb-2 small" name="parent[state]" id="state">
+            <option value="">Select State</option>
+          </select>
+          <select class="form-control mb-2 small" name="parent[district]" id="district">
+            <option value="">Select District</option>
+          </select>
+        </div>
+      </div>
+
+      <input class="form-control mb-3 small" name="parent[pincode]" placeholder="Pincode" type="text">
+
+      <h5 class="mt-4 mb-3 small">Children</h5>
+ <div id="children" class="mb-3"></div>
+-      <button type="button" class="btn btn-secondary btn-sm mb-3" onclick="addChild()">+ Add Child</button>
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Save Family</button>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+</form>
+
+<script>
+  function handlePhotoSelect(input, previewId) {
+    if(input.files && input.files[0]){
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const img = document.getElementById(previewId);
+        img.src = e.target.result;
+        img.style.display = 'block';
+
+        // Display file size
+        const sizeElement = document.getElementById(previewId.replace('_preview', '_size'));
+        if (sizeElement) {
+          const sizeKB = (file.size / 1024).toFixed(2);
+          sizeElement.textContent = `Size: ${sizeKB} KB`;
+        }
+      }
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function selectPhoto(type) {
+    const fileInput = document.getElementById(`${type}_file`);
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  async function capturePhoto(type) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+
+      // Create modal for camera
+      const modal = document.createElement('div');
+      modal.className = 'modal fade show';
+      modal.style.display = 'block';
+      modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Capture Photo</h5>
+              <button type="button" class="btn-close" onclick="closeCameraModal()"></button>
+            </div>
+            <div class="modal-body text-center">
+              <video id="cameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>
+              <br><br>
+              <button type="button" class="btn btn-success" onclick="takePhoto('${type}')">Take Photo</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const videoElement = modal.querySelector('#cameraVideo');
+      videoElement.srcObject = stream;
+
+      // Store stream globally for cleanup
+      window.currentStream = stream;
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      alert('Unable to access camera. Please check permissions.');
+    }
+  }
+
+  function takePhoto(type) {
+    const video = document.querySelector('#cameraVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+      const file = new File([blob], 'captured-photo.jpg', { type: 'image/jpeg' });
+
+      // Create a DataTransfer to simulate file input
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const fileInput = document.getElementById(`${type}_file`);
+      if (fileInput) {
+        fileInput.files = dt.files;
+        handlePhotoSelect(fileInput, `${type}_preview`);
+      }
+
+      closeCameraModal();
+    }, 'image/jpeg', 0.8);
+  }
+
+  function closeCameraModal() {
+    const modal = document.querySelector('.modal.fade.show');
+    if (modal) {
+      document.body.removeChild(modal);
+    }
+    if (window.currentStream) {
+      window.currentStream.getTracks().forEach(track => track.stop());
+    }
+  }
+</script>
+
+<!-- Child Add/Edit Modal -->
+<div class="modal fade" id="addChildModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="childModalTitle">Add Child</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="childId">
+
+        <input id="childName" class="form-control mb-2" placeholder="Child Name" style="font-family: Arial, sans-serif;">
+        <input id="childDOB" class="form-control mb-2" type="date" style="font-family: Arial, sans-serif;">
+        <select id="childGender" class="form-control mb-2" style="font-family: Arial, sans-serif;">
+          <option value="">Select Gender</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+        <input id="childOccupation" class="form-control mb-2" placeholder="Occupation" style="font-family: Arial, sans-serif;">
+        <input id="childRelationship" class="form-control mb-2" placeholder="Relationship" style="font-family: Arial, sans-serif;">
+        <textarea id="childAddress" class="form-control mb-2" placeholder="Address" style="font-family: Arial, sans-serif;"></textarea>
+
+        <label style="font-family: Arial, sans-serif;">Child Photo</label>
+        <div class="d-flex gap-2 mb-2">
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectPhoto('modal_child')">Select Photo</button>
+          <button type="button" class="btn btn-outline-success btn-sm" onclick="capturePhoto('modal_child')">Capture Photo</button>
+        </div>
+        <input type="file" id="childPhoto" class="form-control mb-2 d-none" style="font-family: Arial, sans-serif;" accept="image/*" onchange="handlePhotoSelect(this, 'childPhotoPreview')">
+        <div id="modal_child_size" class="small text-muted"></div>
+        <img id="childPhotoPreview" style="max-width:100px; display:none;">
       </div>
 
       <div class="modal-footer">

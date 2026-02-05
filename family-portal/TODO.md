@@ -1,4 +1,0 @@
-- [x] Change .family-grid to 4 columns instead of 3 and reduce gap from 2rem to 1rem
-- [x] Reduce padding in .family-card-header from 1rem to 0.75rem
-- [x] Reduce padding in .family-card-body from 1.25rem to 1rem
-- [x] Change background color from #faf7f79c to #ecbd7bd5 for .header, .stat-card, .family-card, and the search card

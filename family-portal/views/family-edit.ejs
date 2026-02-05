@@ -2,222 +2,773 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Family</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Brown Theme -->
   <style>
-    :root {
-      --brown-main: #6f4e37;
-      --brown-light: #f5efe9;
-      --brown-border: #d6c2b3;
-    }
-
+    /* ===== GLOBAL ===== */
     body {
-      background-color: var(--brown-light);
+      margin: 0;
+      background-color: #f5e6d3;
     }
 
-    h3, h5 {
-      color: var(--brown-main);
-      font-weight: 600;
+    /* ===== FULL WIDTH HEADER ===== */
+    .family-header {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      background: linear-gradient(135deg, #8B4513, #A0522D);
+      color: white;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
     }
 
-    .card {
-      border: 1px solid var(--brown-border);
-      border-radius: 10px;
-      margin-bottom: 15px;
+    /* ===== SECTION ===== */
+    .section-title {
+      margin: 25px 0 10px;
+      font-weight: bold;
+      color: #5a3e2b;
     }
 
-    .btn-primary {
-      background-color: var(--brown-main);
-      border-color: var(--brown-main);
+    /* ===== ROWS ===== */
+    .parents-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 10px;
     }
 
-    .btn-primary:hover {
-      background-color: #5a3f2c;
-      border-color: #5a3f2c;
+    .children-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      overflow-x: auto;
+      padding-bottom: 10px;
     }
 
-    .form-control:focus {
-      border-color: var(--brown-main);
-      box-shadow: 0 0 0 0.2rem rgba(111, 78, 55, 0.25);
+    /* ===== CARD ===== */
+    .member-card {
+      min-width: 420px;
+      max-width: 720px;
+      background-color: #f9f1e6;
+      border-radius: 14px;
+      padding: 100px;
+      position: relative;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-start;
     }
 
-    .img-thumbnail {
-      max-height: 150px;
+    /* ===== LEFT DETAILS ===== */
+    .member-info {
+      flex: 1;
+      padding-right: 19px;
+    }
+
+    .member-name {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #5a3e2b;
+      margin-bottom: 3px;
+    }
+
+    .info-item {
+      font-size: 1rem;
+      color: #4b3621;
+      margin-bottom: 4px;
+    }
+
+    /* ===== PHOTO ===== */
+    .member-photo {
+      width: 220px;
+      height: 220px;
       object-fit: cover;
-      display: none;
-      margin-top: 8px;
+      border-radius: 12px;
+      border: 2px solid #d1b89a;
+    }
+
+    /* ===== EDIT ICON ===== */
+    .edit-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #8B4513;
+      color: white;
+      padding: 6px;
+      border-radius: 50%;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .parents-row,
+      .children-row {
+        flex-wrap: wrap;
+      }
+
+      .member-card {
+        min-width: 100%;
+      }
     }
   </style>
 </head>
-<body class="container-fluid mt-4">
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-  <h3 class="mb-3 mb-md-0">Edit Family</h3>
-  <a href="/my-family" class="btn btn-secondary">Back to My Family</a>
-</div>
+<body>
 
-<form id="editFamilyForm" enctype="multipart/form-data">
-  <div class="row g-2">
-    <div class="col-12">
-      <div class="card p-3">
-        <div class="row g-2">
-          <div class="col-12 col-md-6">
-            <h5 class="mb-3 small">Parent Details</h5>
-            <input class="form-control mb-2 small" name="husband_name" placeholder="Husband Name" required>
-            <input class="form-control mb-2 small" name="wife_name" placeholder="Wife Name">
-            <input class="form-control mb-2 small" name="wife_mobile" placeholder="Wife Mobile" type="tel">
-            <input class="form-control mb-2 small" name="wife_occupation" placeholder="Wife Occupation">
-            <input class="form-control mb-2 small" name="husband_mobile" placeholder="Husband Mobile" type="tel">
-            <input class="form-control mb-2 small" name="husband_occupation" placeholder="Husband Occupation">
-          </div>
+  <!-- HEADER -->
+  <div class="family-header">
+    Edit Family
+  </div>
 
-          <div class="col-12 col-md-6">
-            <h5 class="mb-3 small">Photos</h5>
-            <div class="mb-3">
-              <label class="form-label small">Husband Photo</label>
-              <input type="file" class="form-control small" name="husband_photo" accept="image/*" onchange="handlePhotoSelect(this, 'husband_preview')">
-              <img id="husband_preview" class="img-thumbnail">
+  <div class="container mt-4">
+
+    <% members = members || []; %>
+
+    <!-- ================= PARENTS ================= -->
+    <h4 class="section-title">Parents</h4>
+    <div class="parents-row">
+
+      <% members.forEach(member => { %>
+        <% if (member.member_type === 'parent') { %>
+
+          <div class="member-card">
+            <% if (member.relationship === 'husband') { %>
+              <i class="fas fa-edit edit-icon" onclick="showEditPopupForEditPage('husband', <%= member.id %>)"></i>
+            <% } else if (member.relationship === 'wife') { %>
+              <i class="fas fa-edit edit-icon" onclick="showEditPopupForEditPage('wife', <%= member.id %>)"></i>
+            <% } %>
+
+            <div class="member-info">
+              <div class="member-name"><%= member.name %></div>
+              <div class="info-item"><b>Relationship:</b> <%= member.relationship %></div>
+              <div class="info-item"><b>Mobile:</b> <%= member.mobile || '-' %></div>
+              <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
+              <div class="info-item"><b>Gender:</b>
+                <%
+                  let gender = member.gender;
+                  if (!gender || gender === '-') {
+                    if (member.relationship === 'husband') gender = 'Male';
+                    else if (member.relationship === 'wife') gender = 'Female';
+                    else gender = '-';
+                  }
+                %>
+                <%= gender %>
+              </div>
+              <div class="info-item"><b>Address:</b> <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-' %></div>
             </div>
-            <div class="mb-3">
-              <label class="form-label small">Wife Photo</label>
-              <input type="file" class="form-control small" name="wife_photo" accept="image/*" onchange="handlePhotoSelect(this, 'wife_preview')">
-              <img id="wife_preview" class="img-thumbnail">
+
+            <% if (member.photo && member.photo.trim() !== "") { %>
+              <% let photoSrc = member.photo; %>
+              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+              <% if (photoSrc.startsWith('uploads/')) { %>
+                <img src="/<%= photoSrc %>" class="member-photo">
+              <% } else { %>
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% } %>
+            <% } else { %>
+              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
+            <% } %>
+          </div>
+
+        <% } %>
+      <% }) %>
+
+    </div>
+
+    <!-- ================= CHILDREN ================= -->
+    <h4 class="section-title">Children</h4>
+    <div class="children-row">
+
+      <% members.forEach(member => { %>
+        <% if (member.member_type === 'child') { %>
+
+          <div class="member-card">
+            <i class="fas fa-edit edit-icon" onclick="showEditPopupForEditPage('<%= member.relationship %>', <%= member.id %>)"></i>
+
+            <div class="member-info">
+              <div class="member-name"><%= member.name %></div>
+              <div class="info-item"><b>Relationship:</b> <%= member.relationship || '-' %></div>
+              <div class="info-item"><b>DOB:</b>
+                <%= member.dob
+                    ? new Date(member.dob).toISOString().split('T')[0]
+                    : '-'
+                %>
+              </div>
+              <div class="info-item"><b>Gender:</b>
+                <%
+                  let gender = member.gender;
+                  if (!gender || gender === '-') {
+                    if (member.relationship === 'husband') gender = 'Male';
+                    else if (member.relationship === 'wife') gender = 'Female';
+                    else gender = '-';
+                  }
+                %>
+                <%= gender %>
+              </div>
+              <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
+              <div class="info-item"><b>Address:</b> <%= member.door_no || '-' %></div>
+            </div>
+
+            <% if (member.photo && member.photo.trim() !== "") { %>
+              <% let photoSrc = member.photo; %>
+              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+              <% if (photoSrc.startsWith('uploads/')) { %>
+                <img src="/<%= photoSrc %>" class="member-photo">
+              <% } else { %>
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% } %>
+            <% } else { %>
+              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
+            <% } %>
+          </div>
+
+        <% } %>
+      <% }) %>
+
+    </div>
+
+  </div>
+
+  <!-- HUSBAND EDIT MODAL -->
+  <div class="modal fade" id="husbandEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#A0522D;color:white;">
+          <h5 class="modal-title">Edit Husband Details</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="husbandEditForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <input class="form-control mb-2" name="name" placeholder="Husband Name" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Mobile</label>
+                <input class="form-control mb-2" name="mobile" placeholder="Mobile Number" type="tel">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Occupation</label>
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Photo</label>
+                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'husbandEditPreview')">
+                <img id="husbandEditPreview" class="img-thumbnail" style="max-height: 100px; display: none;">
+              </div>
             </div>
           </div>
-        </div>
-
-        <h5 class="mt-4 mb-3 small">Address</h5>
-        <div class="row g-2">
-          <div class="col-12 col-md-6">
-            <input class="form-control mb-2 small" name="door_no" placeholder="Door No">
-            <input class="form-control mb-2 small" name="street" placeholder="Street">
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
           </div>
-          <div class="col-12 col-md-6">
-            <select class="form-control mb-2 small" name="state" id="state">
-              <option value="">Select State</option>
-            </select>
-            <select class="form-control mb-2 small" name="district" id="district">
-              <option value="">Select District</option>
-            </select>
-          </div>
-        </div>
-
-        <input class="form-control mb-3 small" name="pincode" placeholder="Pincode" type="text">
-
-        <div class="mt-4">
-          <button type="submit" class="btn btn-primary w-100 w-lg-auto" style="min-height: 44px; font-size: 16px;">Update Family</button>
-        </div>
+        </form>
       </div>
     </div>
   </div>
-</form>
 
-<script src="/js/family.js"></script>
+  <!-- WIFE EDIT MODAL -->
+  <div class="modal fade" id="wifeEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#A0522D;color:white;">
+          <h5 class="modal-title">Edit Wife Details</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="wifeEditForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <input class="form-control mb-2" name="name" placeholder="Wife Name" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Mobile</label>
+                <input class="form-control mb-2" name="mobile" placeholder="Mobile Number" type="tel">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Occupation</label>
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Photo</label>
+                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'wifeEditPreview')">
+                <img id="wifeEditPreview" class="img-thumbnail" style="max-height: 100px; display: none;">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-<script>
-  function handlePhotoSelect(input, previewId) {
-    if(input.files && input.files[0]){
-      const reader = new FileReader();
-      reader.onload = function(e){
-        const img = document.getElementById(previewId);
-        img.src = e.target.result;
-        img.style.display = 'block';
+  <!-- CHILD EDIT MODAL -->
+  <div class="modal fade" id="childEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#A0522D;color:white;">
+          <h5 class="modal-title">Edit Child Details</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="childEditForm" enctype="multipart/form-data">
+          <input type="hidden" name="memberId" value="">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <input class="form-control mb-2" name="name" placeholder="Child Name" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" class="form-control mb-2" name="dob">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Gender</label>
+                <select class="form-control mb-2" name="gender">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Occupation</label>
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Relationship</label>
+                <select class="form-control mb-2" name="relationship">
+                  <option value="">Relationship</option>
+                  <option value="son">Son</option>
+                  <option value="daughter">Daughter</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Photo</label>
+                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'childEditPreview')">
+                <img id="childEditPreview" class="img-thumbnail" style="max-height: 100px; display: none;">
+              </div>
+            </div>
+            <!-- Address Section -->
+            <h6 class="mt-3 mb-2">Address</h6>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="door_no" placeholder="Door No">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="street" placeholder="Street">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <input class="form-control mb-2" name="pincode" placeholder="Pincode" pattern="[0-9]{6}" title="Enter 6-digit pincode">
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="state" id="childEditState">
+                  <option value="">Select State</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="district" id="childEditDistrict">
+                  <option value="">Select District</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/family.js"></script>
+
+  <script>
+    function handlePhotoSelect(input, previewId) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById(previewId);
+          img.src = e.target.result;
+          img.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
       }
-      reader.readAsDataURL(input.files[0]);
     }
-  }
 
-  // Load existing family data
-  document.addEventListener("DOMContentLoaded", async () => {
-    try {
-      const res = await fetch("/my-family-json");
-      const data = await res.json();
+    // Show edit popup for family-edit page
+    async function showEditPopupForEditPage(relationship, memberId) {
+      try {
+        // Fetch member data
+        const response = await fetch(`/edit-form/${memberId}`);
+        const data = await response.json();
 
-      if (data.success && data.members) {
-        // Find parents
-        const husband = data.members.find(m => m.relationship === 'husband');
-        const wife = data.members.find(m => m.relationship === 'wife');
-
-        if (husband) {
-          document.querySelector('input[name="husband_name"]').value = husband.name || '';
-          document.querySelector('input[name="husband_mobile"]').value = husband.mobile || '';
-          document.querySelector('input[name="husband_occupation"]').value = husband.occupation || '';
-
-          if (husband.photo) {
-            document.getElementById('husband_preview').src = '/uploads/' + husband.photo;
-            document.getElementById('husband_preview').style.display = 'block';
-          }
+        if (!data.success) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load member data'
+          });
+          return;
         }
 
-        if (wife) {
-          document.querySelector('input[name="wife_name"]').value = wife.name || '';
-          document.querySelector('input[name="wife_mobile"]').value = wife.mobile || '';
-          document.querySelector('input[name="wife_occupation"]').value = wife.occupation || '';
+        const member = data.member;
 
-          if (wife.photo) {
-            document.getElementById('wife_preview').src = '/' + wife.photo;
-            document.getElementById('wife_preview').style.display = 'block';
-          }
+        // Build popup content
+        let popupContent = `<div style="text-align: center;">
+          <h4>${member.name}</h4>
+          <p><strong>Relationship:</strong> ${member.relationship}</p>
+          <p><strong>Mobile:</strong> ${member.mobile || '-'}</p>
+          <p><strong>Occupation:</strong> ${member.occupation || '-'}</p>`;
+
+        if (member.dob) {
+          popupContent += `<p><strong>DOB:</strong> ${new Date(member.dob).toISOString().split('T')[0]}</p>`;
         }
 
-        // Address fields
-        document.querySelector('input[name="door_no"]').value = husband?.door_no || wife?.door_no || '';
-        document.querySelector('input[name="street"]').value = husband?.street || wife?.street || '';
-        document.querySelector('select[name="state"]').value = husband?.state || wife?.state || '';
-        document.querySelector('select[name="district"]').value = husband?.district || wife?.district || '';
-        document.querySelector('input[name="pincode"]').value = husband?.pincode || wife?.pincode || '';
-      }
-    } catch (err) {
-      console.error("Error loading family data:", err);
-    }
-  });
+        popupContent += `<p><strong>Gender:</strong> ${member.gender || '-'}</p>
+          <p><strong>Address:</strong> ${[member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-'}</p>
+        </div>`;
 
-  document.getElementById('editFamilyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-
-    try {
-      const res = await fetch('/update-family', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await res.json();
-
-      if (result.success) {
+        // Show popup with options
         Swal.fire({
-          icon: 'success',
-          title: 'Success!',
-          text: 'Family updated successfully!',
-          confirmButtonColor: '#6f4e37'
-        }).then(() => {
-          window.location.href = '/my-family';
+          title: 'Member Details',
+          html: popupContent,
+          showCancelButton: true,
+          confirmButtonText: 'Edit Details',
+          cancelButtonText: 'Close',
+          confirmButtonColor: '#8B4513',
+          cancelButtonColor: '#6c757d'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Proceed to open edit modal
+            if (relationship === 'husband') {
+              openHusbandEditModal(memberId);
+            } else if (relationship === 'wife') {
+              openWifeEditModal(memberId);
+            } else if (relationship === 'son' || relationship === 'daughter') {
+              openChildEditModal(memberId);
+            }
+          }
         });
-      } else {
+
+      } catch (error) {
+        console.error('Error showing edit popup:', error);
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: result.message || 'Failed to update family',
-          confirmButtonColor: '#6f4e37'
+          text: 'Failed to show edit popup'
         });
       }
-    } catch (err) {
-      console.error("Update error:", err);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Network error occurred',
-        confirmButtonColor: '#6f4e37'
-      });
     }
-  });
-</script>
+
+    // Open husband edit modal
+    async function openHusbandEditModal(memberId) {
+      try {
+        const response = await fetch(`/edit-form/${memberId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const member = data.member;
+          document.querySelector('#husbandEditForm input[name="name"]').value = member.name || '';
+          document.querySelector('#husbandEditForm input[name="mobile"]').value = member.mobile || '';
+          document.querySelector('#husbandEditForm input[name="occupation"]').value = member.occupation || '';
+
+          const preview = document.getElementById('husbandEditPreview');
+          if (member.photo) {
+            preview.src = '/uploads/' + member.photo;
+            preview.style.display = 'block';
+          } else {
+            preview.style.display = 'none';
+          }
+
+          const modal = new bootstrap.Modal(document.getElementById('husbandEditModal'));
+          modal.show();
+        }
+      } catch (error) {
+        console.error('Error loading husband data:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load husband details'
+        });
+      }
+    }
+
+    // Open wife edit modal
+    async function openWifeEditModal(memberId) {
+      try {
+        const response = await fetch(`/edit-form/${memberId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const member = data.member;
+          document.querySelector('#wifeEditForm input[name="name"]').value = member.name || '';
+          document.querySelector('#wifeEditForm input[name="mobile"]').value = member.mobile || '';
+          document.querySelector('#wifeEditForm input[name="occupation"]').value = member.occupation || '';
+
+          const preview = document.getElementById('wifeEditPreview');
+          if (member.photo) {
+            preview.src = '/uploads/' + member.photo;
+            preview.style.display = 'block';
+          } else {
+            preview.style.display = 'none';
+          }
+
+          const modal = new bootstrap.Modal(document.getElementById('wifeEditModal'));
+          modal.show();
+        }
+      } catch (error) {
+        console.error('Error loading wife data:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load wife details'
+        });
+      }
+    }
+
+    // Open child edit modal
+    async function openChildEditModal(memberId) {
+      try {
+        const response = await fetch(`/edit-form/${memberId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const member = data.member;
+          document.querySelector('#childEditForm input[name="memberId"]').value = memberId;
+          document.querySelector('#childEditForm input[name="name"]').value = member.name || '';
+          document.querySelector('#childEditForm input[name="dob"]').value = member.dob ? new Date(member.dob).toISOString().split('T')[0] : '';
+          document.querySelector('#childEditForm select[name="gender"]').value = member.gender || '';
+          document.querySelector('#childEditForm input[name="occupation"]').value = member.occupation || '';
+          document.querySelector('#childEditForm select[name="relationship"]').value = member.relationship || '';
+          document.querySelector('#childEditForm input[name="door_no"]').value = member.door_no || '';
+          document.querySelector('#childEditForm input[name="street"]').value = member.street || '';
+          document.querySelector('#childEditForm input[name="pincode"]').value = member.pincode || '';
+          document.querySelector('#childEditForm select[name="state"]').value = member.state || '';
+          document.querySelector('#childEditForm select[name="district"]').value = member.district || '';
+
+          const preview = document.getElementById('childEditPreview');
+          if (member.photo) {
+            preview.src = '/uploads/' + member.photo;
+            preview.style.display = 'block';
+          } else {
+            preview.style.display = 'none';
+          }
+
+          // Load states for child edit modal
+          await loadStatesForEditChildModal();
+
+          const modal = new bootstrap.Modal(document.getElementById('childEditModal'));
+          modal.show();
+        }
+      } catch (error) {
+        console.error('Error loading child data:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load child details'
+        });
+      }
+    }
+
+    // Load states for child edit modal
+    async function loadStatesForEditChildModal() {
+      const stateSelect = document.getElementById("childEditState");
+      if (!stateSelect) return;
+
+      try {
+        const res = await fetch("/data/india-states-districts.json");
+        const indiaData = await res.json();
+
+        stateSelect.innerHTML = '<option value="">Select State</option>';
+        Object.keys(indiaData).forEach(state => {
+          const option = document.createElement("option");
+          option.value = state;
+          option.textContent = state;
+          stateSelect.appendChild(option);
+        });
+
+        stateSelect.addEventListener("change", function () {
+          const selectedState = this.value;
+          const districtSelect = document.getElementById("childEditDistrict");
+          districtSelect.innerHTML = '<option value="">Select District</option>';
+
+          if (selectedState && indiaData[selectedState]) {
+            indiaData[selectedState].forEach(district => {
+              const option = document.createElement("option");
+              option.value = district;
+              option.textContent = district;
+              districtSelect.appendChild(option);
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Error loading states for child edit modal:", error);
+      }
+    }
+
+    // Handle husband form submission
+    document.getElementById('husbandEditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+
+      try {
+        const response = await fetch('/update-husband', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('husbandEditModal'));
+          modal.hide();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Husband details updated successfully!',
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.message || 'Failed to update husband details'
+          });
+        }
+      } catch (error) {
+        console.error('Update husband error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Network error occurred'
+        });
+      }
+    });
+
+    // Handle wife form submission
+    document.getElementById('wifeEditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+
+      try {
+        const response = await fetch('/update-wife', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('wifeEditModal'));
+          modal.hide();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Wife details updated successfully!',
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.message || 'Failed to update wife details'
+          });
+        }
+      } catch (error) {
+        console.error('Update wife error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Network error occurred'
+        });
+      }
+    });
+
+    // Handle child form submission
+    document.getElementById('childEditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+
+      // Get member ID from the form (we'll need to add it when opening the modal)
+      const memberId = document.querySelector('#childEditForm input[name="memberId"]')?.value;
+
+      try {
+        const response = await fetch(`/update-member/${memberId}`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('childEditModal'));
+          modal.hide();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Child details updated successfully!',
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.message || 'Failed to update child details'
+          });
+        }
+      } catch (error) {
+        console.error('Update child error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Network error occurred'
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>
