@@ -81,18 +81,30 @@ exports.dashboard = async (req, res) => {
     );
 
     const hasFamily = families.length > 0;
+    let members = [];
+
+    if (hasFamily) {
+      const familyId = families[0].id;
+      const [rows] = await db.query(
+        "SELECT * FROM family_members WHERE family_id = ?",
+        [familyId]
+      );
+      members = rows || [];
+    }
 
     res.render("dashboard", {
       user: req.session.user,
       message: req.query.message || null,
-      hasFamily
+      hasFamily,
+      members
     });
   } catch (err) {
     console.error("Dashboard error:", err);
     res.render("dashboard", {
       user: req.session.user,
       message: req.query.message || null,
-      hasFamily: false
+      hasFamily: false,
+      members: []
     });
   }
 };
