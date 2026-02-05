@@ -1,34 +1,46 @@
-let indiaData = {};
-
-async function loadIndiaData() {
-  const res = await fetch("/data/india-states-districts.json");
-  indiaData = await res.json();
-
-  const stateSelect = document.getElementById("state");
-  Object.keys(indiaData).forEach(state => {
-    const option = document.createElement("option");
-    option.value = state;
-    option.textContent = state;
-    stateSelect.appendChild(option);
-  });
-
-  stateSelect.addEventListener("change", function () {
-    const selectedState = this.value;
-    const districtSelect = document.getElementById("district");
-    districtSelect.innerHTML = '<option value="">Select District</option>';
-
-    if (selectedState && indiaData[selectedState]) {
-      indiaData[selectedState].forEach(district => {
-        const option = document.createElement("option");
-        option.value = district;
-        option.textContent = district;
-        districtSelect.appendChild(option);
-      });
-    }
-  });
+// ========== GLOBAL DATA ==========
+if (typeof indiaData === "undefined") {
+  var indiaData = {};
 }
 
 let childIndex = 0;
+
+// ========== LOAD INDIA DATA ==========
+async function loadIndiaData() {
+  try {
+    const res = await fetch("/data/india-states-districts.json");
+    indiaData = await res.json();
+
+    const stateSelect = document.getElementById("state");
+    if (!stateSelect) return;
+
+    Object.keys(indiaData).forEach(state => {
+      const option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+
+    stateSelect.addEventListener("change", function () {
+      const selectedState = this.value;
+      const districtSelect = document.getElementById("district");
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+
+      if (selectedState && indiaData[selectedState]) {
+        indiaData[selectedState].forEach(district => {
+          const option = document.createElement("option");
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        });
+      }
+    });
+  } catch (err) {
+    console.error("Error loading India data:", err);
+  }
+}
+
+// ========== ADD & REMOVE CHILD ==========
 function addChild() {
   const container = document.getElementById("children");
   const html = `
@@ -100,88 +112,14 @@ function removeChildRow(index) {
   if (el && el.parentNode) el.parentNode.removeChild(el);
 }
 
-window.addEventListener("DOMContentLoaded", loadIndiaData);
-
-// ================== ADD CHILD MODAL HANDLING ==================
-document.addEventListener("DOMContentLoaded", () => {
-  const addChildForm = document.getElementById("addChildForm");
-  if (addChildForm) {
-    addChildForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const formData = new FormData(addChildForm);
-
-      try {
-        const response = await fetch("/add-child", {
-          method: "POST",
-          body: formData,
-          credentials: "include"
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          // Close modal
-          const modal = bootstrap.Modal.getInstance(document.getElementById("addChildModal"));
-          modal.hide();
-
-          // Reset form
-          addChildForm.reset();
-
-          // Show success message and reload page
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              icon: 'success',
-              title: 'Child Added Successfully!',
-              text: result.message,
-              showConfirmButton: false,
-              timer: 1500
-            }).then(() => {
-              // Reload page to show new child
-              window.location.reload();
-            });
-          } else {
-            alert('Child Added Successfully!');
-            window.location.reload();
-          }
-        } else {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              icon: 'error',
-              title: 'Failed to Add Child',
-              text: result.message || 'An error occurred'
-            });
-          } else {
-            alert('Failed to Add Child: ' + (result.message || 'An error occurred'));
-          }
-        }
-      } catch (error) {
-        console.error("Add child error:", error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Network Error',
-          text: 'Failed to connect to server'
-        });
-      }
-    });
-  }
-
-  // Load states when add child modal is shown
-  const addChildModal = document.getElementById("addChildModal");
-  if (addChildModal) {
-    addChildModal.addEventListener('show.bs.modal', () => {
-      loadStatesForChildModal();
-    });
-  }
-});
-
+// ========== LOAD CHILD MODAL STATES ==========
 async function loadStatesForChildModal() {
   const stateSelect = document.getElementById("childState");
   if (!stateSelect) return;
 
   try {
     const res = await fetch("/data/india-states-districts.json");
-    const indiaData = await res.json();
+    indiaData = await res.json();
 
     Object.keys(indiaData).forEach(state => {
       const option = document.createElement("option");
@@ -208,6 +146,8 @@ async function loadStatesForChildModal() {
     console.error("Error loading states for child modal:", error);
   }
 }
+
+
 
 // ================== CHILD ADDRESS AND PHOTO FUNCTIONS ==================
 
@@ -354,127 +294,264 @@ function deleteChildPhoto(childIndex) {
 }
 
 // ================== FORM SUBMIT ==================
+
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("familyForm");
-  if (!form) {
-    console.error("familyForm not found");
-    return;
-  }
+  // Load initial India data
+  loadIndiaData();
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // ========== ADD CHILD FORM SUBMIT ==========
+  const addChildForm = document.getElementById("addChildForm");
+  if (addChildForm) {
+    addChildForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(addChildForm);
 
-    const formData = new FormData(form);
-    const members = [];
+      try {
+        const response = await fetch("/add-child", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
 
-    // Add husband
-    const husbandName = formData.get("husband_name");
-    if (husbandName) {
-      members.push({
-        member_type: "parent",
-        name: husbandName,
-        relationship: "husband",
-        gender: formData.get("parent[husband_gender]") || "male",
-        mobile: formData.get("parent[mobile]") || null,
-        occupation: formData.get("parent[occupation]") || null,
-        door_no: formData.get("parent[door_no]") || null,
-        street: formData.get("parent[street]") || null,
-        district: formData.get("parent[district]") || null,
-        state: formData.get("parent[state]") || null,
-        pincode: formData.get("parent[pincode]") || null
-      });
-    }
+        const result = await response.json();
+        if (result.success) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById("addChildModal"));
+          modal.hide();
+          addChildForm.reset();
 
-    // Add wife
-    const wifeName = formData.get("parent[wife_name]");
-    if (wifeName) {
-      members.push({
-        member_type: "parent",
-        name: wifeName,
-        relationship: "wife",
-        gender: formData.get("parent[wife_gender]") || "female",
-        mobile: formData.get("parent[mobile_wife]") || null,
-        occupation: formData.get("parent[occupation_wife]") || null,
-        door_no: formData.get("parent[door_no]") || null,
-        street: formData.get("parent[street]") || null,
-        district: formData.get("parent[district]") || null,
-        state: formData.get("parent[state]") || null,
-        pincode: formData.get("parent[pincode]") || null
-      });
-    }
-
-    // Add children
-    const childrenContainer = document.getElementById("children");
-    const childCards = childrenContainer.querySelectorAll(".child-card");
-    childCards.forEach((card, index) => {
-      const childName = formData.get(`children[${index}][name]`);
-      if (childName) {
-        members.push({
-          member_type: "child",
-          name: childName,
-          relationship: formData.get(`children[${index}][relationship]`) || null,
-          dob: formData.get(`children[${index}][dob]`) || null,
-          gender: formData.get(`children[${index}][gender]`) || null,
-          occupation: formData.get(`children[${index}][occupation]`) || null,
-          door_no: formData.get(`children[${index}][door_no]`) || null,
-          street: formData.get(`children[${index}][street]`) || null,
-          district: formData.get(`children[${index}][district]`) || null,
-          state: formData.get(`children[${index}][state]`) || null,
-          pincode: formData.get(`children[${index}][pincode]`) || null,
-          use_parent_address: formData.get(`children[${index}][use_parent_address]`) === "true"
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Child Added Successfully!',
+              text: result.message,
+              showConfirmButton: false,
+              timer: 1500
+            }).then(() => window.location.reload());
+          } else {
+            alert('Child Added Successfully!');
+            window.location.reload();
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Add Child',
+            text: result.message || 'An error occurred'
+          });
+        }
+      } catch (error) {
+        console.error("Add child error:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Network Error',
+          text: 'Failed to connect to server'
         });
       }
     });
+  }
 
-    // Append JSON data
-    formData.append("members", JSON.stringify(members));
-    formData.append("husband_name", husbandName);
+  // ========== LOAD CHILD MODAL STATES ==========
+  const addChildModal = document.getElementById("addChildModal");
+  if (addChildModal) {
+    addChildModal.addEventListener('show.bs.modal', () => {
+      loadStatesForChildModal();
+    });
+  }
 
-    try {
-      const response = await fetch("/save-family", {
-        method: "POST",
-        body: formData,
-        credentials: "include"
+  // ========== FAMILY FORM SUBMIT ==========
+  const form = document.getElementById("familyForm");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const members = [];
+
+      // Add husband
+      const husbandName = formData.get("husband_name");
+      if (husbandName) {
+        members.push({
+          member_type: "parent",
+          name: husbandName,
+          relationship: "husband",
+          gender: formData.get("parent[husband_gender]") || "male",
+          mobile: formData.get("parent[mobile]") || null,
+          occupation: formData.get("parent[occupation]") || null,
+          door_no: formData.get("parent[door_no]") || null,
+          street: formData.get("parent[street]") || null,
+          district: formData.get("parent[district]") || null,
+          state: formData.get("parent[state]") || null,
+          pincode: formData.get("parent[pincode]") || null
+        });
+      }
+
+      // Add wife
+      const wifeName = formData.get("parent[wife_name]");
+      if (wifeName) {
+        members.push({
+          member_type: "parent",
+          name: wifeName,
+          relationship: "wife",
+          gender: formData.get("parent[wife_gender]") || "female",
+          mobile: formData.get("parent[mobile_wife]") || null,
+          occupation: formData.get("parent[occupation_wife]") || null,
+          door_no: formData.get("parent[door_no]") || null,
+          street: formData.get("parent[street]") || null,
+          district: formData.get("parent[district]") || null,
+          state: formData.get("parent[state]") || null,
+          pincode: formData.get("parent[pincode]") || null
+        });
+      }
+
+      // Add children
+      const childrenContainer = document.getElementById("children");
+      const childCards = childrenContainer.querySelectorAll(".child-card");
+      childCards.forEach((card, index) => {
+        const childName = formData.get(`children[${index}][name]`);
+        if (childName) {
+          members.push({
+            member_type: "child",
+            name: childName,
+            relationship: formData.get(`children[${index}][relationship]`) || null,
+            dob: formData.get(`children[${index}][dob]`) || null,
+            gender: formData.get(`children[${index}][gender]`) || null,
+            occupation: formData.get(`children[${index}][occupation]`) || null,
+            door_no: formData.get(`children[${index}][door_no]`) || null,
+            street: formData.get(`children[${index}][street]`) || null,
+            district: formData.get(`children[${index}][district]`) || null,
+            state: formData.get(`children[${index}][state]`) || null,
+            pincode: formData.get(`children[${index}][pincode]`) || null,
+            use_parent_address: formData.get(`children[${index}][use_parent_address]`) === "true"
+          });
+        }
       });
 
-      const text = await response.text(); // FIRST read raw response
+      // Append JSON data
+      formData.append("members", JSON.stringify(members));
+      formData.append("husband_name", husbandName);
 
-      let result;
       try {
-        result = JSON.parse(text); // Try to parse manually
-      } catch (err) {
-        console.error("Server did NOT return JSON. Raw response:", text);
-        alert("Server error: Invalid response from server. Check backend.");
-        return;
-      }
+        const response = await fetch("/save-family", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
 
-      if (result.success && result.exists) {
-        window.location.href = "/my-family";
-      } else if (result.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Family Saved Successfully!',
-          text: 'Your family details including children have been saved.',
-          showConfirmButton: false,
-          timer: 3000
-        }).then(() => {
-          window.location.href = "/dashboard";
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed to Save Family',
-          text: result.message || 'An error occurred'
-        });
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (err) {
+          console.error("Server did NOT return JSON. Raw response:", text);
+          alert("Server error: Invalid response from server. Check backend.");
+          return;
+        }
+
+        if (result.success && result.exists) {
+          window.location.href = "/my-family";
+        } else if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Family Saved Successfully!',
+            text: 'Your family details including children have been saved.',
+            showConfirmButton: false,
+            timer: 3000
+          }).then(() => {
+            window.location.href = "/dashboard";
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Save Family',
+            text: result.message || 'An error occurred'
+          });
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Server not reachable");
       }
-    } catch (error) {
-      console.error("Network error:", error);
-      alert("Server not reachable");
-    }
-  });
+    });
+  }
 });
 
-// ================== EDIT MODAL HANDLING ==================
+// ================== EDIT POPUP AND MODAL HANDLING ==================
+async function showEditPopup(relationship, memberId, element) {
+  try {
+    // Fetch member data
+    const response = await fetch(`/my-family-json`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      alert('Failed to load member data');
+      return;
+    }
+
+    // Find the specific member
+    const member = result.members.find(m => m.id == memberId);
+    if (!member) {
+      alert('Member not found');
+      return;
+    }
+
+    // Build popup content
+    let popupContent = `<div style="text-align: center;">
+      <h4>${member.name}</h4>
+      <p><strong>Relationship:</strong> ${member.relationship}</p>
+      <p><strong>Mobile:</strong> ${member.mobile || '-'}</p>
+      <p><strong>Occupation:</strong> ${member.occupation || '-'}</p>`;
+
+    if (member.dob) {
+      popupContent += `<p><strong>DOB:</strong> ${new Date(member.dob).toISOString().split('T')[0]}</p>`;
+    }
+
+    popupContent += `<p><strong>Gender:</strong> ${member.gender || '-'}</p>
+      <p><strong>Address:</strong> ${[member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-'}</p>`;
+
+    if (member.photo && member.photo.trim() !== '') {
+      let photoSrc = member.photo;
+      const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/);
+      if (sizeMatch) photoSrc = sizeMatch[1];
+      if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
+      if (photoSrc.startsWith('uploads/')) {
+        popupContent += `<p><img src="/${photoSrc}" class="img-fluid" style="max-height: 100px;"></p>`;
+      } else {
+        popupContent += `<p><img src="/uploads/${photoSrc}" class="img-fluid" style="max-height: 100px;"></p>`;
+      }
+    }
+
+    popupContent += `</div>`;
+
+    // Show popup with options
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Member Details',
+        html: popupContent,
+        showCancelButton: true,
+        confirmButtonText: 'Edit Details',
+        cancelButtonText: 'Close',
+        confirmButtonColor: '#8B4513',
+        cancelButtonColor: '#6c757d'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Proceed to open edit modal
+          openEditModal(relationship, memberId);
+        }
+      });
+    } else {
+      // Fallback if Swal not available
+      if (confirm('View details? Click OK to edit.')) {
+        openEditModal(relationship, memberId);
+      }
+    }
+
+  } catch (error) {
+    console.error('Error showing edit popup:', error);
+    alert('Failed to show edit popup');
+  }
+}
+
 async function openEditModal(relationship, memberId) {
   try {
     // Fetch member data
@@ -517,21 +594,45 @@ async function openEditModal(relationship, memberId) {
 
     // Populate form with member data
     const form = document.getElementById(formId);
-    form.querySelector('[name="name"]').value = member.name || '';
-    form.querySelector('[name="mobile"]').value = member.mobile || '';
-    form.querySelector('[name="occupation"]').value = member.occupation || '';
-    form.querySelector('[name="door_no"]').value = member.door_no || '';
-    form.querySelector('[name="street"]').value = member.street || '';
-    form.querySelector('[name="pincode"]').value = member.pincode || '';
-    form.querySelector('[name="state"]').value = member.state || '';
-    form.querySelector('[name="district"]').value = member.district || '';
+    if (form) {
+      const nameInput = form.querySelector('[name="name"]');
+      if (nameInput) nameInput.value = member.name || '';
 
-    // Handle child-specific fields
-    if (relationship === 'child') {
-      form.querySelector('[name="member_id"]').value = memberId;
-      form.querySelector('[name="dob"]').value = member.dob ? new Date(member.dob).toISOString().split('T')[0] : '';
-      form.querySelector('[name="gender"]').value = member.gender || '';
-      form.querySelector('[name="relationship"]').value = member.relationship || '';
+      const mobileInput = form.querySelector('[name="mobile"]');
+      if (mobileInput) mobileInput.value = member.mobile || '';
+
+      const occupationInput = form.querySelector('[name="occupation"]');
+      if (occupationInput) occupationInput.value = member.occupation || '';
+
+      const doorNoInput = form.querySelector('[name="door_no"]');
+      if (doorNoInput) doorNoInput.value = member.door_no || '';
+
+      const streetInput = form.querySelector('[name="street"]');
+      if (streetInput) streetInput.value = member.street || '';
+
+      const pincodeInput = form.querySelector('[name="pincode"]');
+      if (pincodeInput) pincodeInput.value = member.pincode || '';
+
+      const stateInput = form.querySelector('[name="state"]');
+      if (stateInput) stateInput.value = member.state || '';
+
+      const districtInput = form.querySelector('[name="district"]');
+      if (districtInput) districtInput.value = member.district || '';
+
+      // Handle child-specific fields
+      if (relationship === 'child') {
+        const memberIdInput = form.querySelector('[name="member_id"]');
+        if (memberIdInput) memberIdInput.value = memberId;
+
+        const dobInput = form.querySelector('[name="dob"]');
+        if (dobInput) dobInput.value = member.dob ? new Date(member.dob).toISOString().split('T')[0] : '';
+
+        const genderInput = form.querySelector('[name="gender"]');
+        if (genderInput) genderInput.value = member.gender || '';
+
+        const relationshipInput = form.querySelector('[name="relationship"]');
+        if (relationshipInput) relationshipInput.value = member.relationship || '';
+      }
     }
 
     // Handle photo preview
@@ -662,13 +763,16 @@ async function submitEditForm(formId, modalId, type, memberId) {
 
   try {
     let url, method;
-    if (type === 'husband' || type === 'wife') {
-      url = '/update-family';
+    if (type === 'husband') {
+      url = '/update-husband';
+      method = 'POST';
+    } else if (type === 'wife') {
+      url = '/update-wife';
       method = 'POST';
     } else {
       // For children, use the memberId passed as parameter
-      url = `/update-child/${memberId}`;
-      method = 'PUT';
+      url = `/update-member/${memberId}`;
+      method = 'POST';
     }
 
     const response = await fetch(url, {

@@ -159,7 +159,11 @@
         <% if (member.member_type === 'parent') { %>
 
           <div class="member-card">
-            <i class="fas fa-edit edit-icon" onclick="openEditModal('<%= member.relationship %>', '<%= member.id %>')"></i>
+            <% if (member.relationship === 'husband') { %>
+              <button type="button" class="edit-icon" onclick="openEditModal('husband', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
+            <% } else if (member.relationship === 'wife') { %>
+              <button type="button" class="edit-icon" onclick="openEditModal('wife', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
+            <% } %>
 
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
@@ -209,7 +213,7 @@
         <% if (member.member_type === 'child') { %>
 
           <div class="member-card">
-            <i class="fas fa-edit edit-icon" onclick="openEditModal('child', '<%= member.id %>')"></i>
+            <button type="button" class="edit-icon" onclick="openEditModal('child', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
 
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
@@ -562,6 +566,8 @@
       </div>
     </div>
   </div>
+
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/family.js"></script>
