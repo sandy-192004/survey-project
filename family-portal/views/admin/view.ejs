@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+tust<!DOCTYPE html>
 <html>
 <head>
   <title>View Family Member</title>
@@ -19,61 +19,66 @@
     <div class="alert alert-danger">Member not found</div>
 <% } else { %>
 
-<div class="row">
-  <!-- Husband Details Card -->
-  <div class="col-md-6 mb-3">
-    <div class="card h-100">
-      <div class="card-header">
-        <h5 class="card-title mb-0">Husband Details</h5>
-      </div>
-      <div class="card-body d-flex">
-        <div class="flex-grow-1">
-          <p><strong>Name:</strong> <%= member.husband_name %></p>
-          <p><strong>Mobile:</strong> <%= member.mobile %></p>
-          <p><strong>Occupation:</strong> <%= member.occupation %></p>
-          <p><strong>Gender:</strong> <%= member.husband_gender %></p>
-          <h6>Address</h6>
-          <p><strong>Door No:</strong> <%= member.door_no %></p>
-          <p><strong>Street:</strong> <%= member.street %></p>
-          <p><strong>District:</strong> <%= member.district %></p>
-          <p><strong>State:</strong> <%= member.state %></p>
-          <p><strong>Pincode:</strong> <%= member.pincode %></p>
-        </div>
-        <% if (member.husband_photo) { %>
-          <div class="ms-3">
-            <img src="/uploads/parents/<%= member.husband_photo %>" class="img-thumbnail" style="max-width: 120px; max-height: 120px;">
-          </div>
-        <% } %>
-      </div>
-    </div>
+<!-- Husband Details Card -->
+<div class="card mb-3">
+  <div class="card-header">
+    <h5 class="card-title mb-0">Husband Details</h5>
   </div>
-
-  <!-- Wife Details Card -->
-  <div class="col-md-6 mb-3">
-    <div class="card h-100">
-      <div class="card-header">
-        <h5 class="card-title mb-0">Wife Details</h5>
-      </div>
-      <div class="card-body d-flex">
-        <div class="flex-grow-1">
-          <p><strong>Name:</strong> <%= member.wife_name %></p>
-          <p><strong>Mobile:</strong> <%= member.mobile %></p>
-          <p><strong>Occupation:</strong> <%= member.occupation %></p>
-          <p><strong>Gender:</strong> <%= member.wife_gender %></p>
-          <h6>Address</h6>
-          <p><strong>Door No:</strong> <%= member.door_no %></p>
-          <p><strong>Street:</strong> <%= member.street %></p>
-          <p><strong>District:</strong> <%= member.district %></p>
-          <p><strong>State:</strong> <%= member.state %></p>
-          <p><strong>Pincode:</strong> <%= member.pincode %></p>
-        </div>
-        <% if (member.wife_photo) { %>
-          <div class="ms-3">
-            <img src="/uploads/parents/<%= member.wife_photo %>" class="img-thumbnail" style="max-width: 120px; max-height: 120px;">
-          </div>
-        <% } %>
-      </div>
+  <div class="card-body d-flex">
+    <div class="flex-grow-1">
+      <a href="/admin/edit/<%= member.family_id %>" class="text-primary mb-2"><i class="fas fa-edit"></i></a>
+      <p><strong>Name:</strong> <%= member.husband_name %></p>
+      <p><strong>Mobile:</strong> <%= member.mobile %></p>
+      <p><strong>Occupation:</strong> <%= member.occupation %></p>
+      <p><strong>Gender:</strong> <%= member.husband_gender %></p>
+      <h6>Address</h6>
+      <p><strong>Door No:</strong> <%= member.door_no %></p>
+      <p><strong>Street:</strong> <%= member.street %></p>
+      <p><strong>District:</strong> <%= member.district %></p>
+      <p><strong>State:</strong> <%= member.state %></p>
+      <p><strong>Pincode:</strong> <%= member.pincode %></p>
     </div>
+    <% if (member.husband_photo) { %>
+      <% let husbandPhotoSrc = member.husband_photo.replace(/^uploads\//, ''); %>
+      <% if (!husbandPhotoSrc.match(/\.(png|jpg|jpeg|webp)$/i)) husbandPhotoSrc += '.png'; %>
+      <div class="ms-3">
+        <img src="/survey-project/family-portal/middleware/upload.js/<%= husbandPhotoSrc %>"
+             class="img-thumbnail"
+             style="max-width: 120px; max-height: 120px;">
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Wife Details Card -->
+<div class="card mb-3">
+  <div class="card-header">
+    <h5 class="card-title mb-0">Wife Details</h5>
+  </div>
+  <div class="card-body d-flex">
+    <div class="flex-grow-1">
+      <a href="/admin/edit/<%= member.family_id %>" class="text-primary mb-2"><i class="fas fa-edit"></i></a>
+      <p><strong>Name:</strong> <%= member.wife_name %></p>
+      <p><strong>Mobile:</strong> <%= member.mobile %></p>
+      <p><strong>Occupation:</strong> <%= member.occupation %></p>
+      <p><strong>Gender:</strong> <%= member.wife_gender %></p>
+      <h6>Address</h6>
+      <p><strong>Door No:</strong> <%= member.door_no %></p>
+      <p><strong>Street:</strong> <%= member.street %></p>
+      <p><strong>District:</strong> <%= member.district %></p>
+      <p><strong>State:</strong> <%= member.state %></p>
+      <p><strong>Pincode:</strong> <%= member.pincode %></p>
+    </div>
+    <% if (member.wife_photo) { %>
+      <% let wifePhotoSrc = member.wife_photo.replace(/^uploads\//, ''); %>
+      <% if (!wifePhotoSrc.match(/\.(png|jpg|jpeg|webp)$/i)) wifePhotoSrc += '.png'; %>
+      <div class="ms-3">
+        <img src="/survey-project/family-portal/middleware/upload.js/<%= wifePhotoSrc %>" 
+             class="img-thumbnail" 
+             style="max-width: 120px; max-height: 120px;"
+             onerror="this.src='/images/nophoto.png';">
+      </div>
+    <% } %>
   </div>
 </div>
 
@@ -84,7 +89,7 @@
     <% children.forEach(child => { %>
       <div class="border p-2 mb-2 d-flex">
         <div class="flex-grow-1">
-          <p><strong>Name:</strong> <%= child.name %></p>
+          <p><strong>Name:</strong> <%= child.name %> <a href="/admin/edit/<%= member.family_id %>" class="text-primary ms-2"><i class="fas fa-edit"></i></a></p>
           <p><strong>Relationship:</strong> <%= child.relationship %></p>
           <p><strong>Occupation:</strong> <%= child.occupation %></p>
           <p><strong>Date of Birth:</strong>
@@ -103,8 +108,12 @@
           <p><strong>Pincode:</strong> <%= child.pincode %></p>
         </div>
         <% if (child.photo) { %>
+          <% let childPhotoSrc = child.photo.replace(/^uploads\//, ''); %>
+          <% if (!childPhotoSrc.match(/\.(png|jpg|jpeg|webp)$/i)) childPhotoSrc += '.png'; %>
           <div class="ms-3">
-            <img src="/uploads/children/<%= child.photo %>" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+            <img src="/survey-project/family-portal/middleware/upload.js/<%= childPhotoSrc %>"
+                 class="img-thumbnail"
+                 style="max-width: 150px; max-height: 150px;">
           </div>
         <% } %>
       </div>
@@ -122,4 +131,3 @@
 
 </body>
 </html>
-

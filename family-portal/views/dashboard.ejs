@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Family Portal - Dashboard</title>
 
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
   <!-- JQUERY (REQUIRED FOR YOUR CODE) -->
@@ -164,15 +164,12 @@
                   <div class="ms-3">
                     <% if (parent.photo && parent.photo.trim() !== "") { %>
                       <% let photoSrc = parent.photo; %>
+                      <% // Remove size from photo path if present %>
                       <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
                       <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-                      <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-                      <% if (photoSrc.startsWith('uploads/')) { %>
-                        <% photoSrc = `/${photoSrc}`; %>
-                      <% } else { %>
-                        <% photoSrc = `/uploads/${photoSrc}`; %>
-                      <% } %>
-                      <img src="<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
+                      <% // Normalize path %>
+                      <% photoSrc = photoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
+                      <img src="/uploads/<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
                     <% } else { %>
                       <img src="https://via.placeholder.com/120x120?text=No+Photo" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
                     <% } %>
@@ -270,7 +267,7 @@
 </div>
 
 <!-- =================== SCRIPTS =================== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 /* ---------- SUCCESS TOAST ---------- */

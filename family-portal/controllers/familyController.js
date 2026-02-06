@@ -712,7 +712,13 @@ exports.updateHusband = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
-    const photoPath = req.file ? `parents/${req.file.filename}` : null;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `parents/${req.file.filename}`;
+      const filePath = path.join('uploads', photoPath);
+      const stats = fs.statSync(filePath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
 
     const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
     if (familyRows.length === 0) {
@@ -742,7 +748,13 @@ exports.updateWife = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
-    const photoPath = req.file ? `parents/${req.file.filename}` : null;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `parents/${req.file.filename}`;
+      const filePath = path.join('uploads', photoPath);
+      const stats = fs.statSync(filePath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
 
     const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
     if (familyRows.length === 0) {

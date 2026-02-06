@@ -189,12 +189,13 @@
               <% // Remove size from photo path if present %>
               <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
               <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-              <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
-              <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% // Normalize path %>
+              <% photoSrc = photoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
+              <% // If no folder, assume parents for parents, children for children %>
+              <% if (photoSrc.indexOf('/') === -1) { %>
+                <% photoSrc = (member.member_type === 'child' ? 'children/' : 'parents/') + photoSrc; %>
               <% } %>
+              <img src="/uploads/<%= photoSrc %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
@@ -244,12 +245,13 @@
               <% // Remove size from photo path if present %>
               <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
               <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-              <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
-              <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% // Normalize path %>
+              <% photoSrc = photoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
+              <% // If no folder, assume parents for parents, children for children %>
+              <% if (photoSrc.indexOf('/') === -1) { %>
+                <% photoSrc = (member.member_type === 'child' ? 'children/' : 'parents/') + photoSrc; %>
               <% } %>
+              <img src="/uploads/<%= photoSrc %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
