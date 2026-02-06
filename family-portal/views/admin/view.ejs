@@ -9,14 +9,11 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    /* ===== GLOBAL ===== */
     body {
       margin: 0;
       background-color: #f5e6d3;
-      
     }
 
-    /* ===== FULL WIDTH HEADER ===== */
     .family-header {
       width: 100vw;
       margin-left: calc(-50vw + 50%);
@@ -28,37 +25,30 @@
       font-weight: bold;
     }
 
-    /* ===== SECTION ===== */
     .section-title {
       margin: 25px 0 10px;
       font-weight: bold;
       color: #5a3e2b;
     }
 
-    /* ===== ROWS ===== */
     .parents-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
     .children-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      flex-wrap: wrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
-    /* ===== CARD ===== */
     .member-card {
-      min-width: 420px;
-      max-width: 720px;
+      min-width: 300px;
+      max-width: 500px;
       background-color: #f9f1e6;
       border-radius: 14px;
-      padding: 100px;
+      padding: 20px;
       position: relative;
       box-shadow: 0 6px 18px rgba(0,0,0,0.15);
       display: flex;
@@ -66,7 +56,6 @@
       align-items: flex-start;
     }
 
-    /* ===== LEFT DETAILS ===== */
     .member-info {
       flex: 1;
       padding-right: 19px;
@@ -85,18 +74,14 @@
       margin-bottom: 4px;
     }
 
-    /* ===== PHOTO ===== */
     .member-photo {
-      width: 220px;
-      height: 220px;
+      width: 150px;
+      height: 150px;
       object-fit: cover;
       border-radius: 12px;
       border: 2px solid #d1b89a;
     }
 
-
-
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .parents-row,
       .children-row {
@@ -117,17 +102,11 @@
     Family Details
   </div>
 
-  <div class="container mt-3">
-    <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
-  </div>
-
   <div class="container mt-4">
 
     <% 
-    // Prepare members array from member and children data
     let members = [];
     if (member) {
-      // Add husband
       if (member.husband_name) {
         members.push({
           member_type: 'parent',
@@ -144,7 +123,6 @@
           photo: member.husband_photo
         });
       }
-      // Add wife
       if (member.wife_name) {
         members.push({
           member_type: 'parent',
@@ -162,7 +140,7 @@
         });
       }
     }
-    // Add children
+
     if (children) {
       children.forEach(child => {
         members.push({
@@ -190,92 +168,66 @@
       </div>
     <% } %>
 
-    <!-- ================= PARENTS ================= -->
+    <!-- PARENTS -->
     <h4 class="section-title">Parents</h4>
     <div class="parents-row">
-
       <% members.forEach(member => { %>
         <% if (member.member_type === 'parent') { %>
-
           <div class="member-card">
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
               <div class="info-item"><b>Relationship:</b> <%= member.relationship %></div>
               <div class="info-item"><b>Mobile:</b> <%= member.mobile || '-' %></div>
               <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
-              <div class="info-item"><b>Gender:</b>
-                <%
-                  let gender = member.gender;
-                  if (!gender || gender === '-') {
-                    if (member.relationship === 'husband') gender = 'Male';
-                    else if (member.relationship === 'wife') gender = 'Female';
-                    else gender = '-';
-                  }
-                %>
-                <%= gender %>
+              <div class="info-item"><b>Gender:</b> <%= member.gender || '-' %></div>
+              <div class="info-item"><b>Address:</b>
+                <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-' %>
               </div>
-              <div class="info-item"><b>Address:</b> <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-' %></div>
             </div>
 
-            <% if (member.photo && member.photo.trim() !== "") { %>
+            <% if (member.photo) { %>
               <img src="/uploads/<%= member.photo %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
           </div>
-
         <% } %>
       <% }) %>
-
     </div>
 
-    <% if (members.some(m => m.member_type === 'child')) { %>
-    <!-- ================= CHILDREN ================= -->
+    <!-- CHILDREN -->
     <h4 class="section-title">Children</h4>
     <div class="children-row">
-
       <% members.forEach(member => { %>
         <% if (member.member_type === 'child') { %>
-
           <div class="member-card">
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
               <div class="info-item"><b>Relationship:</b> <%= member.relationship || '-' %></div>
               <div class="info-item"><b>DOB:</b>
-                <%= member.dob
-                    ? new Date(member.dob).toISOString().split('T')[0]
-                    : '-'
-                %>
+                <%= member.dob ? new Date(member.dob).toISOString().split('T')[0] : '-' %>
               </div>
-              <div class="info-item"><b>Gender:</b>
-                <%
-                  let gender = member.gender;
-                  if (!gender || gender === '-') {
-                    if (member.relationship === 'husband') gender = 'Male';
-                    else if (member.relationship === 'wife') gender = 'Female';
-                    else gender = '-';
-                  }
-                %>
-                <%= gender %>
-              </div>
+              <div class="info-item"><b>Gender:</b> <%= member.gender || '-' %></div>
               <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
               <div class="info-item"><b>Address:</b> <%= member.door_no || '-' %></div>
             </div>
 
-            <% if (member.photo && member.photo.trim() !== "") { %>
+            <% if (member.photo) { %>
               <img src="/uploads/<%= member.photo %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
           </div>
-
         <% } %>
       <% }) %>
-
     </div>
-    <% } %>
 
-
+    <!-- BACK TO DASHBOARD (BOTTOM) -->
+    <div class="text-center mt-5 mb-4" ></div>
+      <a href="/admin/dashboard" class="btn btn-primary px-4" style="background-color: #8B4513;  border:2px solid #5a3e2b" >
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+      </a>
+    </div>
 
   </div>
 

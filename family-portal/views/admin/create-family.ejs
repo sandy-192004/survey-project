@@ -131,17 +131,17 @@
       </div>
     </div>
 
-    <!-- Address -->
+    <!-- Address (PARENTS) -->
     <div class="form-section">
       <h5>Address</h5>
       <div class="row">
         <div class="col-md-6">
           <label class="form-label">Door No</label>
-          <input type="text" class="form-control" name="door_no">
+          <input type="text" class="form-control" name="door_no" id="parent_door_no">
         </div>
         <div class="col-md-6">
           <label class="form-label">Street</label>
-          <input type="text" class="form-control" name="street">
+          <input type="text" class="form-control" name="street" id="parent_street">
         </div>
       </div>
       <div class="row mt-3">
@@ -159,7 +159,7 @@
         </div>
         <div class="col-md-4">
           <label class="form-label">Pincode</label>
-          <input type="text" class="form-control" name="pincode">
+          <input type="text" class="form-control" name="pincode" id="parent_pincode">
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@
 <script>
 let childIndex = 0;
 
-// Load states and districts
+// Load states and districts (UNCHANGED)
 fetch('/data/india-states-districts.json')
   .then(response => response.json())
   .then(data => {
@@ -226,7 +226,7 @@ fetch('/data/india-states-districts.json')
     });
   });
 
-// ADD CHILD (UNCHANGED LOGIC)
+// ✅ UPDATED: ADD CHILD WITH ADDRESS + CHECKBOX
 function addChild() {
   const container = document.getElementById('children-container');
 
@@ -235,6 +235,7 @@ function addChild() {
 
   childDiv.innerHTML = `
     <h6>Child ${childIndex + 1}</h6>
+
     <div class="row">
       <div class="col-md-6">
         <label class="form-label">Name *</label>
@@ -276,6 +277,44 @@ function addChild() {
       </div>
     </div>
 
+    <hr>
+    <h6>Child Address</h6>
+
+    <label>
+      <input type="checkbox" class="same-address-checkbox">
+      Same as Parents
+    </label>
+
+    <div class="row mt-2">
+      <div class="col-md-6">
+        <label>Door No</label>
+        <input type="text" class="form-control child-door" name="children[${childIndex}][door_no]">
+      </div>
+      <div class="col-md-6">
+        <label>Street</label>
+        <input type="text" class="form-control child-street" name="children[${childIndex}][street]">
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-md-4">
+        <label>State</label>
+        <select class="form-control child-state" name="children[${childIndex}][state]">
+          <option value="">Select State</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label>District</label>
+        <select class="form-control child-district" name="children[${childIndex}][district]">
+          <option value="">Select District</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label>Pincode</label>
+        <input type="text" class="form-control child-pincode" name="children[${childIndex}][pincode]">
+      </div>
+    </div>
+
     <div class="row mt-2">
       <div class="col-md-12">
         <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn">
@@ -286,17 +325,56 @@ function addChild() {
   `;
 
   container.appendChild(childDiv);
+
+  // Copy state options to child dropdown
+  const parentState = document.getElementById("state");
+  const childState = childDiv.querySelector(".child-state");
+
+  parentState.querySelectorAll("option").forEach(opt=>{
+    const newOpt = opt.cloneNode(true);
+    childState.appendChild(newOpt);
+  });
+
+  // When child state changes → load districts
+  childState.addEventListener("change", function(){
+    const childDistrict = childDiv.querySelector(".child-district");
+    childDistrict.innerHTML = '<option value="">Select District</option>';
+
+    fetch('/data/india-states-districts.json')
+      .then(res=>res.json())
+      .then(data=>{
+        if(data[this.value]){
+          data[this.value].forEach(d=>{
+            const opt=document.createElement("option");
+            opt.value=d;
+            opt.textContent=d;
+            childDistrict.appendChild(opt);
+          });
+        }
+      });
+  });
+
+  // ✅ SAME AS PARENTS CHECKBOX LOGIC
+  childDiv.querySelector(".same-address-checkbox").addEventListener("change", function(){
+    if(this.checked){
+      childDiv.querySelector(".child-door").value = document.getElementById("parent_door_no").value;
+      childDiv.querySelector(".child-street").value = document.getElementById("parent_street").value;
+      childDiv.querySelector(".child-pincode").value = document.getElementById("parent_pincode").value;
+      childDiv.querySelector(".child-state").value = document.getElementById("state").value;
+    }
+  });
+
   childIndex++;
 }
 
-// ✅ FIXED: RELIABLE REMOVE CHILD (WORKS FOR DYNAMIC ELEMENTS)
+// Remove child (UNCHANGED)
 document.addEventListener("click", function (e) {
   if (e.target.classList.contains("remove-child-btn")) {
     e.target.closest(".child-entry").remove();
   }
 });
 
-// FORM SUBMIT (AJAX)
+// FORM SUBMIT (UNCHANGED)
 document.getElementById('createFamilyForm').addEventListener('submit', function(e) {
   e.preventDefault();
 
@@ -325,9 +403,7 @@ function showSuccessPopup() {
   modal.show();
 }
 
-
 function showErrorPopup(message) {
-  // You can use SweetAlert for errors or create a Bootstrap error modal
   Swal.fire({
     icon: 'error',
     title: 'Error',

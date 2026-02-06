@@ -166,11 +166,12 @@
 
             <% if (member.photo && member.photo.trim() !== "") { %>
               <% let photoSrc = member.photo; %>
+              <% photoSrc = photoSrc.replace(/_resized$/, ''); %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%=photoSrc %>" class="member-photo">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%=photosrc %>" class="member-photo">
               <% } %>
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
@@ -218,15 +219,14 @@
 
             <% if (member.photo && member.photo.trim() !== "") { %>
               <% let photoSrc = member.photo; %>
+              <% photoSrc = photoSrc.replace(/_resized$/, ''); %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%=photoSrc %>" class="member-photo">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%= photoSrc %>" class="member-photo">
               <% } %>
             <% } else { %>
-              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
-            <% } %>
           </div>
 
         <% } %>
@@ -499,7 +499,7 @@
 
           const preview = document.getElementById('husbandEditPreview');
           if (member.photo) {
-            preview.src = '/uploads/' + member.photo;
+            preview.src = '/survey-project/family-portal/uploads/' + member.photo;
             preview.style.display = 'block';
           } else {
             preview.style.display = 'none';
@@ -507,6 +507,7 @@
 
           const modal = new bootstrap.Modal(document.getElementById('husbandEditModal'));
           modal.show();
+          document.getElementById('husbandEditModal').setAttribute('aria-hidden', 'false');
         }
       } catch (error) {
         console.error('Error loading husband data:', error);
@@ -532,7 +533,7 @@
 
           const preview = document.getElementById('wifeEditPreview');
           if (member.photo) {
-            preview.src = '/uploads/' + member.photo;
+            preview.src = '/survey-project/family-portal/uploads/' + member.photo;
             preview.style.display = 'block';
           } else {
             preview.style.display = 'none';
@@ -540,6 +541,7 @@
 
           const modal = new bootstrap.Modal(document.getElementById('wifeEditModal'));
           modal.show();
+          document.getElementById('wifeEditModal').setAttribute('aria-hidden', 'false');
         }
       } catch (error) {
         console.error('Error loading wife data:', error);
@@ -573,7 +575,7 @@
 
           const preview = document.getElementById('childEditPreview');
           if (member.photo) {
-            preview.src = '/uploads/' + member.photo;
+            preview.src = '/survey-project/family-portal/uploads/' + member.photo;
             preview.style.display = 'block';
           } else {
             preview.style.display = 'none';

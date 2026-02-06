@@ -54,6 +54,12 @@ router.post("/add-child", upload.fields([{ name: 'photo', maxCount: 1 }]), contr
 router.get("/export/excel", exportController.exportToExcel);
 router.get("/export/pdf", exportController.exportToPdf);
 
+// Create Family (Admin)
+router.get("/create-family", (req, res) => {
+  res.render("admin/create-family");
+});
+router.post("/create-family", upload.any(), controller.createFamily);
+
 // Delete family
 router.post("/delete/:id", controller.deleteFamily);
 

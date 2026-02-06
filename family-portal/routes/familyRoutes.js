@@ -29,9 +29,6 @@ router.get("/dashboard", isLoggedIn, controller.dashboard);
 // ================== FAMILY FORM ==================
 
 router.get("/family-form", isLoggedIn, controller.showForm);
-router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
-
-router.get("/family-form", controller.showForm);
 router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
 
 
@@ -45,16 +42,17 @@ router.post("/add-child", isLoggedIn, upload.single('photo'), controller.addChil
 
 // Edit routes
 router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
-router.get("/edit-form/:id", isLoggedIn, controller.editForm);
 router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
 router.get("/get-child/:id", isLoggedIn, controller.getChild);
 router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
-router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
 router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
+
+// ================== DELETE FAMILY ==================
+router.delete("/delete-family", isLoggedIn, controller.deleteFamily);
 
 // ================== PLACEHOLDERS ==================
 router.get("/pooja-booking", (req, res) => {
-  res.send("Pooja booking feature coming soon!");
+  res.render("pooja-booking");
 });
 
 router.get("/profile", (req, res) => {

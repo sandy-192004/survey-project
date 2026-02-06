@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,126 +10,115 @@
 
   <style>
     /* ===== GLOBAL ===== */
-    body {
-      margin: 0;
-      background-color: #f5e6d3;
-      
-    }
+ <style>
+  body {
+    margin: 0;
+    background-color: #f5e6d3;
+  }
 
-    /* ===== FULL WIDTH HEADER ===== */
-    .family-header {
-      width: 100vw;
-      margin-left: calc(-50vw + 50%);
-      background: linear-gradient(135deg, #8B4513, #A0522D);
-      color: white;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      font-size: 2rem;
-      font-weight: bold;
-    }
+  .family-header {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    background: linear-gradient(135deg, #8B4513, #A0522D);
+    color: white;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+  }
 
-    /* ===== SECTION ===== */
-    .section-title {
-      margin: 25px 0 10px;
-      font-weight: bold;
-      color: #5a3e2b;
-    }
+  .section-title {
+    margin: 25px 0 10px;
+    font-weight: bold;
+    color: #5a3e2b;
+  }
 
-    /* ===== ROWS ===== */
-    .parents-row {
-      display: flex;
-      gap: 20px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
-    }
+  .parents-row,
+  .children-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
 
+  /* ==== THIS IS THE KEY MATCHING CARD STYLE ==== */
+  .member-card {
+    min-width: 300px;
+    max-width: 500px;
+    background-color: #f9f1e6;
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+  }
+
+  .member-info {
+    flex: 1;
+    padding-right: 19px;
+  }
+
+  .member-name {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #5a3e2b;
+    margin-bottom: 3px;
+  }
+
+  .info-item {
+    font-size: 1rem;
+    color: #4b3621;
+    margin-bottom: 4px;
+  }
+
+  /* ==== MATCHED PHOTO SIZE ==== */
+  .member-photo {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid #d1b89a;
+  }
+
+  /* Keep your edit icon but visually consistent */
+  .edit-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #8B4513;
+    color: white;
+    padding: 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+  }
+
+  /* Keep Add Child bar but lighter look */
+  .add-child-bar {
+    margin: 20px 0;
+    background-color: #8B4513;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  @media (max-width: 768px) {
+    .parents-row,
     .children-row {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
+      grid-template-columns: 1fr;
     }
 
-    /* ===== CARD ===== */
     .member-card {
-      min-width: 420px;
-      max-width: 720px;
-      background-color: #f9f1e6;
-      border-radius: 14px;
-      padding: 100px;
-      position: relative;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-      display: flex;
-      justify-content: space-evenly;
-      align-items: flex-start;
+      min-width: 100%;
     }
+  }
+</style>
 
-    /* ===== LEFT DETAILS ===== */
-    .member-info {
-      flex: 1;
-      padding-right: 19px;
-    }
-
-    .member-name {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #5a3e2b;
-      margin-bottom: 3px;
-    }
-
-    .info-item {
-      font-size: 1rem;
-      color: #4b3621;
-      margin-bottom: 4px;
-    }
-
-    /* ===== PHOTO ===== */
-    .member-photo {
-      width: 220px;
-      height: 220px;
-      object-fit: cover;
-      border-radius: 12px;
-      border: 2px solid #d1b89a;
-    }
-
-    /* ===== EDIT ICON ===== */
-    .edit-icon {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: #8B4513;
-      color: white;
-      padding: 6px;
-      border-radius: 50%;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    /* ===== ADD CHILD BAR ===== */
-    .add-child-bar {
-      margin: 20px 0;
-      background-color: #8B4513;
-      color: white;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 768px) {
-      .parents-row,
-      .children-row {
-        flex-wrap: wrap;
-      }
-
-      .member-card {
-        min-width: 100%;
-      }
-    }
   </style>
 </head>
 
@@ -191,13 +180,14 @@
               <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
+                <img src="/<%= photoSrc %>" class="member-photo">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
               <% } %>
-          </div>
-              <img src="https://via.placeholder.com/220x220?text=No+Photo" class="member-photo">
+            <% } else { %>
+              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
+          </div>
 
         <% } %>
       <% }) %>
@@ -245,12 +235,12 @@
               <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
+                <img src="/<%= photoSrc %>" class="member-photo">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
               <% } %>
             <% } else { %>
-              <img src="https://via.placeholder.com/220x220?text=No+Photo" class="member-photo">
+              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
           </div>
 
