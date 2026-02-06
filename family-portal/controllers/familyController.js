@@ -82,18 +82,30 @@ exports.dashboard = async (req, res) => {
     );
 
     const hasFamily = families.length > 0;
+    let members = [];
+
+    if (hasFamily) {
+      const familyId = families[0].id;
+      const [rows] = await db.query(
+        "SELECT * FROM family_members WHERE family_id = ?",
+        [familyId]
+      );
+      members = rows || [];
+    }
 
     res.render("dashboard", {
       user: req.session.user,
       message: req.query.message || null,
-      hasFamily
+      hasFamily,
+      members
     });
   } catch (err) {
     console.error("Dashboard error:", err);
     res.render("dashboard", {
       user: req.session.user,
       message: req.query.message || null,
-      hasFamily: false
+      hasFamily: false,
+      members: []
     });
   }
 };
@@ -493,8 +505,10 @@ exports.updateChild = async (req, res) => {
     let photoPath = null;
     if (req.file) {
       photoPath = `children/${req.file.filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
       photoPath = `${photoPath}(${stats.size})`;
     }
 
@@ -666,6 +680,20 @@ exports.updateMember = async (req, res) => {
       return res.status(404).json({ success: false, message: "Member not found" });
     }
 
+
+    const member = members[0];
+    let photoPath = null;
+    if (req.file) {
+      const folder = member.member_type === 'child' ? 'children' : 'parents';
+      photoPath = `${folder}/${req.file.filename}`;
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
+
+
     let sql, params;
     if (photoPath) {
       sql = `
@@ -691,13 +719,46 @@ exports.updateMember = async (req, res) => {
   }
 };
 
-/* ================= DELETE FAMILY ================= */
+
+exports.updateHusband = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `parents/${req.file.filename}`;
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
+
+    const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
+    if (familyRows.length === 0) {
+      return res.status(404).json({ success: false, message: "Family not found" });
+    }
+
+    const familyId = familyRows[0].id;
+
 
 exports.deleteFamily = async (req, res) => {
   const connection = await db.getConnection();
 
   try {
     const userId = req.session.user.id;
+
+    const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `parents/${req.file.filename}`;
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
+
 
     await connection.beginTransaction();
 
