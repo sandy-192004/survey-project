@@ -108,24 +108,7 @@
       background: #803535;
     }
 
-    .delete-btn {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: #803535;
-      color: rgb(255, 255, 255);
-      border: none;
-      border-radius: 5px;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 10;
-    }
 
-    .delete-btn:hover {
-      background: #c82333;
-    }
 
     .family-card-header {
       background: linear-gradient(135deg, #8B4513, #c19879);
@@ -269,9 +252,6 @@
     <div class="family-card" onclick="location='/admin/view/<%= member.id %>'">
       <button class="edit-btn" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
         <i class="fas fa-pencil-alt"></i>
-      </button>
-      <button class="delete-btn" onclick="event.stopPropagation(); confirmDelete( member.id , '<%= member.name %>')">
-        DELETE
       </button>
       <div class="family-card-header">
         <strong><i class="fas fa-user-circle"></i> <%= member.name %></strong>

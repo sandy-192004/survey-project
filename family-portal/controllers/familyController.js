@@ -662,13 +662,6 @@ exports.updateMember = async (req, res) => {
     const memberId = req.params.id;
     const userId = req.session.user.id;
     const { name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode } = req.body;
-    let photoPath = null;
-    if (req.file) {
-      photoPath = `parents/${req.file.filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
-      photoPath = `${photoPath}(${stats.size})`;
-    }
 
     // Verify the member belongs to the user
     const [members] = await db.query(
@@ -679,7 +672,6 @@ exports.updateMember = async (req, res) => {
     if (members.length === 0) {
       return res.status(404).json({ success: false, message: "Member not found" });
     }
-
 
     const member = members[0];
     let photoPath = null;
@@ -719,7 +711,6 @@ exports.updateMember = async (req, res) => {
   }
 };
 
-
 exports.updateHusband = async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -741,24 +732,29 @@ exports.updateHusband = async (req, res) => {
 
     const familyId = familyRows[0].id;
 
+    let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, pincode=?, state=?, district=?`;
+    let params = [name, mobile || null, occupation || null, door_no || null, street || null, pincode || null, state || null, district || null];
+    if (photoPath) {
+      sql += `, photo=?`;
+      params.push(photoPath);
+    }
+    sql += ` WHERE family_id=? AND relationship='husband'`;
+    params.push(familyId);
+
+    await db.query(sql, params);
+    res.json({ success: true, message: "Husband updated successfully" });
+  } catch (err) {
+    console.error("Update husband error:", err);
+    res.status(500).json({ success: false, message: "Failed to update husband", error: err.message });
+  }
+};
+
 
 exports.deleteFamily = async (req, res) => {
   const connection = await db.getConnection();
 
   try {
     const userId = req.session.user.id;
-
-    const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
-    let photoPath = null;
-    if (req.file) {
-      photoPath = `parents/${req.file.filename}`;
-      const oldPath = path.join('uploads', req.file.filename);
-      const newPath = path.join('uploads', photoPath);
-      fs.renameSync(oldPath, newPath);
-      const stats = fs.statSync(newPath);
-      photoPath = `${photoPath}(${stats.size})`;
-    }
-
 
     await connection.beginTransaction();
 
