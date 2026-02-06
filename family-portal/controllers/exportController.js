@@ -168,4 +168,3 @@ exports.exportToPdf = async (req, res) => {
     res.status(500).send('Error exporting data');
   }
 };
-

@@ -126,6 +126,9 @@ router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.up
 router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
 router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
 
+// ================== DELETE FAMILY ==================
+router.delete("/delete-family", isLoggedIn, controller.deleteFamily);
+
 // ================== PLACEHOLDERS ==================
 router.get("/pooja-booking", (req, res) => {
   res.send("Pooja booking feature coming soon!");

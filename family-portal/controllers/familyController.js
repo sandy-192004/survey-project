@@ -44,6 +44,7 @@ exports.register = async (req, res) => {
   try {
     const { email, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
+/*******  88ec1cc0-9866-4f21-88ad-db885cafd9bc  *******/
       return res.status(400).send("Passwords do not match");
     }
 
@@ -304,14 +305,13 @@ exports.saveFamily = async (req, res) => {
 
 // My Family page (EJS render)
 exports.myFamily = async (req, res) => {
-  console.log("🔥 myFamily controller HIT");
+  console.log("myFamily controller HIT");
 
   try {
     const userId = req.session.user.id;
 
     let family = null;
-    let members = []; // ⬅️ GUARANTEED
-
+    let members = []; 
     const [families] = await db.query(
       "SELECT * FROM families WHERE user_id = ? LIMIT 1",
       [userId]
@@ -328,16 +328,14 @@ exports.myFamily = async (req, res) => {
       members = rows || [];
     }
 
-    // 🔥 ALWAYS PASS members
     return res.render("my-family", {
       family,
       members
     });
 
   } catch (err) {
-    console.error("🔥 myFamily ERROR:", err);
+    console.error("myFamily ERROR:", err);
 
-    // 🔥 EVEN ON ERROR
     return res.render("my-family", {
       family: null,
       members: []
@@ -503,7 +501,7 @@ exports.getChild = async (req, res) => {
 exports.updateChild = async (req, res) => {
   try {
     const id = req.params.id;
-    const { name, dob, gender, occupation, relationship, address, pincode } = req.body;
+    const { name, dob, gender, occupation, relationship, address } = req.body;
     let photoPath = null;
     if (req.file) {
       photoPath = `children/${req.file.filename}`;
@@ -519,17 +517,17 @@ exports.updateChild = async (req, res) => {
     if (photoPath) {
       sql = `
         UPDATE family_members
-        SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?, pincode=?, photo=?
+        SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?, photo=?
         WHERE id=?
       `;
-      params = [name, dob, gender, occupation, relationship, address, pincode, photoPath, id];
+      params = [name, dob, gender, occupation, relationship, address, photoPath, id];
     } else {
       sql = `
         UPDATE family_members
-        SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?, pincode=?
+        SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?
         WHERE id=?
       `;
-      params = [name, dob, gender, occupation, relationship, address, pincode, id];
+      params = [name, dob, gender, occupation, relationship, address, id];
     }
 
     await db.query(sql, params);
@@ -557,9 +555,9 @@ exports.showFamilyEdit = async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    // Get all family members for this user
+    // Get parent members for this user
     const [members] = await db.query(
-      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ?",
+      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ? AND fm.member_type = 'parent'",
       [userId]
     );
 
@@ -664,8 +662,15 @@ exports.updateMember = async (req, res) => {
     const memberId = req.params.id;
     const userId = req.session.user.id;
     const { name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode } = req.body;
+    let photoPath = null;
+    if (req.file) {
+      photoPath = `parents/${req.file.filename}`;
+      const filePath = path.join('uploads', photoPath);
+      const stats = fs.statSync(filePath);
+      photoPath = `${photoPath}(${stats.size})`;
+    }
 
-    // Verify the member belongs to the user and get member_type
+    // Verify the member belongs to the user
     const [members] = await db.query(
       "SELECT * FROM family_members WHERE id = ? AND family_id IN (SELECT id FROM families WHERE user_id = ?)",
       [memberId, userId]
@@ -674,6 +679,7 @@ exports.updateMember = async (req, res) => {
     if (members.length === 0) {
       return res.status(404).json({ success: false, message: "Member not found" });
     }
+
 
     const member = members[0];
     let photoPath = null;
@@ -686,6 +692,7 @@ exports.updateMember = async (req, res) => {
       const stats = fs.statSync(newPath);
       photoPath = `${photoPath}(${stats.size})`;
     }
+
 
     let sql, params;
     if (photoPath) {
@@ -712,6 +719,7 @@ exports.updateMember = async (req, res) => {
   }
 };
 
+
 exports.updateHusband = async (req, res) => {
   try {
     const userId = req.session.user.id;
@@ -733,26 +741,13 @@ exports.updateHusband = async (req, res) => {
 
     const familyId = familyRows[0].id;
 
-    let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, pincode=?, state=?, district=?`;
-    let params = [name, mobile || null, occupation || null, door_no || null, street || null, pincode || null, state || null, district || null];
-    if (photoPath) {
-      sql += `, photo=?`;
-      params.push(photoPath);
-    }
-    sql += ` WHERE family_id=? AND relationship='husband'`;
-    params.push(familyId);
 
-    await db.query(sql, params);
-    res.json({ success: true, message: "Husband updated successfully" });
-  } catch (err) {
-    console.error("Update husband error:", err);
-    res.status(500).json({ success: false, message: "Failed to update husband", error: err.message });
-  }
-};
+exports.deleteFamily = async (req, res) => {
+  const connection = await db.getConnection();
 
-exports.updateWife = async (req, res) => {
   try {
     const userId = req.session.user.id;
+
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
     let photoPath = null;
     if (req.file) {
@@ -764,49 +759,37 @@ exports.updateWife = async (req, res) => {
       photoPath = `${photoPath}(${stats.size})`;
     }
 
-    const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
+
+    await connection.beginTransaction();
+
+    // Get family_id for the user
+    const [familyRows] = await connection.query(
+      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
+
     if (familyRows.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ success: false, message: "Family not found" });
     }
 
     const familyId = familyRows[0].id;
 
-    let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, pincode=?, state=?, district=?`;
-    let params = [name, mobile || null, occupation || null, door_no || null, street || null, pincode || null, state || null, district || null];
-    if (photoPath) {
-      sql += `, photo=?`;
-      params.push(photoPath);
-    }
-    sql += ` WHERE family_id=? AND relationship='wife'`;
-    params.push(familyId);
+    // Delete family members first (due to foreign key constraint)
+    await connection.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
 
-    await db.query(sql, params);
-    res.json({ success: true, message: "Wife updated successfully" });
+    // Delete the family
+    await connection.query("DELETE FROM families WHERE id = ?", [familyId]);
+
+    await connection.commit();
+
+    res.json({ success: true, message: "Family deleted successfully" });
+
   } catch (err) {
-    console.error("Update wife error:", err);
-    res.status(500).json({ success: false, message: "Failed to update wife", error: err.message });
-  }
-};
-
-// Get member data for edit (JSON response for AJAX)
-exports.editForm = async (req, res) => {
-  try {
-    const memberId = req.params.id;
-    const userId = req.session.user.id;
-
-    // Get the specific member
-    const [members] = await db.query(
-      "SELECT * FROM family_members WHERE id = ? AND family_id IN (SELECT id FROM families WHERE user_id = ?)",
-      [memberId, userId]
-    );
-
-    if (members.length === 0) {
-      return res.json({ success: false, message: "Member not found" });
-    }
-
-    res.json({ success: true, member: members[0] });
-  } catch (err) {
-    console.error("Edit form error:", err);
-    res.json({ success: false, message: "Failed to load member data" });
+    await connection.rollback();
+    console.error("Delete family error:", err);
+    res.status(500).json({ success: false, message: "Failed to delete family", error: err.message });
+  } finally {
+    connection.release();
   }
 };

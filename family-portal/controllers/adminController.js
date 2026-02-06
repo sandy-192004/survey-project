@@ -39,17 +39,20 @@ exports.dashboard = async (req, res) => {
 
     const { states, districts } = loadDropdownOptions();
 
-    // Calculate stats
-    const [totalFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent'");
-    const [totalMembersResult] = await db.query("SELECT COUNT(*) AS total FROM family_members");
-    const [totalChildrenResult] = await db.query("SELECT COUNT(*) AS total FROM family_members WHERE member_type = 'child'");
-    const [recentFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    // Calculate stats with optimized single query
+    const [statsResult] = await db.query(`
+      SELECT
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
+        (SELECT COUNT(*) FROM family_members) AS totalMembers,
+        (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS recentFamilies
+    `);
 
     const stats = {
-      totalFamilies: totalFamiliesResult[0].total,
-      totalMembers: totalMembersResult[0].total,
-      totalChildren: totalChildrenResult[0].total,
-      recentFamilies: recentFamiliesResult[0].total
+      totalFamilies: statsResult[0].totalFamilies,
+      totalMembers: statsResult[0].totalMembers,
+      totalChildren: statsResult[0].totalChildren,
+      recentFamilies: statsResult[0].recentFamilies
     };
 
     let sql = `
@@ -130,6 +133,7 @@ exports.dashboard = async (req, res) => {
       totalPages,
       currentPage: page,
       updated: req.query.updated === "true",
+      deleted: req.query.deleted === "true",
       stats: stats,
       message: req.query.message || null
     });
@@ -217,17 +221,20 @@ exports.search = async (req, res) => {
     const [countResult] = await db.query(countSql, countParams);
     const totalPages = Math.ceil(countResult[0].total / limit);
 
-    // Calculate stats for search as well
-    const [totalFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent'");
-    const [totalMembersResult] = await db.query("SELECT COUNT(*) AS total FROM family_members");
-    const [totalChildrenResult] = await db.query("SELECT COUNT(*) AS total FROM family_members WHERE member_type = 'child'");
-    const [recentFamiliesResult] = await db.query("SELECT COUNT(DISTINCT family_id) AS total FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    // Calculate stats for search as well with optimized single query
+    const [statsResult] = await db.query(`
+      SELECT
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
+        (SELECT COUNT(*) FROM family_members) AS totalMembers,
+        (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS recentFamilies
+    `);
 
     const stats = {
-      totalFamilies: totalFamiliesResult[0].total,
-      totalMembers: totalMembersResult[0].total,
-      totalChildren: totalChildrenResult[0].total,
-      recentFamilies: recentFamiliesResult[0].total
+      totalFamilies: statsResult[0].totalFamilies,
+      totalMembers: statsResult[0].totalMembers,
+      totalChildren: statsResult[0].totalChildren,
+      recentFamilies: statsResult[0].recentFamilies
     };
 
     res.render("admin/dashboard", {
@@ -516,6 +523,161 @@ exports.addChild = async (req, res) => {
     });
 
     res.redirect("/admin/dashboard?updated=true");
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// CREATE FAMILY (Admin)
+// =======================
+exports.createFamily = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    console.log("📥 Received Body:", req.body);
+    console.log("📎 Received Files:", req.files);
+
+    let { husband_name, members } = req.body;
+
+    if (typeof members === "string") {
+      try {
+        members = JSON.parse(members);
+      } catch (e) {
+        console.error("Failed to parse members JSON:", e);
+        members = [];
+      }
+    }
+
+    if (!Array.isArray(members)) members = [];
+
+    await connection.beginTransaction();
+
+    // Generate a unique family_id for admin-created families
+    const familyId = `ADMIN-${Date.now()}`;
+
+    // Step 3: Insert family members
+    for (let i = 0; i < members.length; i++) {
+      const m = members[i];
+      const {
+        member_type,
+        name,
+        relationship,
+        mobile,
+        occupation,
+        dob,
+        gender,
+        door_no,
+        street,
+        district,
+        state,
+        pincode
+      } = m;
+
+      // Default gender for husband
+      let finalGender = gender;
+      if (relationship === 'husband' && !gender) {
+        finalGender = 'Male';
+      }
+
+      if (!name || !relationship) continue;
+
+      // Handle file uploads
+      let photoPath = null;
+      if (req.files) {
+        if (member_type === 'parent') {
+          if (relationship === 'husband') {
+            const husbandFiles = req.files['parent[husband_photo]'];
+            if (husbandFiles && husbandFiles[0]) {
+              photoPath = `parents/${husbandFiles[0].filename}`;
+              const filePath = path.join('uploads', photoPath);
+              const stats = fs.statSync(filePath);
+              photoPath = `${photoPath}(${stats.size})`;
+            }
+          } else if (relationship === 'wife') {
+            const wifeFiles = req.files['parent[wife_photo]'];
+            if (wifeFiles && wifeFiles[0]) {
+              photoPath = `parents/${wifeFiles[0].filename}`;
+              const filePath = path.join('uploads', photoPath);
+              const stats = fs.statSync(filePath);
+              photoPath = `${photoPath}(${stats.size})`;
+            }
+          }
+        } else if (member_type === 'child') {
+          const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
+          if (childFiles && childFiles[0]) {
+            photoPath = `children/${childFiles[0].filename}`;
+            const filePath = path.join('uploads', photoPath);
+            const stats = fs.statSync(filePath);
+            photoPath = `${photoPath}(${stats.size})`;
+          }
+        }
+      }
+
+      await connection.query(
+        `INSERT INTO family_members
+         (family_id, member_type, name, relationship, mobile, occupation,
+          dob, gender, door_no, street, district, state, pincode, photo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          familyId,
+          member_type || "child",
+          name,
+          relationship,
+          mobile || null,
+          occupation || null,
+          dob || null,
+          gender || null,
+          door_no || null,
+          street || null,
+          district || null,
+          state || null,
+          pincode || null,
+          photoPath
+        ]
+      );
+    }
+
+    await connection.commit();
+
+    res.json({
+      success: true,
+      message: "Family details saved successfully!",
+      familyId
+    });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error("SAVE FAMILY ERROR");
+    console.error("Message:", err.message);
+    console.error("SQL:", err.sqlMessage);
+    console.error("Stack:", err.stack);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to save family data",
+      error: err.message,
+      sql: err.sqlMessage
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+// =======================
+// DELETE FAMILY
+// =======================
+exports.deleteFamily = async (req, res) => {
+  try {
+    const familyId = req.params.id;
+    const FamilyMember = require("../models/FamilyMember");
+
+    // Delete all members of the family
+    await db.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
+
+    res.redirect("/admin/dashboard?deleted=true");
 
   } catch (err) {
     console.error(err);
