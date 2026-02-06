@@ -22,7 +22,7 @@
       --warning-color: #F59E0B;
       --danger-color: #DC2626;
       --text-secondary: #ffffffd8;
-      --card-shadow: 0 8px 20px rgba(6, 5, 5, 0.08);
+      --card-shadow: 0 8px 20px rgba(9, 8, 8, 0.08);
       --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.12);
     }
 
@@ -36,8 +36,8 @@
     }
 
     .header {
-      background: #faf7f79c;
-       color: #070606;
+      background: #00000030;
+       color: #ffffff;
       border-radius: 14px;
       padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
@@ -54,16 +54,16 @@
       grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
-       color: #0a0a0a;
+       color: #ffffff;
     }
 
     .stat-card {
-      background: #faf7f79c;
+      background: #00000023;
       padding: 1rem;
       border-radius: 10px;
       text-align: center;
       box-shadow: var(--card-shadow);
-       color: #000000;
+       color: #ffffff;
     }
 
     .family-grid {
@@ -73,7 +73,7 @@
     }
 
     .family-card {
-      background: #faf7f79c;
+      background: #00000023;
       border-radius: 14px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
@@ -91,7 +91,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #803535;
+      background: #80353585;
       color: rgb(255, 255, 255);
       border: none;
       border-radius: 50%;
@@ -105,14 +105,14 @@
     }
 
     .edit-btn:hover {
-      background: #803535;
+      background: #7a4545;
     }
 
     .delete-btn {
       position: absolute;
       bottom: 10px;
       right: 10px;
-      background: #803535;
+      background: #7a4545;
       color: rgb(255, 255, 255);
       border: none;
       border-radius: 5px;
@@ -128,18 +128,18 @@
     }
 
     .family-card-header {
-      background: linear-gradient(135deg, #8B4513, #c19879);
+      background: linear-gradient(135deg, #a07c5b, #56492a);
       padding: 0.75rem;
-      color: #ffffff;
+      color: #ffffffe2;
     }
 
     .family-card-body {
       padding: 1rem;
-      color: rgb(0, 0, 0);
+      color: rgba(255, 255, 255, 0.816);
     }
 
     .children-badge {
-      background: #f8f6f5;
+      background: #c1a972;
       color: var(--primary-color);
       padding: 0.35rem 0.7rem;
       border-radius: 999px;
@@ -195,10 +195,10 @@
   <!-- HEADER -->
   <div class="header">
     <div>
-      <h4 class="fw-bold mb-0" style="color: #8B4513;">
+      <h4 class="fw-bold mb-0" style="color:  #8B4513;">
         <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
       </h4>
-      <small style="color: rgb(0, 0, 0);">Manage and monitor family registrations</small>
+      <small style="color: rgba(255, 254, 254, 0.799);">Manage and monitor family registrations</small>
     </div>
 
     <div class="dropdown" style="position: absolute; right: 1.5rem;">
@@ -246,16 +246,26 @@
   <% } %>
 
   <!-- SEARCH -->
-  <div class="card mb-4" style="background-color: #faf7f79c;">
-    <div class="card-body">
-      <%- include("search-filter-form") %>
-    </div>
-  </div>
+  <div class="card mb-2 search-form" style="background-color: #00000016;">
+  <div class="card-body">
 
-  <!-- ACTION BUTTONS -->
-  <div class="mb-4 d-flex gap-2">
-    <a href="/admin/create-family" class="btn btn-primary">Add Family</a>
+    <style>
+      .search-form input,
+      .search-form select {
+        width: 170px;
+      }
+
+      .search-form button {
+        padding: 6px 14px;
+        font-size: 14px;
+      }
+    </style>
+
+    <%- include("search-filter-form") %>
+
   </div>
+</div>
+
 
   <!-- FAMILY CARDS -->
   <div class="family-grid">
@@ -369,4 +379,4 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function (
 });
 </script>
 </body>
-</html> 
+</html>  
