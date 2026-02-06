@@ -218,12 +218,6 @@
   </div>
   <% } %>
 
-  <% if (locals.deleted) { %>
-  <div class="alert alert-danger alert-dismissible fade show mb-4">
-    Family deleted successfully!
-    <button class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-  <% } %>
 
   <!-- STATS -->
   <% if (stats) { %>
@@ -267,15 +261,21 @@
   <div class="family-grid">
     <% results.forEach(member => { %>
     <div class="family-card" onclick="location='/admin/view/<%= member.id %>'">
-      <button class="edit-btn" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
+
+      <button class="edit-btn"
+        onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
         <i class="fas fa-pencil-alt"></i>
       </button>
-      <button class="delete-btn" onclick="event.stopPropagation(); confirmDelete( member.id , '<%= member.name %>')">
+
+      <button class="delete-btn"
+        onclick="event.stopPropagation(); confirmDelete( '<%= member.id %>' , '<%= member.name %>')">
         DELETE
       </button>
+
       <div class="family-card-header">
         <strong><i class="fas fa-user-circle"></i> <%= member.name %></strong>
       </div>
+
       <div class="family-card-body">
         <p><i class="fas fa-map-marker-alt"></i> <%= member.district %>, <%= member.state %></p>
         <p><i class="fas fa-briefcase"></i> <%= member.occupation %></p>
@@ -322,19 +322,19 @@
 </div>
 
 <!-- DELETE CONFIRMATION MODAL -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <p id="deleteMessage">Sure you want to delete the family?</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
       </div>
     </div>
   </div>
@@ -345,22 +345,27 @@
 <script>
 let deleteFamilyId = null;
 
+// create modal ONCE (this was the bug)
+const deleteModal = new bootstrap.Modal(
+  document.getElementById('deleteModal')
+);
+
 function confirmDelete(familyId, familyName) {
   deleteFamilyId = familyId;
-  document.getElementById('deleteMessage').textContent = 'Sure you want to delete the Family?';
-  const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+  document.getElementById('deleteMessage').textContent =
+    'Sure you want to delete the Family?';
   deleteModal.show();
 }
 
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-  if (deleteFamilyId) {
-    // Create a form to POST to delete endpoint
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/admin/delete/' + deleteFamilyId;
-    document.body.appendChild(form);
-    form.submit();
-  }
+document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+  if (!deleteFamilyId) return;
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/admin/delete/' + deleteFamilyId;
+
+  document.body.appendChild(form);
+  form.submit();
 });
 </script>
 </body>

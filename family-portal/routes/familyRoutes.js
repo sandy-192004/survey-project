@@ -31,9 +31,6 @@ router.get("/dashboard", isLoggedIn, controller.dashboard);
 router.get("/family-form", isLoggedIn, controller.showForm);
 router.post("/save-family", isLoggedIn, upload.any(), controller.saveFamily);
 
-router.get("/family-form", controller.showForm);
-router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
-
 
 // ================== FAMILY MANAGEMENT ==================
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
@@ -45,11 +42,8 @@ router.post("/add-child", isLoggedIn, upload.single('photo'), controller.addChil
 
 // Edit routes
 router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
-router.get("/edit-form/:id", isLoggedIn, controller.editForm);
 router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
 router.get("/get-child/:id", isLoggedIn, controller.getChild);
-router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
-router.post("/update-wife", isLoggedIn, upload.single('photo'), controller.updateWife);
 router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
 
 // ================== DELETE FAMILY ==================
