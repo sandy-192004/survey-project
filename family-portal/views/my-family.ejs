@@ -195,7 +195,7 @@
               <% if (photoSrc.indexOf('/') === -1) { %>
                 <% photoSrc = (member.member_type === 'child' ? 'children/' : 'parents/') + photoSrc; %>
               <% } %>
-              <img src="/survey-project/family-portal/uploads/<%= photoSrc %>" class="member-photo">
+              <img src="/uploads/<%= photoSrc %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
@@ -245,7 +245,7 @@
               <% if (photoSrc.indexOf('/') === -1) { %>
                 <% photoSrc = (member.member_type === 'child' ? 'children/' : 'parents/') + photoSrc; %>
               <% } %>
-              <img src="/survey-project/family-portal/uploads/<%= photoSrc %>" class="member-photo">
+              <img src="/uploads/<%= photoSrc %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
