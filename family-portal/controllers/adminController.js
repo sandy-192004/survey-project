@@ -305,6 +305,7 @@ exports.viewMember = async (req, res) => {
   }
 };
 
+
 // =======================
 // EDIT FAMILY MEMBERS
 // =======================
@@ -449,7 +450,7 @@ exports.updateMember = async (req, res) => {
               name: child.name,
               occupation: child.occupation || "",
               dob: child.dob,
-              gender: child.gender || ""
+              gender: child.gender && child.gender !== '' ? child.gender : null
             };
             if (childPhoto) {
               childData.photo = childPhoto;
@@ -462,15 +463,16 @@ exports.updateMember = async (req, res) => {
             await db.query(sql, params);
           } else {
             // Insert new child (added via + Add Child button)
+            const childRelationship = child.gender === 'Male' ? 'son' : child.gender === 'Female' ? 'daughter' : 'other';
             const fullChildData = {
               family_id: familyId,
               member_type: "child",
               name: child.name,
-              relationship: "child",
+              relationship: childRelationship,
               mobile: "",
               occupation: child.occupation || "",
               dob: child.dob,
-              gender: child.gender || "",
+              gender: child.gender || null,
               door_no: "",
               street: "",
               district: "",
@@ -502,11 +504,12 @@ exports.addChild = async (req, res) => {
     const familyId = req.body.family_id;
     const FamilyMember = require("../models/FamilyMember");
 
+    const childRelationship = req.body.gender === 'Male' ? 'son' : req.body.gender === 'Female' ? 'daughter' : 'other';
     await FamilyMember.create({
       family_id: familyId,
       member_type: "child",
       name: req.body.name,
-      relationship: "child",
+      relationship: childRelationship,
       mobile: req.body.mobile || "",
       occupation: req.body.occupation || "",
       dob: req.body.dob,
@@ -528,6 +531,7 @@ exports.addChild = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
 
 // =======================
 // CREATE FAMILY (Admin)

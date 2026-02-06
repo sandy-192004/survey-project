@@ -186,7 +186,16 @@
             </div>
 
             <% if (member.photo) { %>
-              <img src="/uploads/<%= member.photo %>" class="member-photo">
+              <% let photoSrc = member.photo; %>
+              <% // Remove size from photo path if present %>
+              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+              <% if (photoSrc.startsWith('uploads/')) { %>
+                <img src="/<%= photoSrc %>" class="member-photo">
+              <% } else { %>
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% } %>
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
@@ -213,7 +222,16 @@
             </div>
 
             <% if (member.photo) { %>
-              <img src="/uploads/<%= member.photo %>" class="member-photo">
+              <% let photoSrc = member.photo; %>
+              <% // Remove size from photo path if present %>
+              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+              <% if (photoSrc.startsWith('uploads/')) { %>
+                <img src="/<%= photoSrc %>" class="member-photo">
+              <% } else { %>
+                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <% } %>
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
