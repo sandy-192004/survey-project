@@ -22,17 +22,17 @@ exports.login = async (req, res) => {
     const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
 
     if (rows.length === 0) {
-      return res.status(400).send("Invalid email or password");
+      return res.redirect("/login?error=invalid");
     }
 
     const user = rows[0];
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(400).send("Invalid email or password");
+      return res.redirect("/login?error=invalid");
     }
 
     req.session.user = { id: user.id, email: user.email };
-    res.redirect("/dashboard");
+    res.redirect("/dashboard?login=success");
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).send("Server error");
@@ -62,7 +62,7 @@ exports.register = async (req, res) => {
 // Logout
 exports.logout = (req, res) => {
   req.session.destroy(() => {
-    res.redirect("/login");
+    res.redirect("/login?logout=success");
   });
 };
 

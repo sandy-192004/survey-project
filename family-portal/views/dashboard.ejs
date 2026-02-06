@@ -30,6 +30,17 @@
       padding: 2rem;
       margin-top: 15rem !important;
     }
+    #comingSoonModal .modal-dialog {
+      max-width: 400px; /* Reduce horizontal size */
+      min-height: 300px; /* Increase vertical size */
+    }
+    #comingSoonModal .modal-body {
+      background-color: #FFF8DC; /* Cream color background for modal body */
+    }
+    #comingSoonModal .modal-body p {
+      color: #FF9933; /* Saffron color for coming soon message, fitting temple theme */
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -40,6 +51,27 @@
     <div class="d-flex">
       <div class="toast-body">✓ Family saved successfully!</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Success Modal -->
+<div class="modal fade" id="loginSuccessModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-check-circle-fill me-2"></i>Success
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center bg-light">
+        <div class="mb-4">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+        <h4 class="text-success fw-bold mb-3">Login Successful!</h4>
+        <p class="text-muted">Welcome back to our temple digital seva portal. May your visit be blessed.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -63,12 +95,12 @@
           </a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="/pooja-booking">
+          <a class="nav-link fw-500" href="#" onclick="showComingSoonModal(); return false;">
             <i class="bi bi-calendar-heart"></i> Pooja Booking
           </a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="/profile">
+          <a class="nav-link fw-500" href="#" onclick="showComingSoonModal(); return false;">
             <i class="bi bi-person-circle"></i> Profile
           </a>
         </li>
@@ -96,12 +128,12 @@
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link" href="/pooja-booking">
+        <a class="nav-link" href="#" onclick="showComingSoonModal(); return false;">
           <i class="bi bi-calendar-heart"></i> Pooja Booking
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link" href="/profile">
+        <a class="nav-link" href="#" onclick="showComingSoonModal(); return false;">
           <i class="bi bi-person-circle"></i> Profile
         </a>
       </li>
@@ -266,6 +298,21 @@
   </div>
 </div>
 
+<!-- 3) Coming Soon Modal for Pooja Booking -->
+<div class="modal fade" id="comingSoonModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Coming Soon</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Features coming soon! 🚀</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- =================== SCRIPTS =================== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -277,6 +324,13 @@ if (urlParams.get('success') === 'true') {
   toastElement.style.display = 'flex';
   const toast = new bootstrap.Toast(toastElement);
   toast.show();
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+/* ---------- LOGIN SUCCESS MODAL ---------- */
+if (urlParams.get('login') === 'success') {
+  const loginModal = new bootstrap.Modal(document.getElementById('loginSuccessModal'));
+  loginModal.show();
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
@@ -311,6 +365,12 @@ function showFamilyModal(title, msg, btnText, redirectUrl) {
     modal.hide();
     window.location.href = redirectUrl; // Only when user clicks button
   });
+}
+
+/* ---------- SHOW COMING SOON MODAL ---------- */
+function showComingSoonModal() {
+  const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
+  modal.show();
 }
 
 /* ---------- EXISTING: LOAD FAMILY INTO MODAL ---------- */
