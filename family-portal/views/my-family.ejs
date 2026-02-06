@@ -195,7 +195,7 @@
               <% if (photoSrc.indexOf('/') === -1) { %>
                 <% photoSrc = (member.member_type === 'child' ? 'children/' : 'parents/') + photoSrc; %>
               <% } %>
-              <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <img src="/survey-project/family-portal/uploads/<%= photoSrc %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
@@ -219,12 +219,6 @@
             <div class="member-info">
               <div class="member-name"><%= member.name %></div>
               <div class="info-item"><b>Relationship:</b> <%= member.relationship || '-' %></div>
-              <div class="info-item"><b>DOB:</b>
-                <%= member.dob
-                    ? new Date(member.dob).toISOString().split('T')[0]
-                    : '-'
-                %>
-              </div>
               <div class="info-item"><b>Gender:</b>
                 <%
                   let gender = member.gender;
@@ -251,7 +245,7 @@
               <% if (photoSrc.indexOf('/') === -1) { %>
                 <% photoSrc = (member.member_type === 'child' ? 'children/' : 'parents/') + photoSrc; %>
               <% } %>
-              <img src="/uploads/<%= photoSrc %>" class="member-photo">
+              <img src="/survey-project/family-portal/uploads/<%= photoSrc %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>

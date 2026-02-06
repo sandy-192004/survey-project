@@ -39,10 +39,18 @@ tust<!DOCTYPE html>
       <p><strong>Pincode:</strong> <%= member.pincode %></p>
     </div>
     <% if (member.husband_photo) { %>
-      <% let husbandPhotoSrc = member.husband_photo.replace(/^uploads\//, ''); %>
+      <% let husbandPhotoSrc = member.husband_photo; %>
+      <% // Remove size from photo path if present %>
+      <% const sizeMatchHusband = husbandPhotoSrc.match(/^(.+)\(\d+\)$/); %>
+      <% if (sizeMatchHusband) husbandPhotoSrc = sizeMatchHusband[1]; %>
+      <% // Normalize path %>
+      <% husbandPhotoSrc = husbandPhotoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
+      <% // If no folder, assume parents %>
+      <% if (husbandPhotoSrc.indexOf('/') === -1) { %>
+        <% husbandPhotoSrc = 'parents/' + husbandPhotoSrc; %>
+      <% } %>
       <% if (!husbandPhotoSrc.match(/\.(png|jpg|jpeg|webp)$/i)) husbandPhotoSrc += '.png'; %>
-      <div class="ms-3">
-        <img src="/survey-project/family-portal/middleware/upload.js/<%= husbandPhotoSrc %>"
+      <div class="ms-3"><img src="/survey-project/family-portal/middleware/upload.js"</div>/<%= husbandPhotoSrc %>"
              class="img-thumbnail"
              style="max-width: 120px; max-height: 120px;">
       </div>
@@ -70,11 +78,20 @@ tust<!DOCTYPE html>
       <p><strong>Pincode:</strong> <%= member.pincode %></p>
     </div>
     <% if (member.wife_photo) { %>
-      <% let wifePhotoSrc = member.wife_photo.replace(/^uploads\//, ''); %>
+      <% let wifePhotoSrc = member.wife_photo; %>
+      <% // Remove size from photo path if present %>
+      <% const sizeMatchWife = wifePhotoSrc.match(/^(.+)\(\d+\)$/); %>
+      <% if (sizeMatchWife) wifePhotoSrc = sizeMatchWife[1]; %>
+      <% // Normalize path %>
+      <% wifePhotoSrc = wifePhotoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
+      <% // If no folder, assume parents %>
+      <% if (wifePhotoSrc.indexOf('/') === -1) { %>
+        <% wifePhotoSrc = 'parents/' + wifePhotoSrc; %>
+      <% } %>
       <% if (!wifePhotoSrc.match(/\.(png|jpg|jpeg|webp)$/i)) wifePhotoSrc += '.png'; %>
       <div class="ms-3">
-        <img src="/survey-project/family-portal/middleware/upload.js/<%= wifePhotoSrc %>" 
-             class="img-thumbnail" 
+        <img src="/uploads/<%= wifePhotoSrc %>"
+             class="img-thumbnail"
              style="max-width: 120px; max-height: 120px;"
              onerror="this.src='/images/nophoto.png';">
       </div>
@@ -108,10 +125,19 @@ tust<!DOCTYPE html>
           <p><strong>Pincode:</strong> <%= child.pincode %></p>
         </div>
         <% if (child.photo) { %>
-          <% let childPhotoSrc = child.photo.replace(/^uploads\//, ''); %>
+          <% let childPhotoSrc = child.photo; %>
+          <% // Remove size from photo path if present %>
+          <% const sizeMatchChild = childPhotoSrc.match(/^(.+)\(\d+\)$/); %>
+          <% if (sizeMatchChild) childPhotoSrc = sizeMatchChild[1]; %>
+          <% // Normalize path %>
+          <% childPhotoSrc = childPhotoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
+          <% // If no folder, assume children %>
+          <% if (childPhotoSrc.indexOf('/') === -1) { %>
+            <% childPhotoSrc = 'children/' + childPhotoSrc; %>
+          <% } %>
           <% if (!childPhotoSrc.match(/\.(png|jpg|jpeg|webp)$/i)) childPhotoSrc += '.png'; %>
           <div class="ms-3">
-            <img src="/survey-project/family-portal/middleware/upload.js/<%= childPhotoSrc %>"
+            <img src="/uploads/<%= childPhotoSrc %>"
                  class="img-thumbnail"
                  style="max-width: 150px; max-height: 150px;">
           </div>

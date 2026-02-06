@@ -169,9 +169,9 @@
               <% photoSrc = photoSrc.replace(/_resized$/, ''); %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%=photoSrc %>" class="member-photo">
               <% } else { %>
-                <img src="/survey-project/family-portal/middleware/upload.js?path=<%=photpsrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%=photosrc %>" class="member-photo">
               <% } %>
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
@@ -222,9 +222,9 @@
               <% photoSrc = photoSrc.replace(/_resized$/, ''); %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/survey-project/family-portal/middleware/upload.js/<% photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%=photoSrc %>" class="member-photo">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+                <img src="/survey-project/family-portal/uploads/<%= photoSrc %>" class="member-photo">
               <% } %>
             <% } else { %>
           </div>
@@ -499,7 +499,7 @@
 
           const preview = document.getElementById('husbandEditPreview');
           if (member.photo) {
-            preview.src = '/uploads/' + member.photo;
+            preview.src = '/survey-project/family-portal/uploads/' + member.photo;
             preview.style.display = 'block';
           } else {
             preview.style.display = 'none';
@@ -533,7 +533,7 @@
 
           const preview = document.getElementById('wifeEditPreview');
           if (member.photo) {
-            preview.src = '/uploads/' + member.photo;
+            preview.src = '/survey-project/family-portal/uploads/' + member.photo;
             preview.style.display = 'block';
           } else {
             preview.style.display = 'none';
@@ -575,7 +575,7 @@
 
           const preview = document.getElementById('childEditPreview');
           if (member.photo) {
-            preview.src = '/uploads/' + member.photo;
+            preview.src = '/survey-project/family-portal/uploads/' + member.photo;
             preview.style.display = 'block';
           } else {
             preview.style.display = 'none';

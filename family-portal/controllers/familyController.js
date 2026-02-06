@@ -507,8 +507,10 @@ exports.updateChild = async (req, res) => {
     let photoPath = null;
     if (req.file) {
       photoPath = `children/${req.file.filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
       photoPath = `${photoPath}(${stats.size})`;
     }
 
@@ -678,8 +680,10 @@ exports.updateMember = async (req, res) => {
     if (req.file) {
       const folder = member.member_type === 'child' ? 'children' : 'parents';
       photoPath = `${folder}/${req.file.filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
       photoPath = `${photoPath}(${stats.size})`;
     }
 
@@ -715,8 +719,10 @@ exports.updateHusband = async (req, res) => {
     let photoPath = null;
     if (req.file) {
       photoPath = `parents/${req.file.filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
       photoPath = `${photoPath}(${stats.size})`;
     }
 
@@ -751,8 +757,10 @@ exports.updateWife = async (req, res) => {
     let photoPath = null;
     if (req.file) {
       photoPath = `parents/${req.file.filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
+      const oldPath = path.join('uploads', req.file.filename);
+      const newPath = path.join('uploads', photoPath);
+      fs.renameSync(oldPath, newPath);
+      const stats = fs.statSync(newPath);
       photoPath = `${photoPath}(${stats.size})`;
     }
 
