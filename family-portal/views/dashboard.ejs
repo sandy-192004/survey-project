@@ -171,6 +171,25 @@
   </div>
 </div>
 
+<!-- 3) Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Sure you want to delete the family?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- =================== SCRIPTS =================== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
@@ -217,6 +236,43 @@ function showFamilyModal(title, msg, btnText, redirectUrl) {
     window.location.href = redirectUrl; // Only when user clicks button
   });
 }
+
+/* ---------- DELETE FAMILY FUNCTIONS ---------- */
+function confirmDeleteFamily() {
+  const modal = new bootstrap.Modal(document.getElementById("deleteConfirmModal"));
+  modal.show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+  // Close confirmation modal
+  const confirmModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+  confirmModal.hide();
+
+  // Close family check modal
+  const familyModal = bootstrap.Modal.getInstance(document.getElementById('familyCheckModal'));
+  familyModal.hide();
+
+  // Perform delete
+  fetch('/delete-family', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Show success message
+      showFamilyModal("Deleted Successfully", "Family deleted successfully!", "OK", "/dashboard");
+    } else {
+      showFamilyModal("Error", "Failed to delete family. Please try again.", "OK", null);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showFamilyModal("Error", "An error occurred while deleting the family.", "OK", null);
+  });
+});
 
 /* ---------- EXISTING: LOAD FAMILY INTO MODAL ---------- */
 const familyModal = document.getElementById('familyCheckModal');
@@ -284,8 +340,11 @@ familyModal.addEventListener('show.bs.modal', function () {
 
         html += `
           <div class="text-center mt-3">
-            <button class="btn btn-primary" onclick="window.location.href='/my-family'">
+            <button class="btn btn-primary me-2" onclick="window.location.href='/my-family'">
               View Full Details
+            </button>
+            <button class="btn btn-danger" onclick="confirmDeleteFamily()">
+              <i class="bi bi-trash"></i> Delete Family
             </button>
           </div>
         `;

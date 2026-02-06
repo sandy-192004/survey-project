@@ -45,7 +45,7 @@ exports.dashboard = async (req, res) => {
         (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
         (SELECT COUNT(*) FROM family_members) AS totalMembers,
         (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
-        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS recentFamilies
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS recentFamilies
     `);
 
     const stats = {
@@ -133,6 +133,7 @@ exports.dashboard = async (req, res) => {
       totalPages,
       currentPage: page,
       updated: req.query.updated === "true",
+      deleted: req.query.deleted === "true",
       stats: stats,
       message: req.query.message || null
     });
@@ -226,7 +227,7 @@ exports.search = async (req, res) => {
         (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
         (SELECT COUNT(*) FROM family_members) AS totalMembers,
         (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
-        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS recentFamilies
+        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS recentFamilies
     `);
 
     const stats = {
@@ -676,7 +677,7 @@ exports.deleteFamily = async (req, res) => {
     // Delete all members of the family
     await db.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
 
-    res.redirect("/admin/dashboard?message=Family deleted successfully");
+    res.redirect("/admin/dashboard?deleted=true");
 
   } catch (err) {
     console.error(err);
