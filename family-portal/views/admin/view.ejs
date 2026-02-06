@@ -117,6 +117,10 @@
     Family Details
   </div>
 
+  <div class="container mt-3">
+    <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
   <div class="container mt-4">
 
     <% 
@@ -214,16 +218,7 @@
             </div>
 
             <% if (member.photo && member.photo.trim() !== "") { %>
-              <% let photoSrc = member.photo; %>
-              <% // Remove size from photo path if present %>
-              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-              <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
-              <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
-              <% } %>
+              <img src="/uploads/<%= member.photo %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
@@ -234,6 +229,7 @@
 
     </div>
 
+    <% if (members.some(m => m.member_type === 'child')) { %>
     <!-- ================= CHILDREN ================= -->
     <h4 class="section-title">Children</h4>
     <div class="children-row">
@@ -267,16 +263,7 @@
             </div>
 
             <% if (member.photo && member.photo.trim() !== "") { %>
-              <% let photoSrc = member.photo; %>
-              <% // Remove size from photo path if present %>
-              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-              <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
-              <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
-              <% } %>
+              <img src="/uploads/<%= member.photo %>" class="member-photo">
             <% } else { %>
               <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
             <% } %>
@@ -286,6 +273,7 @@
       <% }) %>
 
     </div>
+    <% } %>
 
 
 
