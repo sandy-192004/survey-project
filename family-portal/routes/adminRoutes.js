@@ -53,6 +53,6 @@ router.get("/create-family", (req, res) => {
 router.post("/create-family", upload.any(), controller.createFamily);
 
 // Delete family
-router.get("/delete/:id", controller.deleteFamily);
+router.post("/delete/:id", controller.deleteFamily);
 
 module.exports = router;

@@ -21,27 +21,31 @@
       --success-color: #16A34A;
       --warning-color: #F59E0B;
       --danger-color: #DC2626;
-      --text-secondary: #2d1e1ed8;
-      --card-shadow: 0 8px 20px rgba(0,0,0,0.08);
-      --card-shadow-hover: 0 14px 30px rgba(0,0,0,0.12);
+      --text-secondary: #ffffffd8;
+      --card-shadow: 0 8px 20px rgba(6, 5, 5, 0.08);
+      --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.12);
     }
 
     body {
+   
       font-family: 'Inter', sans-serif;
-      background: url("/images/tem.jpg") no-repeat center center fixed;
+      background: url("/images/pic.png") no-repeat center center fixed;
       background-size: cover;
       margin: 0;
+      
     }
 
     .header {
-      background: rgba(255, 255, 255, 0.85);
+      background: #faf7f79c;
+       color: #070606;
       border-radius: 14px;
       padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
       box-shadow: var(--card-shadow);
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      position: relative;
 
     }
 
@@ -50,39 +54,88 @@
       grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
+       color: #0a0a0a;
     }
 
     .stat-card {
-      background: rgba(255,255,255,0.9);
+      background: #faf7f79c;
       padding: 1rem;
       border-radius: 10px;
       text-align: center;
       box-shadow: var(--card-shadow);
+       color: #000000;
     }
 
     .family-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
+      gap: 1rem;
     }
 
     .family-card {
-      background: #fff;
+      background: #faf7f79c;
       border-radius: 14px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
       cursor: pointer;
       position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .family-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .edit-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #803535;
+      color: rgb(255, 255, 255);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .edit-btn:hover {
+      background: #803535;
+    }
+
+    .delete-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: #803535;
+      color: rgb(255, 255, 255);
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .delete-btn:hover {
+      background: #c82333;
     }
 
     .family-card-header {
-      background: linear-gradient(135deg, #8B4513, #c9896b);
-      padding: 1rem;
-      color: #fff;
+      background: linear-gradient(135deg, #8B4513, #c19879);
+      padding: 0.75rem;
+      color: #ffffff;
     }
 
     .family-card-body {
-      padding: 1.25rem;
+      padding: 1rem;
+      color: rgb(0, 0, 0);
     }
 
     .children-badge {
@@ -106,16 +159,17 @@
       background-color: rgba(255, 255, 255, 0.9);
       border: 2px solid var(--primary-color);
       border-radius: 50px;
-      padding: 0.5rem 1rem;
-      margin: 0 0.25rem;
+      padding: 0.25rem 0.5rem;
+      margin: 0 0.125rem;
       font-weight: 600;
+      font-size: 0.875rem;
       transition: all 0.1s ease;
       box-shadow: var(--card-shadow);
     }
 
     .pagination .page-link:hover {
       background-color: var(--primary-color);
-      color: white;
+      color: rgb(19, 19, 19);
       transform: translateY(-2px);
       box-shadow: var(--card-shadow-hover);
     }
@@ -123,7 +177,7 @@
     .pagination .page-item.active .page-link {
       background-color: var(--primary-color);
       border-color: var(--primary-color);
-      color: white;
+      color: rgb(0, 0, 0);
       box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
     }
 
@@ -141,14 +195,14 @@
   <!-- HEADER -->
   <div class="header">
     <div>
-      <h4 class="fw-bold text-primary mb-0">
-        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+      <h4 class="fw-bold mb-0" style="color: #8B4513;">
+        <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
       </h4>
-      <small class="text-muted">Manage and monitor family registrations</small>
+      <small style="color: rgb(0, 0, 0);">Manage and monitor family registrations</small>
     </div>
 
-    <div class="dropdown">
-      <button class="btn btn-outline-primary fs-4" data-bs-toggle="dropdown">⋮</button>
+    <div class="dropdown" style="position: absolute; right: 1.5rem;">
+      <button class="btn btn-lg" style="color:  #8B4513;" data-bs-toggle="dropdown">⋮</button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
         <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
@@ -160,6 +214,13 @@
   <% if (locals.updated) { %>
   <div class="alert alert-success alert-dismissible fade show mb-4">
     Family details updated successfully!
+    <button class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <% } %>
+
+  <% if (locals.deleted) { %>
+  <div class="alert alert-danger alert-dismissible fade show mb-4">
+    Family deleted successfully!
     <button class="btn-close" data-bs-dismiss="alert"></button>
   </div>
   <% } %>
@@ -191,7 +252,7 @@
   <% } %>
 
   <!-- SEARCH -->
-  <div class="card mb-4">
+  <div class="card mb-4" style="background-color: #faf7f79c;">
     <div class="card-body">
       <%- include("search-filter-form") %>
     </div>
@@ -206,6 +267,12 @@
   <div class="family-grid">
     <% results.forEach(member => { %>
     <div class="family-card" onclick="location='/admin/view/<%= member.id %>'">
+      <button class="edit-btn" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'">
+        <i class="fas fa-pencil-alt"></i>
+      </button>
+      <button class="delete-btn" onclick="event.stopPropagation(); confirmDelete( member.id , '<%= member.name %>')">
+        DELETE
+      </button>
       <div class="family-card-header">
         <strong><i class="fas fa-user-circle"></i> <%= member.name %></strong>
       </div>
@@ -222,8 +289,8 @@
 
   <!-- PAGINATION -->
 <% if (totalPages > 1) { %>
-<nav class="d-flex justify-content-center mt-4">
-  <ul class="pagination pagination-lg align-items-center">
+<nav class="d-flex justify-content-center mt-3">
+  <ul class="pagination pagination-sm align-items-center">
 
     <!-- Back button -->
     <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
@@ -316,15 +383,19 @@ let deleteFamilyId = null;
 
 function confirmDelete(familyId, familyName) {
   deleteFamilyId = familyId;
-  document.getElementById('deleteMessage').textContent = 'Sure you want to delete the family "' + familyName + '"?';
+  document.getElementById('deleteMessage').textContent = 'Sure you want to delete the Family?';
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
   deleteModal.show();
 }
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
   if (deleteFamilyId) {
-    // Redirect to delete endpoint
-    window.location.href = '/admin/delete/' + deleteFamilyId;
+    // Create a form to POST to delete endpoint
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/delete/' + deleteFamilyId;
+    document.body.appendChild(form);
+    form.submit();
   }
 });
 
@@ -400,4 +471,4 @@ function downloadPdf() {
 }
 </script>
 </body>
-</html>
+</html> 
