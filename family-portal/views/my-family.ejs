@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -191,14 +191,13 @@
               <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
+                <img src="/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+                <img src="/uploads/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
               <% } %>
-            <% } else { %>
-              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
-            <% } %>
           </div>
+              <img src="https://via.placeholder.com/220x220?text=No+Photo" class="member-photo">
+            <% } %>
 
         <% } %>
       <% }) %>
@@ -246,12 +245,12 @@
               <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
               <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
               <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
+                <img src="/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
               <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
+                <img src="/uploads/<%= photoSrc %>" class="member-photo" onerror="this.src='https://via.placeholder.com/220x220?text=No+Photo'">
               <% } %>
             <% } else { %>
-              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
+              <img src="https://via.placeholder.com/220x220?text=No+Photo" class="member-photo">
             <% } %>
           </div>
 
