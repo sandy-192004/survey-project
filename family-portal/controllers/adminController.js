@@ -226,6 +226,7 @@ exports.search = async (req, res) => {
         (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
         (SELECT COUNT(*) FROM family_members) AS totalMembers,
         (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
+
         (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS recentFamilies
     `);
 
@@ -403,8 +404,15 @@ exports.updateMember = async (req, res) => {
         district: req.body.district,
         state: req.body.state,
         pincode: req.body.pincode,
-        photo: uploadedFiles.husband_photo || husband.photo
+        photo: uploadedFiles.husband_photo ? `parent/${uploadedFiles.husband_photo}` : husband.photo
       };
+      // Delete old husband photo if new one is uploaded
+      if (uploadedFiles.husband_photo && husband.photo) {
+        const oldPath = path.join(__dirname, '../uploads', husband.photo);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
       await FamilyMember.update(husband.id, husbandData);
     }
 
@@ -422,7 +430,7 @@ exports.updateMember = async (req, res) => {
         district: req.body.wife_district || "",
         state: req.body.wife_state || "",
         pincode: req.body.wife_pincode || "",
-        photo: uploadedFiles.wife_photo || (wife ? wife.photo : null)
+        photo: uploadedFiles.wife_photo ? `parent/${uploadedFiles.wife_photo}` : (wife ? wife.photo : null)
       };
 
       if (wife) {
@@ -453,7 +461,15 @@ exports.updateMember = async (req, res) => {
               gender: child.gender && child.gender !== '' ? child.gender : null
             };
             if (childPhoto) {
-              childData.photo = childPhoto;
+              childData.photo = `children/${childPhoto}`;
+              // Delete old child photo if new one is uploaded
+              const [oldChildRows] = await db.query("SELECT photo FROM family_members WHERE id = ?", [child.id]);
+              if (oldChildRows.length > 0 && oldChildRows[0].photo) {
+                const oldPath = path.join(__dirname, '../uploads', oldChildRows[0].photo);
+                if (fs.existsSync(oldPath)) {
+                  fs.unlinkSync(oldPath);
+                }
+              }
             }
 
             const sql = "UPDATE family_members SET name = ?, occupation = ?, dob = ?, gender = ?" + (childData.photo ? ", photo = ?" : "") + " WHERE id = ?";
@@ -520,7 +536,7 @@ exports.addChild = async (req, res) => {
       state: "",
       pincode: "",
       photo: req.files && req.files.photo
-        ? req.files.photo[0].filename
+        ? `children/${req.files.photo[0].filename}`
         : null
     });
 
@@ -533,141 +549,7 @@ exports.addChild = async (req, res) => {
 };
 
 
-// =======================
-// CREATE FAMILY (Admin)
-// =======================
-exports.createFamily = async (req, res) => {
-  const connection = await db.getConnection();
 
-  try {
-    console.log("📥 Received Body:", req.body);
-    console.log("📎 Received Files:", req.files);
-
-    let { husband_name, members } = req.body;
-
-    if (typeof members === "string") {
-      try {
-        members = JSON.parse(members);
-      } catch (e) {
-        console.error("Failed to parse members JSON:", e);
-        members = [];
-      }
-    }
-
-    if (!Array.isArray(members)) members = [];
-
-    await connection.beginTransaction();
-
-    // Generate a unique family_id for admin-created families
-    const familyId = `ADMIN-${Date.now()}`;
-
-    // Step 3: Insert family members
-    for (let i = 0; i < members.length; i++) {
-      const m = members[i];
-      const {
-        member_type,
-        name,
-        relationship,
-        mobile,
-        occupation,
-        dob,
-        gender,
-        door_no,
-        street,
-        district,
-        state,
-        pincode
-      } = m;
-
-      // Default gender for husband
-      let finalGender = gender;
-      if (relationship === 'husband' && !gender) {
-        finalGender = 'Male';
-      }
-
-      if (!name || !relationship) continue;
-
-      // Handle file uploads
-      let photoPath = null;
-      if (req.files) {
-        if (member_type === 'parent') {
-          if (relationship === 'husband') {
-            const husbandFiles = req.files['parent[husband_photo]'];
-            if (husbandFiles && husbandFiles[0]) {
-              photoPath = `parents/${husbandFiles[0].filename}`;
-              const filePath = path.join('uploads', photoPath);
-              const stats = fs.statSync(filePath);
-              photoPath = `${photoPath}(${stats.size})`;
-            }
-          } else if (relationship === 'wife') {
-            const wifeFiles = req.files['parent[wife_photo]'];
-            if (wifeFiles && wifeFiles[0]) {
-              photoPath = `parents/${wifeFiles[0].filename}`;
-              const filePath = path.join('uploads', photoPath);
-              const stats = fs.statSync(filePath);
-              photoPath = `${photoPath}(${stats.size})`;
-            }
-          }
-        } else if (member_type === 'child') {
-          const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
-          if (childFiles && childFiles[0]) {
-            photoPath = `children/${childFiles[0].filename}`;
-            const filePath = path.join('uploads', photoPath);
-            const stats = fs.statSync(filePath);
-            photoPath = `${photoPath}(${stats.size})`;
-          }
-        }
-      }
-
-      await connection.query(
-        `INSERT INTO family_members
-         (family_id, member_type, name, relationship, mobile, occupation,
-          dob, gender, door_no, street, district, state, pincode, photo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          familyId,
-          member_type || "child",
-          name,
-          relationship,
-          mobile || null,
-          occupation || null,
-          dob || null,
-          gender || null,
-          door_no || null,
-          street || null,
-          district || null,
-          state || null,
-          pincode || null,
-          photoPath
-        ]
-      );
-    }
-
-    await connection.commit();
-
-    res.json({
-      success: true,
-      message: "Family details saved successfully!",
-      familyId
-    });
-
-  } catch (err) {
-    await connection.rollback();
-    console.error("SAVE FAMILY ERROR");
-    console.error("Message:", err.message);
-    console.error("SQL:", err.sqlMessage);
-    console.error("Stack:", err.stack);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to save family data",
-      error: err.message,
-      sql: err.sqlMessage
-    });
-  } finally {
-    connection.release();
-  }
-};
 
 // =======================
 // DELETE FAMILY
@@ -708,7 +590,20 @@ exports.createFamily = async (req, res) => {
     );
     const familyId = familyResult.insertId;
 
+    // Helper to find file by fieldname
+    const findFile = (fieldname) => {
+      if (!req.files) return null;
+      if (Array.isArray(req.files)) {
+        // upload.any() case
+        return req.files.find(f => f.fieldname === fieldname) || null;
+      } else {
+        // upload.fields() case
+        return req.files[fieldname] ? req.files[fieldname][0] : null;
+      }
+    };
+
     // Step 2: Insert husband (father)
+    const husbandPhotoFile = findFile('husband_photo');
     await connection.query(
       `INSERT INTO family_members
        (family_id, member_type, name, relationship, mobile, occupation, gender, door_no, street, district, state, pincode, photo)
@@ -724,12 +619,13 @@ exports.createFamily = async (req, res) => {
         req.body.district || null,
         req.body.state || null,
         req.body.pincode || null,
-        req.files && req.files['husband_photo'] ? `parents/${req.files['husband_photo'][0].filename}` : null
+        husbandPhotoFile ? `parent/${husbandPhotoFile.filename}` : null
       ]
     );
 
     // Step 3: Insert wife (mother) if provided
     if (req.body.wife_name) {
+      const wifePhotoFile = findFile('wife_photo');
       await connection.query(
         `INSERT INTO family_members
          (family_id, member_type, name, relationship, mobile, occupation, gender, door_no, street, district, state, pincode, photo)
@@ -745,7 +641,7 @@ exports.createFamily = async (req, res) => {
           req.body.district || null,
           req.body.state || null,
           req.body.pincode || null,
-          req.files && req.files['wife_photo'] ? `parents/${req.files['wife_photo'][0].filename}` : null
+          wifePhotoFile ? `parent/${wifePhotoFile.filename}` : null
         ]
       );
     }
@@ -756,7 +652,7 @@ exports.createFamily = async (req, res) => {
       for (const key of childKeys) {
         const child = req.body.children[key];
         if (child.name) {
-          const childPhoto = req.files && req.files[`children[${key}][photo]`] ? req.files[`children[${key}][photo]`][0] : null;
+          const childPhotoFile = findFile(`children[${key}][photo]`);
           await connection.query(
             `INSERT INTO family_members
              (family_id, member_type, name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photo)
@@ -774,7 +670,7 @@ exports.createFamily = async (req, res) => {
               req.body.district || null,
               req.body.state || null,
               req.body.pincode || null,
-              childPhoto ? `children/${childPhoto.filename}` : null
+              childPhotoFile ? `children/${childPhotoFile.filename}` : null
             ]
           );
         }

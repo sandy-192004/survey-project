@@ -9,8 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    /* ===== GLOBAL ===== */
- <style>
+
   body {
     margin: 0;
     background-color: #f5e6d3;
@@ -165,6 +164,8 @@
                   if (!gender || gender === '-') {
                     if (member.relationship === 'husband') gender = 'Male';
                     else if (member.relationship === 'wife') gender = 'Female';
+                    else if (member.relationship === 'son') gender = 'Male';
+                    else if (member.relationship === 'daughter') gender = 'Female';
                     else gender = '-';
                   }
                 %>
@@ -219,6 +220,8 @@
                   if (!gender || gender === '-') {
                     if (member.relationship === 'husband') gender = 'Male';
                     else if (member.relationship === 'wife') gender = 'Female';
+                    else if (member.relationship === 'son') gender = 'Male';
+                    else if (member.relationship === 'daughter') gender = 'Female';
                     else gender = '-';
                   }
                 %>

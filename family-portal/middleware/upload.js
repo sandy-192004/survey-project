@@ -4,10 +4,10 @@ const fs = require("fs");
 const sharp = require("sharp");
 
 
-const parentsDir = path.join(__dirname, "../uploads/parents");
+const parentDir = path.join(__dirname, "../uploads/parent");
 const childrenDir = path.join(__dirname, "../uploads/children");
 
-[parentsDir, childrenDir].forEach((dir) => {
+[parentDir, childrenDir].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
       file.fieldname.includes("husband") ||
       file.fieldname.includes("wife")
     ) {
-      cb(null, parentsDir);
+      cb(null, parentDir);
     } else {
       cb(null, childrenDir);
     }

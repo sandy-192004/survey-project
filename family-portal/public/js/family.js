@@ -110,6 +110,93 @@ function addChild() {
 function removeChildRow(index) {
   const el = document.getElementById(`child-${index}`);
   if (el && el.parentNode) el.parentNode.removeChild(el);
+  reIndexChildren();
+}
+
+function reIndexChildren() {
+  const childrenContainer = document.getElementById("children");
+  const childCards = childrenContainer.querySelectorAll(".child-card");
+  childCards.forEach((card, newIndex) => {
+    // Update card id
+    card.id = `child-${newIndex}`;
+
+    // Update file input id
+    const fileInput = card.querySelector('input[type="file"]');
+    if (fileInput) fileInput.id = `child_${newIndex}_file`;
+
+    // Update placeholder id
+    const placeholder = card.querySelector('[id$="_placeholder"]');
+    if (placeholder) placeholder.id = `child_${newIndex}_placeholder`;
+
+    // Update file_info id
+    const fileInfo = card.querySelector('[id$="_file_info"]');
+    if (fileInfo) fileInfo.id = `child_${newIndex}_file_info`;
+
+    // Update delete icon id
+    const deleteIcon = card.querySelector('[id$="_delete"]');
+    if (deleteIcon) deleteIcon.id = `child_${newIndex}_delete`;
+
+    // Update file_name span id
+    const fileNameSpan = card.querySelector('[id$="_file_name"]');
+    if (fileNameSpan) fileNameSpan.id = `child_${newIndex}_file_name`;
+
+    // Update file_size span id
+    const fileSizeSpan = card.querySelector('[id$="_file_size"]');
+    if (fileSizeSpan) fileSizeSpan.id = `child_${newIndex}_file_size`;
+
+    // Update names for inputs and selects
+    const inputs = card.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      if (input.name) {
+        input.name = input.name.replace(/children\[\d+\]/, `children[${newIndex}]`);
+      }
+    });
+
+    // Update onclick for placeholder
+    if (placeholder) {
+      placeholder.onclick = () => showPhotoOptions(`child_${newIndex}`);
+    }
+
+    // Update onchange for file input
+    if (fileInput) {
+      fileInput.onchange = (e) => handleChildPhotoSelect(e.target, newIndex);
+    }
+
+    // Update onclick for delete icon
+    if (deleteIcon) {
+      deleteIcon.onclick = () => deleteChildPhoto(newIndex);
+    }
+
+    // Update same address checkbox
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+      checkbox.id = `sameAddressCheck_${newIndex}`;
+      checkbox.onchange = () => handleSameAddressCheck(newIndex);
+    }
+
+    // Update hidden input
+    const hiddenInput = card.querySelector('input[name*="use_parent_address"]');
+    if (hiddenInput) {
+      hiddenInput.id = `use_parent_address_${newIndex}`;
+    }
+
+    // Update state and district selects
+    const stateSelect = card.querySelector('select[name*="state"]');
+    if (stateSelect) {
+      stateSelect.id = `child_${newIndex}_state`;
+      stateSelect.onchange = () => loadDistrictsForChild(newIndex);
+    }
+    const districtSelect = card.querySelector('select[name*="district"]');
+    if (districtSelect) districtSelect.id = `child_${newIndex}_district`;
+
+    // Update address inputs
+    const doorNoInput = card.querySelector('input[name*="door_no"]');
+    if (doorNoInput) doorNoInput.id = `child_${newIndex}_door_no`;
+    const streetInput = card.querySelector('input[name*="street"]');
+    if (streetInput) streetInput.id = `child_${newIndex}_street`;
+    const pincodeInput = card.querySelector('input[name*="pincode"]');
+    if (pincodeInput) pincodeInput.id = `child_${newIndex}_pincode`;
+  });
 }
 
 // ========== LOAD CHILD MODAL STATES ==========

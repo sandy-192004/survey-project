@@ -26,52 +26,59 @@
   </div>
 
   <form method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
-    <!-- Parent Details -->
-    <div class="card mb-4">
-      <div class="card-header"><h5>Parent Details</h5></div>
-      <div class="card-body">
-        <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" placeholder="Husband Name" required>
-        <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" placeholder="Mobile" required>
-        <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>" placeholder="Occupation">
-        <div class="mb-3">
-          <label>Husband Photo</label>
-          <input type="file" class="form-control" name="husband_photo" accept="image/*">
-          <% if (parent.husband_photo) { %>
-            <img src="/uploads/parents/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-          <% } %>
+    <div class="row">
+      <div class="col-md-6">
+        <!-- Husband Details -->
+        <div class="card mb-4">
+          <div class="card-header"><h5>Husband Details</h5></div>
+          <div class="card-body">
+            <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" placeholder="Husband Name" required>
+            <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" placeholder="Mobile" required>
+            <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>" placeholder="Occupation">
+            <div class="mb-3">
+              <label>Husband Photo</label>
+              <input type="file" class="form-control" name="husband_photo" accept="image/*" id="husband_photo_input">
+              <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('husband_photo_input')">Capture Photo</button>
+              <% if (parent.husband_photo) { %>
+                <img src="/uploads/parents/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
+              <% } %>
+            </div>
+            <h6>Address</h6>
+            <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>" placeholder="Door No">
+            <input class="form-control mb-2" name="street" value="<%= parent.street %>" placeholder="Street">
+            <input class="form-control mb-2" name="district" value="<%= parent.district %>" placeholder="District">
+            <input class="form-control mb-2" name="state" value="<%= parent.state %>" placeholder="State">
+            <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>" placeholder="Pincode">
+          </div>
         </div>
-        <h6>Address</h6>
-        <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>" placeholder="Door No">
-        <input class="form-control mb-2" name="street" value="<%= parent.street %>" placeholder="Street">
-        <input class="form-control mb-2" name="district" value="<%= parent.district %>" placeholder="District">
-        <input class="form-control mb-2" name="state" value="<%= parent.state %>" placeholder="State">
-        <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>" placeholder="Pincode">
+      </div>
+      <div class="col-md-6">
+        <!-- Wife Details -->
+        <% if (wife) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h5>Wife Details</h5></div>
+          <div class="card-body">
+            <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>" placeholder="Wife Name">
+            <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>" placeholder="Mobile">
+            <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>" placeholder="Occupation">
+            <div class="mb-3">
+              <label>Wife Photo</label>
+              <input type="file" class="form-control" name="wife_photo" accept="image/*" id="wife_photo_input">
+              <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('wife_photo_input')">Capture Photo</button>
+              <% if (wife.photo) { %>
+                <img src="/uploads/parents/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
+              <% } %>
+            </div>
+            <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>" placeholder="Door No">
+            <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>" placeholder="Street">
+            <input class="form-control mb-2" name="wife_district" value="<%= wife.district %>" placeholder="District">
+            <input class="form-control mb-2" name="wife_state" value="<%= wife.state %>" placeholder="State">
+            <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>" placeholder="Pincode">
+          </div>
+        </div>
+        <% } %>
       </div>
     </div>
-
-    <!-- Wife Details -->
-    <% if (wife) { %>
-    <div class="card mb-4">
-      <div class="card-header"><h5>Wife Details</h5></div>
-      <div class="card-body">
-        <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>" placeholder="Wife Name">
-        <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>" placeholder="Mobile">
-        <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>" placeholder="Occupation">
-        <div class="mb-3">
-          <label>Wife Photo</label>
-          <input type="file" class="form-control" name="wife_photo" accept="image/*">
-          <% if (wife.photo) { %>
-            <img src="/uploads/parents/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-          <% } %>
-        </div>
-        <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>" placeholder="Door No">
-        <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>" placeholder="Street">
-        <input class="form-control mb-2" name="wife_district" value="<%= wife.district %>" placeholder="District">
-        <input class="form-control mb-2" name="wife_state" value="<%= wife.state %>" placeholder="State">
-        <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>" placeholder="Pincode">
-      </div>
-    </div>
-    <% } %>
 
     <!-- Children -->
     <div class="card mb-4">
@@ -92,7 +99,8 @@
               <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>">
               <div class="mb-1">
                 <label>Photo</label>
-                <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*">
+                <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*" id="child_photo_<%= i %>">
+                <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('child_photo_<%= i %>')">Capture Photo</button>
                 <% if (c.photo) { %>
                   <img src="/uploads/children/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width:100px;">
                 <% } %>
@@ -176,7 +184,8 @@
         <input type="date" class="form-control mb-1" name="children[${index}][dob]" placeholder="Date of Birth">
         <div class="mb-1">
           <label>Photo</label>
-          <input type="file" class="form-control" name="children[${index}][photo]" accept="image/*">
+          <input type="file" class="form-control" name="children[${index}][photo]" accept="image/*" id="child_photo_${index}">
+          <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('child_photo_${index}')">Capture Photo</button>
         </div>
         <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
       </div>
@@ -187,6 +196,74 @@
   $(document).on("click", ".removeChild", function () {
     $(this).closest(".child").remove();
   });
+
+  function capturePhoto(inputId) {
+    const input = document.getElementById(inputId);
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
+
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+
+          // Create a modal or overlay to show the camera
+          const modal = document.createElement('div');
+          modal.style.position = 'fixed';
+          modal.style.top = '0';
+          modal.style.left = '0';
+          modal.style.width = '100%';
+          modal.style.height = '100%';
+          modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+          modal.style.display = 'flex';
+          modal.style.flexDirection = 'column';
+          modal.style.alignItems = 'center';
+          modal.style.justifyContent = 'center';
+          modal.style.zIndex = '1000';
+
+          const videoContainer = document.createElement('div');
+          videoContainer.appendChild(video);
+          modal.appendChild(videoContainer);
+
+          const captureButton = document.createElement('button');
+          captureButton.textContent = 'Capture';
+          captureButton.className = 'btn btn-primary mt-3';
+          captureButton.onclick = function() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            canvas.toBlob(function(blob) {
+              const file = new File([blob], 'captured_photo.jpg', { type: 'image/jpeg' });
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(file);
+              input.files = dataTransfer.files;
+              document.body.removeChild(modal);
+              stream.getTracks().forEach(track => track.stop());
+            });
+          };
+          modal.appendChild(captureButton);
+
+          const cancelButton = document.createElement('button');
+          cancelButton.textContent = 'Cancel';
+          cancelButton.className = 'btn btn-secondary mt-2';
+          cancelButton.onclick = function() {
+            document.body.removeChild(modal);
+            stream.getTracks().forEach(track => track.stop());
+          };
+          modal.appendChild(cancelButton);
+
+          document.body.appendChild(modal);
+        })
+        .catch(function(err) {
+          console.error('Error accessing camera: ', err);
+          alert('Camera access denied or not available.');
+        });
+    } else {
+      alert('Camera not supported on this device.');
+    }
+  }
 </script>
 
 </body>

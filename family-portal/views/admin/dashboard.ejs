@@ -205,7 +205,7 @@
       <button class="btn btn-lg" style="color:  #f2f1f1;" data-bs-toggle="dropdown">⋮</button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
-        <li><a class="dropdown-item" href="/admin/export/pdf"><i class="fas fa-file-pdf"></i> PDF</a></li>
+        <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
       </ul>
     </div>
   </div>
@@ -351,6 +351,7 @@
 </div>
 
 
+
 <!-- PDF EXPORT MODAL -->
 <div class="modal fade" id="pdfExportModal" tabindex="-1" aria-labelledby="pdfExportModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -364,6 +365,9 @@
           <label for="stateSelect" class="form-label">Select State</label>
           <select class="form-select" id="stateSelect" onchange="loadDistricts()">
             <option value="">Select State</option>
+
+            <option value="all">All</option>
+
             <% if (states && states.length > 0) { %>
               <% states.forEach(function(state) { %>
                 <option value="<%= state %>"><%= state %></option>
@@ -414,6 +418,77 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function (
   document.body.appendChild(form);
   form.submit();
 });
+
+function openPdfExportModal() {
+  const modal = new bootstrap.Modal(document.getElementById('pdfExportModal'));
+  modal.show();
+}
+
+async function loadDistricts() {
+  const stateSelect = document.getElementById('stateSelect');
+  const districtSelect = document.getElementById('districtSelect');
+  const selectedState = stateSelect.value;
+
+  districtSelect.innerHTML = '<option value="">Select District</option>';
+  districtSelect.disabled = true;
+
+  if (selectedState && selectedState !== 'all') {
+    try {
+      const response = await fetch('/data/india-states-districts.json');
+      const data = await response.json();
+      const districts = data[selectedState] || [];
+
+      // Add "All" option first
+      const allOption = document.createElement('option');
+      allOption.value = 'all';
+      allOption.textContent = 'All';
+      districtSelect.appendChild(allOption);
+
+      districts.forEach(district => {
+        const option = document.createElement('option');
+        option.value = district;
+        option.textContent = district;
+        districtSelect.appendChild(option);
+      });
+
+      districtSelect.disabled = false;
+    } catch (error) {
+      console.error('Error loading districts:', error);
+    }
+  } else if (selectedState === 'all') {
+    // If state is "all", set district to "all" automatically
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All';
+    districtSelect.appendChild(allOption);
+    districtSelect.value = 'all';
+    districtSelect.disabled = true;
+  }
+
+  updateDownloadButton();
+}
+
+function updateDownloadButton() {
+  const stateSelect = document.getElementById('stateSelect');
+  const districtSelect = document.getElementById('districtSelect');
+  const downloadBtn = document.getElementById('downloadPdfBtn');
+
+  // Enable button if both state and district are selected (including "all")
+  downloadBtn.disabled = !stateSelect.value || !districtSelect.value;
+}
+
+document.getElementById('districtSelect').addEventListener('change', updateDownloadButton);
+
+function downloadPdf() {
+  const state = document.getElementById('stateSelect').value;
+  const district = document.getElementById('districtSelect').value;
+
+  if (state && district) {
+    window.location.href = `/admin/export/pdf?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}`;
+    const modal = bootstrap.Modal.getInstance(document.getElementById('pdfExportModal'));
+    modal.hide();
+  }
+}
 </script>
 </body>
 </html>  

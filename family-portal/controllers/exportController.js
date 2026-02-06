@@ -50,9 +50,21 @@ exports.pdf = async (req, res, next) => {
     const { state, district } = req.query;
     console.log('PDF export params received:', { state, district });
 
-    let query = 'SELECT * FROM family_members ORDER BY family_id, member_type';
+    let query = 'SELECT * FROM family_members WHERE 1=1';
     let params = [];
-    console.log('PDF export: No filters applied, exporting all data');
+    let conditions = [];
+    if (state && state.toLowerCase() !== 'all') {
+      query += ' AND state = ?';
+      params.push(state);
+      conditions.push('state');
+    }
+    if (district && district.toLowerCase() !== 'all') {
+      query += ' AND district = ?';
+      params.push(district);
+      conditions.push('district');
+    }
+    query += ' ORDER BY family_id, member_type';
+    console.log('PDF export: Filters applied, query:', query, 'params:', params);
 
     const [data] = await db.query(query, params);
     console.log('PDF export: Fetched', data.length, 'rows from family_members');
@@ -65,13 +77,13 @@ exports.pdf = async (req, res, next) => {
 
     // Title
     let title = 'Family Members Data Export';
-    if (state && state !== 'All' && district && district !== 'All') {
+    if (state && state.toLowerCase() !== 'all' && district && district.toLowerCase() !== 'all') {
       title = `Family Details – ${state} / ${district}`;
-    } else if (state && state !== 'All') {
+    } else if (state && state.toLowerCase() !== 'all') {
       title = `Family Details – ${state}`;
-    } else if (district && district !== 'All') {
+    } else if (district && district.toLowerCase() !== 'all') {
       title = `Family Details – ${district}`;
-    } else if (state === 'All' && district === 'All') {
+    } else if (state && state.toLowerCase() === 'all' && district && district.toLowerCase() === 'all') {
       title = `Family Details – All / All`;
     }
     doc.font('Helvetica-Bold').fontSize(16).text(title, { align: 'center' });
@@ -228,9 +240,21 @@ exports.exportToPdf = async (req, res) => {
     const { state, district } = req.query;
     console.log('PDF export params received:', { state, district });
 
-    let query = 'SELECT * FROM family_members ORDER BY family_id, member_type';
+    let query = 'SELECT * FROM family_members WHERE 1=1';
     let params = [];
-    console.log('PDF export: No filters applied, exporting all data');
+    let conditions = [];
+    if (state && state.toLowerCase() !== 'all') {
+      query += ' AND state = ?';
+      params.push(state);
+      conditions.push('state');
+    }
+    if (district && district.toLowerCase() !== 'all') {
+      query += ' AND district = ?';
+      params.push(district);
+      conditions.push('district');
+    }
+    query += ' ORDER BY family_id, member_type';
+    console.log('PDF export: Filters applied, query:', query, 'params:', params);
 
     const [data] = await db.query(query, params);
     console.log('PDF export: Fetched', data.length, 'rows from family_members');
