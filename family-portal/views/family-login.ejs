@@ -113,7 +113,13 @@
                 <div id="signupForm" class="card shadow-lg d-none">
                     <div class="card-body p-5">
                         <h2 class="card-title text-center mb-4">Create Account</h2>
-                        
+
+                        <!-- Password Mismatch Error Message -->
+                        <div id="passwordMismatchError" class="alert alert-danger text-center" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Passwords do not match! Please ensure both password fields are identical.
+                        </div>
+
                         <form id="signupSubmit" method="POST" action="/register">
                             <div class="mb-3">
                                 <label for="signupEmail" class="form-label">Email Address</label>
@@ -209,6 +215,69 @@
       </div>
     </div>
 
+    <!-- Error Modal for Password Mismatch -->
+    <div class="modal fade" id="passwordMismatchModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>Password Mismatch
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center bg-light">
+            <div class="mb-4">
+              <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-danger fw-bold mb-3">Passwords Do Not Match</h4>
+            <p class="text-muted">Please ensure both password fields are identical.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Modal for Invalid Email -->
+    <div class="modal fade" id="invalidEmailModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>Invalid Email
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center bg-light">
+            <div class="mb-4">
+              <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-danger fw-bold mb-3">Please Provide Valid Email</h4>
+            <p class="text-muted">Email must contain @ symbol and proper domain format (e.g., example@gmail.com).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Modal for Password Length -->
+    <div class="modal fade" id="passwordLengthModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>Password Too Short
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center bg-light">
+            <div class="mb-4">
+              <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-danger fw-bold mb-3">Password Must Be Longer</h4>
+            <p class="text-muted">Password must be at least 6 characters long for security.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleForms() {
@@ -244,20 +313,48 @@
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
+        // Check for password mismatch error
+        if (urlParams.get('error') === 'password_mismatch') {
+            const modal = new bootstrap.Modal(document.getElementById('passwordMismatchModal'));
+            modal.show();
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Check for invalid email error
+        if (urlParams.get('error') === 'invalid_email') {
+            const modal = new bootstrap.Modal(document.getElementById('invalidEmailModal'));
+            modal.show();
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         // Validate signup form
         document.getElementById('signupSubmit').addEventListener('submit', function(e) {
+            const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                const modal = new bootstrap.Modal(document.getElementById('invalidEmailModal'));
+                modal.show();
+                return;
+            }
+
             if (password !== confirmPassword) {
                 e.preventDefault();
-                alert('Passwords do not match!');
+                const modal = new bootstrap.Modal(document.getElementById('passwordMismatchModal'));
+                modal.show();
                 return;
             }
 
             if (password.length < 6) {
                 e.preventDefault();
-                alert('Password must be at least 6 characters long!');
+                const modal = new bootstrap.Modal(document.getElementById('passwordLengthModal'));
+                modal.show();
                 return;
             }
         });
