@@ -196,12 +196,11 @@
                   <div class="ms-3">
                     <% if (parent.photo && parent.photo.trim() !== "") { %>
                       <% let photoSrc = parent.photo; %>
+                      <% // Remove size from photo path if present %>
                       <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
                       <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+                      <% // Normalize path %>
                       <% photoSrc = photoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
-                      <% if (photoSrc.indexOf('/') === -1) { %>
-                        <% photoSrc = 'parents/' + photoSrc; %>
-                      <% } %>
                       <img src="/uploads/<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
                     <% } else { %>
                       <img src="https://via.placeholder.com/120x120?text=No+Photo" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
@@ -234,11 +233,13 @@
                       <% let photoSrc = child.photo; %>
                       <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
                       <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-                      <% photoSrc = photoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
-                      <% if (photoSrc.indexOf('/') === -1) { %>
-                        <% photoSrc = 'children/' + photoSrc; %>
+                      <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+                      <% if (photoSrc.startsWith('uploads/')) { %>
+                        <% photoSrc = `/${photoSrc}`; %>
+                      <% } else { %>
+                        <% photoSrc = `/uploads/${photoSrc}`; %>
                       <% } %>
-                      <img src="/uploads/<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
+                      <img src="<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
                     <% } else { %>
                       <img src="https://via.placeholder.com/120x120?text=No+Photo" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
                     <% } %>
@@ -513,4 +514,4 @@ familyModal.addEventListener('show.bs.modal', function () {
 </script>
 
 </body>
-</html>
+</html> 
