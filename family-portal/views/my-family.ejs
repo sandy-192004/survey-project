@@ -37,19 +37,15 @@
 
     /* ===== ROWS ===== */
     .parents-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
     .children-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      flex-wrap: wrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
     /* ===== CARD ===== */
