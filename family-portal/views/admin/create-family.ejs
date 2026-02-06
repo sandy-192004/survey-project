@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Create Family</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: url("/images/pic.png") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .form-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .btn-primary {
+      background-color: #8B4513;
+      border-color: #8B4513;
+    }
+    .btn-primary:hover {
+      background-color: #6b3410;
+      border-color: #6b3410;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary">Create New Family (Admin)</h2>
+    <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
+  <form id="createFamilyForm" enctype="multipart/form-data">
+
+    <!-- Family Code -->
+    <div class="form-section">
+      <h5>Family Information</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Family Code (Optional)</label>
+          <input type="text" class="form-control" name="family_code" placeholder="Auto-generated if empty">
+        </div>
+      </div>
+    </div>
+
+    <!-- Husband Details -->
+    <div class="form-section">
+      <h5>Husband Details</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Name *</label>
+          <input type="text" class="form-control" name="husband_name" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Gender</label>
+          <select class="form-control" name="husband_gender">
+            <option value="Male" selected>Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <label class="form-label">Mobile</label>
+          <input type="tel" class="form-control" name="mobile">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Occupation</label>
+          <input type="text" class="form-control" name="occupation">
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <label class="form-label">Photo</label>
+          <input type="file" class="form-control" name="husband_photo" accept="image/*">
+        </div>
+      </div>
+    </div>
+
+    <!-- Wife Details -->
+    <div class="form-section">
+      <h5>Wife Details</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-control" name="wife_name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Gender</label>
+          <select class="form-control" name="wife_gender">
+            <option value="Female" selected>Female</option>
+            <option value="Male">Male</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <label class="form-label">Mobile</label>
+          <input type="tel" class="form-control" name="wife_mobile">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Occupation</label>
+          <input type="text" class="form-control" name="wife_occupation">
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <label class="form-label">Photo</label>
+          <input type="file" class="form-control" name="wife_photo" accept="image/*">
+        </div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="form-section">
+      <h5>Address</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Door No</label>
+          <input type="text" class="form-control" name="door_no">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Street</label>
+          <input type="text" class="form-control" name="street">
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-4">
+          <label class="form-label">State</label>
+          <select class="form-control" name="state" id="state">
+            <option value="">Select State</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">District</label>
+          <select class="form-control" name="district" id="district">
+            <option value="">Select District</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Pincode</label>
+          <input type="text" class="form-control" name="pincode">
+        </div>
+      </div>
+    </div>
+
+    <!-- Children -->
+    <div class="form-section">
+      <h5>Children</h5>
+      <div id="children-container"></div>
+      <button type="button" class="btn btn-outline-primary mt-3" onclick="addChild()">+ Add Child</button>
+    </div>
+
+    <!-- Submit -->
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-primary btn-lg">Create Family</button>
+    </div>
+
+  </form>
+
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content text-center">
+        <div class="modal-body">
+          <h4 class="text-success">✔ Saved Successfully</h4>
+          <p>Family and all members stored in database.</p>
+          <button class="btn btn-primary" onclick="window.location='/admin/dashboard'">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let childIndex = 0;
+
+// Load states and districts
+fetch('/data/india-states-districts.json')
+  .then(response => response.json())
+  .then(data => {
+    const states = Object.keys(data);
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+
+    states.forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+
+    stateSelect.addEventListener('change', function() {
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+      if (this.value && data[this.value]) {
+        data[this.value].forEach(district => {
+          const option = document.createElement('option');
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        });
+      }
+    });
+  });
+
+// ADD CHILD (UNCHANGED LOGIC)
+function addChild() {
+  const container = document.getElementById('children-container');
+
+  const childDiv = document.createElement('div');
+  childDiv.className = 'child-entry border p-3 mb-3 rounded';
+
+  childDiv.innerHTML = `
+    <h6>Child ${childIndex + 1}</h6>
+    <div class="row">
+      <div class="col-md-6">
+        <label class="form-label">Name *</label>
+        <input type="text" class="form-control" name="children[${childIndex}][name]" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Relationship</label>
+        <select class="form-control" name="children[${childIndex}][relationship]">
+          <option value="son">Son</option>
+          <option value="daughter">Daughter</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-md-4">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" class="form-control" name="children[${childIndex}][dob]">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Gender</label>
+        <select class="form-control" name="children[${childIndex}][gender]">
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Occupation</label>
+        <input type="text" class="form-control" name="children[${childIndex}][occupation]">
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <label class="form-label">Photo</label>
+        <input type="file" class="form-control" name="children[${childIndex}][photo]" accept="image/*">
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-md-12">
+        <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn">
+          Remove Child
+        </button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(childDiv);
+  childIndex++;
+}
+
+// ✅ FIXED: RELIABLE REMOVE CHILD (WORKS FOR DYNAMIC ELEMENTS)
+document.addEventListener("click", function (e) {
+  if (e.target.classList.contains("remove-child-btn")) {
+    e.target.closest(".child-entry").remove();
+  }
+});
+
+// FORM SUBMIT (AJAX)
+document.getElementById('createFamilyForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+
+  fetch('/admin/create-family', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      showSuccessPopup();
+    } else {
+      showErrorPopup(result.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showErrorPopup('An error occurred. Please try again.');
+  });
+});
+
+function showSuccessPopup() {
+  const modal = new bootstrap.Modal(document.getElementById('successModal'));
+  modal.show();
+}
+
+
+function showErrorPopup(message) {
+  // You can use SweetAlert for errors or create a Bootstrap error modal
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: message,
+    confirmButtonText: 'OK'
+  });
+}
+</script>
+
+</body>
+</html>
