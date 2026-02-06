@@ -100,7 +100,8 @@
             <img src="https://via.placeholder.com/160" class="member-photo mb-2">
           <% } %>
 
-          <input type="file" class="form-control mt-2" name="photo">
+          <input type="file" class="form-control mb-2" name="photo" accept="image/*">
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="openCamera('<%= member.id %>')">Capture Photo</button>
         </div>
       </div>
 
@@ -159,5 +160,112 @@
 
 </div>
 
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cameraModalLabel">Capture Photo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <video id="cameraVideo" autoplay playsinline style="width: 100%; max-width: 400px; border: 1px solid #ccc;"></video>
+        <canvas id="cameraCanvas" style="display: none;"></canvas>
+        <br><br>
+        <button type="button" class="btn btn-primary" id="captureBtn">Capture Photo</button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="usePhotoBtn" style="display: none;">Use This Photo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentMemberId = null;
+let cameraStream = null;
+
+async function openCamera(memberId) {
+  currentMemberId = memberId;
+  const modal = new bootstrap.Modal(document.getElementById('cameraModal'));
+  modal.show();
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user' },
+      audio: false
+    });
+    cameraStream = stream;
+    const video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    document.getElementById('captureBtn').style.display = 'inline-block';
+    document.getElementById('usePhotoBtn').style.display = 'none';
+  } catch (err) {
+    console.error('Error accessing camera:', err);
+    alert('Unable to access camera. Please check permissions.');
+  }
+}
+
+document.getElementById('captureBtn').addEventListener('click', () => {
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('cameraCanvas');
+  const context = canvas.getContext('2d');
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Stop camera stream
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+  }
+
+  // Show captured image in video element
+  const capturedImage = canvas.toDataURL('image/jpeg');
+  video.srcObject = null;
+  video.src = capturedImage;
+  video.style.display = 'block';
+
+  document.getElementById('captureBtn').style.display = 'none';
+  document.getElementById('usePhotoBtn').style.display = 'inline-block';
+});
+
+document.getElementById('usePhotoBtn').addEventListener('click', () => {
+  const canvas = document.getElementById('cameraCanvas');
+  canvas.toBlob((blob) => {
+    const file = new File([blob], `captured-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    const fileInput = document.querySelector(`form[action="/update-member/${currentMemberId}"] input[name="photo"]`);
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    // Update preview image
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.querySelector(`form[action="/update-member/${currentMemberId}"] .member-photo`);
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
+    modal.hide();
+  }, 'image/jpeg');
+});
+
+document.getElementById('cameraModal').addEventListener('hidden.bs.modal', () => {
+  // Stop camera stream when modal is closed
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+  const video = document.getElementById('cameraVideo');
+  video.srcObject = null;
+  video.src = '';
+  document.getElementById('captureBtn').style.display = 'inline-block';
+  document.getElementById('usePhotoBtn').style.display = 'none';
+});
+</script>
+
 </body>
-</html>
