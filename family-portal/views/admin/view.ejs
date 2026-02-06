@@ -32,27 +32,23 @@
     }
 
     .parents-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
     .children-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      flex-wrap: wrap;
-      overflow-x: auto;
-      padding-bottom: 10px;
     }
 
     .member-card {
-      min-width: 420px;
-      max-width: 720px;
+      min-width: 300px;
+      max-width: 500px;
       background-color: #f9f1e6;
       border-radius: 14px;
-      padding: 100px;
+      padding: 20px;
       position: relative;
       box-shadow: 0 6px 18px rgba(0,0,0,0.15);
       display: flex;
@@ -79,8 +75,8 @@
     }
 
     .member-photo {
-      width: 220px;
-      height: 220px;
+      width: 150px;
+      height: 150px;
       object-fit: cover;
       border-radius: 12px;
       border: 2px solid #d1b89a;
