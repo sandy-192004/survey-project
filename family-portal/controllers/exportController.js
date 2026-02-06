@@ -125,40 +125,77 @@ exports.exportToExcel = async (req, res) => {
 
 exports.exportToPdf = async (req, res) => {
   try {
-    // Get all rows from family_members table
-    const [data] = await db.query('SELECT * FROM family_members ORDER BY family_id, member_type');
+    const { state, district } = req.query;
+    console.log('PDF export params received:', { state, district });
+
+    let query = 'SELECT * FROM family_members ORDER BY family_id, member_type';
+    let params = [];
+
+    if (state && district) {
+      query = 'SELECT * FROM family_members WHERE state = ? AND district = ? ORDER BY family_id, member_type';
+      params = [state, district];
+      console.log('Filtering by state and district:', state, district);
+    } else {
+      console.log('No filters applied, exporting all data');
+    }
+
+    const [data] = await db.query(query, params);
     console.log('PDF export: Fetched', data.length, 'rows from family_members');
 
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ margin: 30 });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=family-data.pdf');
 
     doc.pipe(res);
 
-    doc.fontSize(18).text('Family Members Data Export', { align: 'center' });
-    doc.moveDown();
+    // Title
+    const title = state && district ? `Family Details – ${state} / ${district}` : 'Family Members Data Export';
+    doc.fontSize(14).text(title, { align: 'center' });
+    doc.moveDown(2);
 
-    let currentFamilyId = null;
+    if (data.length === 0) {
+      doc.fontSize(12).text('No data available for the selected filters.');
+      doc.end();
+      return;
+    }
 
+    // Use monospaced font for table-like appearance
+    doc.font('Courier');
+
+    // Header row
+    const header = 'Family ID | Member Type | Name                | Relationship | Mobile       | Occupation         | DOB        | Gender | Address                          | Pincode';
+    doc.fontSize(8).text(header);
+    doc.moveDown(0.5);
+
+    // Separator line
+    doc.text('----------|-------------|---------------------|--------------|---------------|---------------------|------------|--------|----------------------------------|---------');
+    doc.moveDown(0.5);
+
+    // Data rows
     data.forEach((member) => {
       // Check if we need a new page
-      if (doc.y > 650) {
+      if (doc.y > 700) {
         doc.addPage();
+        // Repeat header on new page
+        doc.fontSize(8).text(header);
+        doc.moveDown(0.5);
+        doc.text('----------|-------------|---------------------|--------------|---------------|---------------------|------------|--------|----------------------------------|---------');
+        doc.moveDown(0.5);
       }
 
-      if (member.family_id !== currentFamilyId) {
-        if (currentFamilyId !== null) {
-          doc.moveDown();
-        }
-        doc.fontSize(12).text(`Family ID: ${member.family_id}`, { underline: true });
-        currentFamilyId = member.family_id;
-        doc.moveDown(0.3);
-      }
+      const familyId = (member.family_id || '').toString().padEnd(9);
+      const memberType = (member.member_type || '').toString().padEnd(12);
+      const name = (member.name || '').toString().padEnd(20).substring(0, 20);
+      const relationship = (member.relationship || '').toString().padEnd(13);
+      const mobile = (member.mobile || '').toString().padEnd(14);
+      const occupation = (member.occupation || '').toString().padEnd(20).substring(0, 20);
+      const dob = member.dob ? new Date(member.dob).toLocaleDateString().padEnd(11) : ''.padEnd(11);
+      const gender = (member.gender || '').toString().padEnd(7);
+      const address = [member.door_no, member.street, member.district, member.state].filter(Boolean).join(', ').padEnd(33).substring(0, 33);
+      const pincode = (member.pincode || '').toString().padEnd(8);
 
-      doc.fontSize(10).text(`Member ID: ${member.id}, Family ID: ${member.family_id}, Type: ${member.member_type}, Name: ${member.name}, Relationship: ${member.relationship}`);
-      doc.text(`Mobile: ${member.mobile || 'N/A'}, Occupation: ${member.occupation || 'N/A'}, DOB: ${member.dob ? new Date(member.dob).toLocaleDateString() : 'N/A'}, Gender: ${member.gender || 'N/A'}`);
-      doc.text(`Address: ${member.door_no || 'N/A'}, ${member.street || 'N/A'}, ${member.district || 'N/A'}, ${member.state || 'N/A'}, ${member.pincode || 'N/A'}`);
-      doc.text(`Photo: ${member.photo || 'N/A'}, Created: ${member.created_at ? new Date(member.created_at).toLocaleString() : 'N/A'}`);
+      const row = `${familyId}|${memberType}|${name}|${relationship}|${mobile}|${occupation}|${dob}|${gender}|${address}|${pincode}`;
+      doc.text(row);
       doc.moveDown(0.3);
     });
 
