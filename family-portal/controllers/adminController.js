@@ -1,4 +1,3 @@
-
 const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
@@ -306,6 +305,7 @@ exports.viewMember = async (req, res) => {
   }
 };
 
+
 // =======================
 // EDIT FAMILY MEMBERS
 // =======================
@@ -450,7 +450,7 @@ exports.updateMember = async (req, res) => {
               name: child.name,
               occupation: child.occupation || "",
               dob: child.dob,
-              gender: child.gender || ""
+              gender: child.gender && child.gender !== '' ? child.gender : null
             };
             if (childPhoto) {
               childData.photo = childPhoto;
@@ -463,15 +463,16 @@ exports.updateMember = async (req, res) => {
             await db.query(sql, params);
           } else {
             // Insert new child (added via + Add Child button)
+            const childRelationship = child.gender === 'Male' ? 'son' : child.gender === 'Female' ? 'daughter' : 'other';
             const fullChildData = {
               family_id: familyId,
               member_type: "child",
               name: child.name,
-              relationship: "child",
+              relationship: childRelationship,
               mobile: "",
               occupation: child.occupation || "",
               dob: child.dob,
-              gender: child.gender || "",
+              gender: child.gender || null,
               door_no: "",
               street: "",
               district: "",
@@ -503,11 +504,12 @@ exports.addChild = async (req, res) => {
     const familyId = req.body.family_id;
     const FamilyMember = require("../models/FamilyMember");
 
+    const childRelationship = req.body.gender === 'Male' ? 'son' : req.body.gender === 'Female' ? 'daughter' : 'other';
     await FamilyMember.create({
       family_id: familyId,
       member_type: "child",
       name: req.body.name,
-      relationship: "child",
+      relationship: childRelationship,
       mobile: req.body.mobile || "",
       occupation: req.body.occupation || "",
       dob: req.body.dob,
@@ -529,6 +531,7 @@ exports.addChild = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
 
 // =======================
 // CREATE FAMILY (Admin)
@@ -682,5 +685,115 @@ exports.deleteFamily = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
+  }
+};
+
+// =======================
+// CREATE FAMILY (ADMIN)
+// =======================
+exports.createFamily = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    console.log("📥 Admin Create Family Body:", req.body);
+    console.log("📎 Admin Create Family Files:", req.files);
+
+    await connection.beginTransaction();
+
+    // Step 1: Insert into families
+    const familyCode = req.body.family_code || `FAM-${Date.now()}`;
+    const [familyResult] = await connection.query(
+      "INSERT INTO families (user_id, family_code, created_by_admin) VALUES (?, ?, ?)",
+      [null, familyCode, 1]
+    );
+    const familyId = familyResult.insertId;
+
+    // Step 2: Insert husband (father)
+    await connection.query(
+      `INSERT INTO family_members
+       (family_id, member_type, name, relationship, mobile, occupation, gender, door_no, street, district, state, pincode, photo)
+       VALUES (?, 'parent', ?, 'husband', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        familyId,
+        req.body.husband_name,
+        req.body.mobile || null,
+        req.body.occupation || null,
+        req.body.husband_gender || 'Male',
+        req.body.door_no || null,
+        req.body.street || null,
+        req.body.district || null,
+        req.body.state || null,
+        req.body.pincode || null,
+        req.files && req.files['husband_photo'] ? `parents/${req.files['husband_photo'][0].filename}` : null
+      ]
+    );
+
+    // Step 3: Insert wife (mother) if provided
+    if (req.body.wife_name) {
+      await connection.query(
+        `INSERT INTO family_members
+         (family_id, member_type, name, relationship, mobile, occupation, gender, door_no, street, district, state, pincode, photo)
+         VALUES (?, 'parent', ?, 'wife', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          familyId,
+          req.body.wife_name,
+          req.body.wife_mobile || null,
+          req.body.wife_occupation || null,
+          req.body.wife_gender || 'Female',
+          req.body.door_no || null,
+          req.body.street || null,
+          req.body.district || null,
+          req.body.state || null,
+          req.body.pincode || null,
+          req.files && req.files['wife_photo'] ? `parents/${req.files['wife_photo'][0].filename}` : null
+        ]
+      );
+    }
+
+    // Step 4: Insert children
+    if (req.body.children && typeof req.body.children === 'object') {
+      const childKeys = Object.keys(req.body.children).sort();
+      for (const key of childKeys) {
+        const child = req.body.children[key];
+        if (child.name) {
+          const childPhoto = req.files && req.files[`children[${key}][photo]`] ? req.files[`children[${key}][photo]`][0] : null;
+          await connection.query(
+            `INSERT INTO family_members
+             (family_id, member_type, name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photo)
+             VALUES (?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              familyId,
+              child.name,
+              child.relationship || 'child',
+              child.mobile || null,
+              child.occupation || null,
+              child.dob || null,
+              child.gender || null,
+              req.body.door_no || null,
+              req.body.street || null,
+              req.body.district || null,
+              req.body.state || null,
+              req.body.pincode || null,
+              childPhoto ? `children/${childPhoto.filename}` : null
+            ]
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+
+    res.json({ success: true });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error("ADMIN CREATE FAMILY ERROR");
+    console.error("Message:", err.message);
+    console.error("SQL:", err.sqlMessage);
+    console.error("Stack:", err.stack);
+
+    res.json({ success: false, message: "Database error" });
+  } finally {
+    connection.release();
   }
 };

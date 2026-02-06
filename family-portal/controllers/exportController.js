@@ -47,29 +47,129 @@ exports.excel = async (req, res, next) => {
 // ===================== EXPORT TO PDF =====================
 exports.pdf = async (req, res, next) => {
   try {
-    const doc = new PDFDocument({ margin: 30 });
-    res.setHeader("Content-Disposition", "attachment; filename=families.pdf");
-    res.setHeader("Content-Type", "application/pdf");
+    const { state, district } = req.query;
+    console.log('PDF export params received:', { state, district });
+
+    let query = 'SELECT * FROM family_members ORDER BY family_id, member_type';
+    let params = [];
+    console.log('PDF export: No filters applied, exporting all data');
+
+    const [data] = await db.query(query, params);
+    console.log('PDF export: Fetched', data.length, 'rows from family_members');
+
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 20 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=family-data.pdf');
 
     doc.pipe(res);
 
-    const [rows] = await db.query(
-      "SELECT name, mobile, district FROM family_members WHERE member_type = 'parent'"
-    );
-
-    doc.fontSize(16).text("Family Members List", { align: "center" });
-    doc.moveDown();
-
-    if (rows && rows.length > 0) {
-      rows.forEach(r => {
-        doc
-          .fontSize(12)
-          .text(`Name: ${r.name} | Mobile: ${r.mobile} | District: ${r.district}`)
-          .moveDown(0.5);
-      });
-    } else {
-      doc.fontSize(12).text("No family data available.");
+    // Title
+    let title = 'Family Members Data Export';
+    if (state && state !== 'All' && district && district !== 'All') {
+      title = `Family Details – ${state} / ${district}`;
+    } else if (state && state !== 'All') {
+      title = `Family Details – ${state}`;
+    } else if (district && district !== 'All') {
+      title = `Family Details – ${district}`;
+    } else if (state === 'All' && district === 'All') {
+      title = `Family Details – All / All`;
     }
+    doc.font('Helvetica-Bold').fontSize(16).text(title, { align: 'center' });
+    doc.moveDown(2);
+
+    if (data.length === 0) {
+      const message = conditions.length > 0 ? 'No data available for the selected filters.' : 'No data available.';
+      doc.fontSize(12).text(message);
+      doc.end();
+      return;
+    }
+
+    // Define table columns with maximized widths to fit A4 landscape (usable width ~802 points)
+    const columns = [
+      { header: 'ID', width: 50 },
+      { header: 'Family ID', width: 50 },
+      { header: 'Member Type', width: 50 },
+      { header: 'Name', width: 50 },
+      { header: 'Relationship', width: 50 },
+      { header: 'Mobile', width: 50 },
+      { header: 'Occupation', width: 50 },
+      { header: 'DOB', width: 50 },
+      { header: 'Gender', width: 50 },
+      { header: 'Door No', width: 50 },
+      { header: 'Street', width: 50 },
+      { header: 'District', width: 50 },
+      { header: 'State', width: 50 },
+      { header: 'Pincode', width: 50 },
+      { header: 'Photo', width: 50 },
+      { header: 'Created At', width: 50 }
+    ];
+
+    const startX = 20;
+    let y = 100;
+    const rowHeight = 25;
+    const fontSize = 8; // Reduced font size for table
+    const pageBottom = 550;
+
+    // Function to draw table header
+    const drawTableHeader = (doc, y) => {
+      let x = startX;
+      columns.forEach((col, index) => {
+        // Draw cell border
+        doc.lineWidth(1).rect(x, y, col.width, rowHeight).stroke();
+        // Draw header text
+        doc.font('Helvetica-Bold').fontSize(fontSize);
+        doc.text(col.header, x + 2, y + 2, { width: col.width - 4, height: rowHeight - 4, lineBreak: false });
+        x += col.width;
+      });
+      return y + rowHeight;
+    };
+
+    // Function to draw a row
+    const drawRow = (doc, rowData, y) => {
+      let x = startX;
+      rowData.forEach((cell, index) => {
+        // Draw cell border
+        doc.lineWidth(1).rect(x, y, columns[index].width, rowHeight).stroke();
+        // Draw cell text
+        doc.font('Helvetica').fontSize(fontSize);
+        doc.text(cell, x + 2, y + 2, { width: columns[index].width - 4, height: rowHeight - 4, lineBreak: false });
+        x += columns[index].width;
+      });
+      return y + rowHeight;
+    };
+
+    // Draw initial header
+    y = drawTableHeader(doc, y);
+
+    // Draw data rows
+    data.forEach((member) => {
+      // Check if next row exceeds page bottom
+      if (y + rowHeight > pageBottom) {
+        doc.addPage();
+        y = 100;
+        y = drawTableHeader(doc, y);
+      }
+
+      const rowData = [
+        member.id ? member.id.toString() : '',
+        member.family_id ? member.family_id.toString() : '',
+        member.member_type || '',
+        member.name || '',
+        member.relationship || '',
+        member.mobile || '',
+        member.occupation || '',
+        member.dob ? new Date(member.dob).toLocaleDateString() : '',
+        member.gender || '',
+        member.door_no || '',
+        member.street || '',
+        member.district || '',
+        member.state || '',
+        member.pincode ? member.pincode.toString() : '',
+        member.photo || '',
+        member.created_at ? new Date(member.created_at).toLocaleDateString() : ''
+      ];
+      y = drawRow(doc, rowData, y);
+    });
 
     doc.end();
   } catch (err) {
@@ -125,41 +225,129 @@ exports.exportToExcel = async (req, res) => {
 
 exports.exportToPdf = async (req, res) => {
   try {
-    // Get all rows from family_members table
-    const [data] = await db.query('SELECT * FROM family_members ORDER BY family_id, member_type');
+    const { state, district } = req.query;
+    console.log('PDF export params received:', { state, district });
+
+    let query = 'SELECT * FROM family_members ORDER BY family_id, member_type';
+    let params = [];
+    console.log('PDF export: No filters applied, exporting all data');
+
+    const [data] = await db.query(query, params);
     console.log('PDF export: Fetched', data.length, 'rows from family_members');
 
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 20 });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=family-data.pdf');
 
     doc.pipe(res);
 
-    doc.fontSize(18).text('Family Members Data Export', { align: 'center' });
-    doc.moveDown();
+    // Title
+    let title = 'Family Members Data Export';
+    if (state && state !== 'All' && district && district !== 'All') {
+      title = `Family Details – ${state} / ${district}`;
+    } else if (state && state !== 'All') {
+      title = `Family Details – ${state}`;
+    } else if (district && district !== 'All') {
+      title = `Family Details – ${district}`;
+    } else if (state === 'All' && district === 'All') {
+      title = `Family Details – All / All`;
+    }
+    doc.font('Helvetica-Bold').fontSize(16).text(title, { align: 'center' });
+    doc.moveDown(2);
 
-    let currentFamilyId = null;
+    if (data.length === 0) {
+      const message = conditions.length > 0 ? 'No data available for the selected filters.' : 'No data available.';
+      doc.fontSize(12).text(message);
+      doc.end();
+      return;
+    }
 
+    // Define table columns with explicit widths to fit A4 landscape (usable width ~802 points)
+    const columns = [
+  { header: 'ID', width: 35 },
+  { header: 'Family ID', width: 45 },
+  { header: 'Member Type', width: 60 },
+  { header: 'Name', width: 95 },
+  { header: 'Relationship', width: 70 },
+  { header: 'Mobile', width: 85 },
+  { header: 'Occupation', width: 90 },
+  { header: 'DOB', width: 65 },
+  { header: 'Gender', width: 55 },
+  { header: 'Door No', width: 55 },
+  { header: 'Street', width: 110 },
+  { header: 'District', width: 85 },
+  { header: 'State', width: 85 },
+  { header: 'Pincode', width: 65 },
+  { header: 'Photo', width: 90 },
+  { header: 'Created At', width: 75 }
+];
+
+
+    const startX = 20;
+    let y = 100;
+    const rowHeight = 25;
+    const fontSize = 8; // Reduced font size for table
+    const pageBottom = 550;
+
+    // Function to draw table header
+    const drawTableHeader = (doc, y) => {
+      let x = startX;
+      columns.forEach((col, index) => {
+        // Draw cell border
+        doc.lineWidth(1).rect(x, y, col.width, rowHeight).stroke();
+        // Draw header text
+        doc.font('Helvetica-Bold').fontSize(fontSize);
+        doc.text(col.header, x + 2, y + 2, { width: col.width - 4, height: rowHeight - 4, lineBreak: false });
+        x += col.width;
+      });
+      return y + rowHeight;
+    };
+
+    // Function to draw a row
+    const drawRow = (doc, rowData, y) => {
+      let x = startX;
+      rowData.forEach((cell, index) => {
+        // Draw cell border
+        doc.lineWidth(1).rect(x, y, columns[index].width, rowHeight).stroke();
+        // Draw cell text
+        doc.font('Helvetica').fontSize(fontSize);
+        doc.text(cell, x + 2, y + 2, { width: columns[index].width - 4, height: rowHeight - 4, lineBreak: false });
+        x += columns[index].width;
+      });
+      return y + rowHeight;
+    };
+
+    // Draw initial header
+    y = drawTableHeader(doc, y);
+
+    // Draw data rows
     data.forEach((member) => {
-      // Check if we need a new page
-      if (doc.y > 650) {
+      // Check if next row exceeds page bottom
+      if (y + rowHeight > pageBottom) {
         doc.addPage();
+        y = 100;
+        y = drawTableHeader(doc, y);
       }
 
-      if (member.family_id !== currentFamilyId) {
-        if (currentFamilyId !== null) {
-          doc.moveDown();
-        }
-        doc.fontSize(12).text(`Family ID: ${member.family_id}`, { underline: true });
-        currentFamilyId = member.family_id;
-        doc.moveDown(0.3);
-      }
-
-      doc.fontSize(10).text(`Member ID: ${member.id}, Family ID: ${member.family_id}, Type: ${member.member_type}, Name: ${member.name}, Relationship: ${member.relationship}`);
-      doc.text(`Mobile: ${member.mobile || 'N/A'}, Occupation: ${member.occupation || 'N/A'}, DOB: ${member.dob ? new Date(member.dob).toLocaleDateString() : 'N/A'}, Gender: ${member.gender || 'N/A'}`);
-      doc.text(`Address: ${member.door_no || 'N/A'}, ${member.street || 'N/A'}, ${member.district || 'N/A'}, ${member.state || 'N/A'}, ${member.pincode || 'N/A'}`);
-      doc.text(`Photo: ${member.photo || 'N/A'}, Created: ${member.created_at ? new Date(member.created_at).toLocaleString() : 'N/A'}`);
-      doc.moveDown(0.3);
+      const rowData = [
+        member.id ? member.id.toString() : '',
+        member.family_id ? member.family_id.toString() : '',
+        member.member_type || '',
+        member.name || '',
+        member.relationship || '',
+        member.mobile || '',
+        member.occupation || '',
+        member.dob ? new Date(member.dob).toLocaleDateString() : '',
+        member.gender || '',
+        member.door_no || '',
+        member.street || '',
+        member.district || '',
+        member.state || '',
+        member.pincode ? member.pincode.toString() : '',
+        member.photo || '',
+        member.created_at ? new Date(member.created_at).toLocaleDateString() : ''
+      ];
+      y = drawRow(doc, rowData, y);
     });
 
     doc.end();

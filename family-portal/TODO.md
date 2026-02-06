@@ -1,9 +1,9 @@
-t# TODO: Fix Photo Loading 404 Errors in Admin View
+# TODO for Temple Dashboard UI Update
 
-## Tasks
-- [ ] Update view.ejs to use correct path for children photos (/uploads/children/ instead of /uploads/parents/)
-- [ ] Add nophoto.png fallback image to public/images/ directory
-
-## Reverted Changes
-- [x] Removed onerror attributes from image tags in view.ejs
-- [x] Confirmed nophoto.png was not added, no removal needed
+- [x] Update <style> section in views/dashboard.ejs with temple theme CSS (colors, fonts, rounded corners, responsive)
+- [x] Replace <!-- ============== WELCOME SECTION ============== --> with new hero section
+- [x] Add about deity section below hero
+- [x] Add donation/service section below about deity
+- [x] Add gallery/slider section below donation
+- [x] Add basic slider JavaScript before closing </script> tag
+- [ ] Test responsiveness and functionality
