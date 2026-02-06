@@ -30,6 +30,17 @@
       padding: 2rem;
       margin-top: 15rem !important;
     }
+    #comingSoonModal .modal-dialog {
+      max-width: 400px; /* Reduce horizontal size */
+      min-height: 300px; /* Increase vertical size */
+    }
+    #comingSoonModal .modal-body {
+      background-color: #FFF8DC; /* Cream color background for modal body */
+    }
+    #comingSoonModal .modal-body p {
+      color: #FF9933; /* Saffron color for coming soon message, fitting temple theme */
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -40,6 +51,27 @@
     <div class="d-flex">
       <div class="toast-body">✓ Family saved successfully!</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Success Modal -->
+<div class="modal fade" id="loginSuccessModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-check-circle-fill me-2"></i>Success
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center bg-light">
+        <div class="mb-4">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+        <h4 class="text-success fw-bold mb-3">Login Successful!</h4>
+        <p class="text-muted">Welcome back to our temple digital seva portal. May your visit be blessed.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -63,12 +95,12 @@
           </a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="/pooja-booking">
+          <a class="nav-link fw-500" href="#" onclick="showComingSoonModal(); return false;">
             <i class="bi bi-calendar-heart"></i> Pooja Booking
           </a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="/profile">
+          <a class="nav-link fw-500" href="#" onclick="showComingSoonModal(); return false;">
             <i class="bi bi-person-circle"></i> Profile
           </a>
         </li>
@@ -96,12 +128,12 @@
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link" href="/pooja-booking">
+        <a class="nav-link" href="#" onclick="showComingSoonModal(); return false;">
           <i class="bi bi-calendar-heart"></i> Pooja Booking
         </a>
       </li>
       <li class="nav-item mb-2">
-        <a class="nav-link" href="/profile">
+        <a class="nav-link" href="#" onclick="showComingSoonModal(); return false;">
           <i class="bi bi-person-circle"></i> Profile
         </a>
       </li>
@@ -134,100 +166,6 @@
   </div>
 </div>
 
-<!-- Family Details Section (Displayed on Dashboard) -->
-<% if (hasFamily && members && members.length > 0) { %>
-<div class="container mt-5">
-  <div class="row">
-    <div class="col-12">
-      <h3 class="text-center mb-4" style="color:#ffffff; font-family:'Times New Roman',Times,serif; font-weight:bold;">
-        Family Details
-      </h3>
-
-      <% const parents = members.filter(m => m.member_type === 'parent'); %>
-      <% const children = members.filter(m => m.member_type === 'child'); %>
-
-      <% if (parents.length > 0) { %>
-        <h5 class="text-primary mb-3" style="color:#ffffff;">Parents:</h5>
-        <div class="row">
-          <% parents.forEach(parent => { %>
-            <div class="col-md-6 mb-3">
-              <div class="card bg-dark text-white">
-                <div class="card-body d-flex">
-                  <div class="flex-grow-1">
-                    <h6 class="card-title"><%= parent.name %></h6>
-                    <p class="card-text small">
-                      <strong>Relationship:</strong> <%= parent.relationship %><br>
-                      <strong>Mobile:</strong> <%= parent.mobile || 'N/A' %><br>
-                      <strong>Occupation:</strong> <%= parent.occupation || 'N/A' %>
-                    </p>
-                  </div>
-                  <div class="ms-3">
-                    <% if (parent.photo && parent.photo.trim() !== "") { %>
-                      <% let photoSrc = parent.photo; %>
-                      <% // Remove size from photo path if present %>
-                      <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-                      <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-                      <% // Normalize path %>
-                      <% photoSrc = photoSrc.replace(/^\/+/, '').replace(/^uploads\//, ''); %>
-                      <img src="/uploads/<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
-                    <% } else { %>
-                      <img src="https://via.placeholder.com/120x120?text=No+Photo" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
-                    <% } %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% }); %>
-        </div>
-      <% } %>
-
-      <% if (children.length > 0) { %>
-        <h5 class="text-success mt-4 mb-3" style="color:#ffffff;">Children:</h5>
-        <div class="row">
-          <% children.forEach(child => { %>
-            <div class="col-md-6 mb-3">
-              <div class="card bg-dark text-white">
-                <div class="card-body d-flex">
-                  <div class="flex-grow-1">
-                    <h6 class="card-title"><%= child.name %></h6>
-                    <p class="card-text small">
-                      <strong>DOB:</strong> <%= child.dob || 'N/A' %><br>
-                      <strong>Gender:</strong> <%= child.gender || 'N/A' %><br>
-                      <strong>Occupation:</strong> <%= child.occupation || 'N/A' %>
-                    </p>
-                  </div>
-                  <div class="ms-3">
-                    <% if (child.photo && child.photo.trim() !== "") { %>
-                      <% let photoSrc = child.photo; %>
-                      <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-                      <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-                      <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-                      <% if (photoSrc.startsWith('uploads/')) { %>
-                        <% photoSrc = `/${photoSrc}`; %>
-                      <% } else { %>
-                        <% photoSrc = `/uploads/${photoSrc}`; %>
-                      <% } %>
-                      <img src="<%= photoSrc %>" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
-                    <% } else { %>
-                      <img src="https://via.placeholder.com/120x120?text=No+Photo" class="img-fluid mb-2" style="max-height: 120px; max-width: 120px; border-radius: 8px;">
-                    <% } %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% }); %>
-        </div>
-      <% } %>
-
-      <div class="text-center mt-4">
-        <button class="btn btn-primary" onclick="window.location.href='/my-family'">
-          View Full Details
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<% } %>
 
 <!-- =================== MODALS =================== -->
 
@@ -266,20 +204,18 @@
   </div>
 </div>
 
-<!-- 3) Delete Confirmation Modal -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+<!-- Coming Soon Modal -->
+<div class="modal fade" id="comingSoonModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Confirm Delete</h5>
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">
+          <i class="bi bi-clock"></i> Coming Soon
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
-        <p>Sure you want to delete the family?</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      <div class="modal-body text-center">
+        <p class="mb-0">Features coming soon!</p>
       </div>
     </div>
   </div>
@@ -296,6 +232,13 @@ if (urlParams.get('success') === 'true') {
   toastElement.style.display = 'flex';
   const toast = new bootstrap.Toast(toastElement);
   toast.show();
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+/* ---------- LOGIN SUCCESS MODAL ---------- */
+if (urlParams.get('login') === 'success') {
+  const loginModal = new bootstrap.Modal(document.getElementById('loginSuccessModal'));
+  loginModal.show();
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
@@ -332,42 +275,11 @@ function showFamilyModal(title, msg, btnText, redirectUrl) {
   });
 }
 
-/* ---------- DELETE FAMILY FUNCTIONS ---------- */
-function confirmDeleteFamily() {
-  const modal = new bootstrap.Modal(document.getElementById("deleteConfirmModal"));
+/* ---------- SHOW COMING SOON MODAL ---------- */
+function showComingSoonModal() {
+  const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
   modal.show();
 }
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-  // Close confirmation modal
-  const confirmModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
-  confirmModal.hide();
-
-  // Close family check modal
-  const familyModal = bootstrap.Modal.getInstance(document.getElementById('familyCheckModal'));
-  familyModal.hide();
-
-  // Perform delete
-  fetch('/delete-family', {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      // Show success message
-      showFamilyModal("Deleted Successfully", "Family deleted successfully!", "OK", "/dashboard");
-    } else {
-      showFamilyModal("Error", "Failed to delete family. Please try again.", "OK", null);
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showFamilyModal("Error", "An error occurred while deleting the family.", "OK", null);
-  });
-});
 
 /* ---------- EXISTING: LOAD FAMILY INTO MODAL ---------- */
 const familyModal = document.getElementById('familyCheckModal');
@@ -475,11 +387,8 @@ familyModal.addEventListener('show.bs.modal', function () {
 
         html += `
           <div class="text-center mt-3">
-            <button class="btn btn-primary me-2" onclick="window.location.href='/my-family'">
+            <button class="btn btn-primary" onclick="window.location.href='/my-family'">
               View Full Details
-            </button>
-            <button class="btn btn-danger" onclick="confirmDeleteFamily()">
-              <i class="bi bi-trash"></i> Delete Family
             </button>
           </div>
         `;
@@ -515,4 +424,4 @@ familyModal.addEventListener('show.bs.modal', function () {
 </script>
 
 </body>
-</html>
+</html> 
