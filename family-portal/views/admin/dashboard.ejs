@@ -286,6 +286,7 @@
           <label for="stateSelect" class="form-label">Select State</label>
           <select class="form-select" id="stateSelect" onchange="loadDistricts()">
             <option value="">Select State</option>
+            <option value="all">All</option>
             <% if (states && states.length > 0) { %>
               <% states.forEach(function(state) { %>
                 <option value="<%= state %>"><%= state %></option>
@@ -340,11 +341,17 @@ async function loadDistricts() {
   districtSelect.innerHTML = '<option value="">Select District</option>';
   districtSelect.disabled = true;
 
-  if (selectedState) {
+  if (selectedState && selectedState !== 'all') {
     try {
       const response = await fetch('/data/india-states-districts.json');
       const data = await response.json();
       const districts = data[selectedState] || [];
+
+      // Add "All" option first
+      const allOption = document.createElement('option');
+      allOption.value = 'all';
+      allOption.textContent = 'All';
+      districtSelect.appendChild(allOption);
 
       districts.forEach(district => {
         const option = document.createElement('option');
@@ -357,6 +364,14 @@ async function loadDistricts() {
     } catch (error) {
       console.error('Error loading districts:', error);
     }
+  } else if (selectedState === 'all') {
+    // If state is "all", set district to "all" automatically
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All';
+    districtSelect.appendChild(allOption);
+    districtSelect.value = 'all';
+    districtSelect.disabled = true;
   }
 
   updateDownloadButton();
@@ -367,6 +382,7 @@ function updateDownloadButton() {
   const districtSelect = document.getElementById('districtSelect');
   const downloadBtn = document.getElementById('downloadPdfBtn');
 
+  // Enable button if both state and district are selected (including "all")
   downloadBtn.disabled = !stateSelect.value || !districtSelect.value;
 }
 
