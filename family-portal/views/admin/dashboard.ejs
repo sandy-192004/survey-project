@@ -68,7 +68,7 @@
 
     .family-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1rem;
     }
 
@@ -185,6 +185,78 @@
       color: #6c757d;
       background-color: #e9ecef;
       border-color: #dee2e6;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .container-fluid {
+        padding: 1rem;
+      }
+
+      .header {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .header .dropdown {
+        position: static;
+        margin-top: 1rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .stat-card {
+        padding: 0.75rem;
+      }
+
+      .stat-card i {
+        font-size: 1.5rem;
+      }
+
+      .stat-card h4 {
+        font-size: 1.25rem;
+      }
+
+      .family-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .family-card {
+        min-height: auto;
+      }
+
+      .family-card-header {
+        padding: 0.5rem;
+      }
+
+      .family-card-body {
+        padding: 0.75rem;
+      }
+
+      .search-form input,
+      .search-form select {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+
+      .search-form button {
+        width: 100%;
+      }
+
+      .pagination {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .pagination .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+      }
     }
   </style>
 </head>

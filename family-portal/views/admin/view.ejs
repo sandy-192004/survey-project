@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>View Family</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -33,13 +34,13 @@
 
     .parents-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
     }
 
     .children-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
     }
 
@@ -82,16 +83,56 @@
       border: 2px solid #d1b89a;
     }
 
+    /* Mobile responsiveness */
     @media (max-width: 768px) {
+      .family-header {
+        font-size: 1.5rem;
+        padding: 1rem 0.5rem;
+      }
+
+      .section-title {
+        font-size: 1.25rem;
+        margin: 20px 0 8px;
+      }
+
       .parents-row,
       .children-row {
-        flex-wrap: wrap;
+        grid-template-columns: 1fr;
+        gap: 15px;
       }
 
       .member-card {
-        min-width: 100%;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        min-width: unset;
+        max-width: unset;
+      }
+
+      .member-info {
+        padding-right: 0;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      .member-name {
+        font-size: 1.5rem;
+      }
+
+      .info-item {
+        font-size: 0.9rem;
+      }
+
+      .member-photo {
+        width: 120px;
+        height: 120px;
+      }
+
+      .container {
+        padding: 0 15px;
       }
     }
+
   </style>
 </head>
 
