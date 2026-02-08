@@ -28,7 +28,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
     res.set('Expires', '0');
   }
 }));
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(path.join(__dirname, "public", "images")));
 
 // ================== SESSION ==================
 app.use(

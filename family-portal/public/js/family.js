@@ -248,34 +248,164 @@ function loadDistrictsForChild(childIndex) {
   }
 }
 
+// Global variables for photo handling
+let currentPhotoTarget = null;
+let cameraStream = null;
+
+// Show photo options modal
+function showPhotoOptions(target) {
+  currentPhotoTarget = target;
+  Swal.fire({
+    title: 'Choose Photo Option',
+    showCancelButton: true,
+    showDenyButton: true,
+    confirmButtonText: 'Upload Photo',
+    denyButtonText: 'Take Photo',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#6f4e37',
+    denyButtonColor: '#6f4e37'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Upload Photo
+      const fileInput = document.getElementById(`${target}_file`);
+      fileInput.click();
+    } else if (result.isDenied) {
+      // Take Photo
+      openCamera(target);
+    }
+  });
+}
+
+// Open camera for photo capture
+function openCamera(target) {
+  Swal.fire({
+    title: 'Capture Photo',
+    html: '<video id="cameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>',
+    showCancelButton: true,
+    confirmButtonText: 'Capture',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#6f4e37',
+    didOpen: () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          cameraStream = stream;
+          const video = document.getElementById('cameraVideo');
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          console.error('Error accessing camera:', err);
+          Swal.fire('Error', 'Unable to access camera', 'error');
+        });
+    },
+    preConfirm: () => {
+      return new Promise((resolve) => {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(resolve, 'image/jpeg', 0.9);
+      });
+    }
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      // Stop camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      // Process captured image
+      processPhotoFile(result.value, target);
+    } else {
+      // Stop camera stream if cancelled
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+    }
+  });
+}
+
+// Process photo file (compress if needed)
+function processPhotoFile(file, target) {
+  const maxSizeKB = 250;
+  const maxSizeBytes = maxSizeKB * 1024;
+
+  if (file.size <= maxSizeBytes) {
+    // File is already small enough
+    updatePhotoPlaceholder(target, file.size);
+    assignFileToInput(file, target);
+  } else {
+    // Compress the image
+    compressImage(file, maxSizeBytes, target);
+  }
+}
+
+// Compress image to fit within size limit
+function compressImage(file, maxSizeBytes, target) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+
+  img.onload = function() {
+    let quality = 0.8;
+    let compressedFile;
+
+    const compress = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob.size <= maxSizeBytes) {
+          compressedFile = blob;
+          updatePhotoPlaceholder(target, blob.size);
+          assignFileToInput(blob, target);
+        } else if (quality > 0.1) {
+          quality -= 0.1;
+          compress();
+        } else {
+          // Even at lowest quality, still too big - use as is
+          updatePhotoPlaceholder(target, blob.size);
+          assignFileToInput(blob, target);
+        }
+      }, 'image/jpeg', quality);
+    };
+
+    compress();
+  };
+
+  img.src = URL.createObjectURL(file);
+}
+
+// Update placeholder with selected photo info
+function updatePhotoPlaceholder(target, sizeBytes) {
+  const placeholder = document.getElementById(`${target}_placeholder`);
+  const sizeKB = (sizeBytes / 1024).toFixed(2);
+  placeholder.innerHTML = `<span class="text-success">Photo Selected - Size: ${sizeKB} KB</span>`;
+}
+
+// Assign compressed file to input field
+function assignFileToInput(file, target) {
+  const input = document.getElementById(`${target}_file`);
+  const dt = new DataTransfer();
+  dt.items.add(new File([file], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+  input.files = dt.files;
+}
+
+// Handle photo selection (upload)
+function handlePhotoSelect(input, target) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFile(file, target);
+  }
+}
+
 function handleChildPhotoSelect(input, childIndex) {
   if (input.files && input.files[0]) {
     const file = input.files[0];
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size exceeds 5MB limit. Please choose a smaller file.');
-      input.value = '';
-      return;
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Only JPEG and WebP formats are allowed.');
-      input.value = '';
-      return;
-    }
-
-    const fileNameSpan = document.getElementById(`child_${childIndex}_file_name`);
-    const fileSizeSpan = document.getElementById(`child_${childIndex}_file_size`);
-    const deleteIcon = document.getElementById(`child_${childIndex}_delete`);
-    const placeholder = document.getElementById(`child_${childIndex}_placeholder`);
-
-    fileNameSpan.textContent = file.name;
-    fileSizeSpan.textContent = ` – ${(file.size / 1024).toFixed(2)} KB`;
-    deleteIcon.style.display = 'inline';
-    placeholder.style.display = 'none';
+    processPhotoFile(file, `child_${childIndex}`);
   }
 }
 
