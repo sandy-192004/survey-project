@@ -1,3 +1,0 @@
-- [ ] Update default maxSizeKB parameter in compressImageToSize function from 250 to 50
-- [ ] Update file size check in processUpload from > 250 to > 50
-- [ ] Update compressImageToSize function call from 250 to 50
