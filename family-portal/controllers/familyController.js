@@ -396,8 +396,13 @@ exports.addChild = async (req, res) => {
 
     const { name, dob, gender, occupation, relationship, door_no, street, pincode, state, district } = req.body;
     let photoPath = null;
-    if (req.files && req.files['photo'] && req.files['photo'][0]) {
-      photoPath = `children/${req.files['photo'][0].filename}`;
+    if (req.file) {
+      photoPath = `children/${req.file.filename}`;
+      const oldPath = req.file.path;
+      const newPath = path.join(__dirname, '../uploads', photoPath);
+      if (oldPath !== newPath) {
+        fs.renameSync(oldPath, newPath);
+      }
     }
     const validRelationship = relationship || 'other';
 

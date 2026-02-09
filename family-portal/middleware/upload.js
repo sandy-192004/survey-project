@@ -80,7 +80,7 @@ const resizeImage = async (filePath) => {
 };
 
 
-const compressImageToSize = async (filePath, maxSizeKB = 250) => {
+const compressImageToSize = async (filePath, maxSizeKB = 50) => {
   try {
     const maxSizeBytes = maxSizeKB * 1024;
     let quality = 80;
@@ -144,8 +144,8 @@ const processUpload = (req, res, next) => {
             const stats = fs.statSync(file.path);
             const fileSizeKB = stats.size / 1024;
 
-            if (fileSizeKB > 250) {
-              await compressImageToSize(file.path, 250);
+            if (fileSizeKB > 50) {
+              await compressImageToSize(file.path, 50);
             }
           } catch (error) {
             console.error("Error processing image:", error);
