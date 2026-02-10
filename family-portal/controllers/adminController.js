@@ -689,6 +689,24 @@ exports.deleteFamily = async (req, res) => {
 };
 
 // =======================
+// LOGOUT
+// =======================
+exports.logout = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).send('Logout failed');
+      }
+      res.redirect('/login');
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+// =======================
 // CREATE FAMILY (ADMIN)
 // =======================
 exports.createFamily = async (req, res) => {

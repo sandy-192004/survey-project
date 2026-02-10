@@ -63,4 +63,7 @@ router.post("/create-family", upload.any(), controller.createFamily);
 // Delete family
 router.post("/delete/:id", controller.deleteFamily);
 
+// Logout
+router.post("/logout", controller.logout);
+
 module.exports = router;

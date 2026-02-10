@@ -46,7 +46,7 @@
       margin-bottom: 1.5rem;
       box-shadow: var(--card-shadow);
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       position: relative;
 
@@ -204,12 +204,17 @@
       <small style="color: rgba(255, 254, 254, 0.799);">Manage and monitor family registrations</small>
     </div>
 
-    <div class="dropdown" style="position: absolute; right: 1.5rem;">
-      <button class="btn btn-lg" style="color:  #f2f1f1;" data-bs-toggle="dropdown">⋮</button>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
-        <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
-      </ul>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="btn btn-outline-light" onclick="confirmLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+      <div class="dropdown">
+        <button class="btn btn-lg" style="color:  #f2f1f1;" data-bs-toggle="dropdown">⋮</button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
+          <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -355,6 +360,25 @@
 
 
 
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Logout</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to logout?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button class="btn btn-danger" id="confirmLogoutBtn">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- PDF EXPORT MODAL -->
 <div class="modal fade" id="pdfExportModal" tabindex="-1" aria-labelledby="pdfExportModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -492,6 +516,24 @@ function downloadPdf() {
     modal.hide();
   }
 }
+
+// Logout confirmation
+function confirmLogout() {
+  console.log('confirmLogout called');
+  const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
+  logoutModal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('confirmLogoutBtn').addEventListener('click', function () {
+    console.log('confirmLogoutBtn clicked');
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/logout';
+    document.body.appendChild(form);
+    form.submit();
+  });
+});
 </script>
 </body>
 </html>  
