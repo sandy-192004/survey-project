@@ -1,13 +1,16 @@
 const mysql = require("mysql2");
+require('dotenv').config();
 
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "sandhiya@sowmiya2004",
-  database: "survey_app",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "pass",
+  database: process.env.DB_NAME || "db name",
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
 
 // Use promise wrapper
