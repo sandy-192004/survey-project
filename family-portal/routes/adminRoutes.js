@@ -37,6 +37,14 @@ router.get("/add-family", (req, res) => {
   res.redirect("/family-form"); // Newly added route to reuse existing User add family form
 });
 
+// Create Family - Direct access without authentication
+router.get("/create-family", (req, res) => {
+  res.render("admin/create-family");
+});
+
+// POST Create Family
+router.post("/create-family", upload.any(), controller.createFamily);
+
 // View and Edit routes
 router.get("/view/:id", controller.viewMember);
 router.get("/edit/:id", controller.editMember);

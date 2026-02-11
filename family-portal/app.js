@@ -28,7 +28,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
     res.set('Expires', '0');
   }
 }));
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(path.join(__dirname, "public", "images")));
 
 // ================== SESSION ==================
 app.use(
@@ -61,6 +61,7 @@ app.use((err, req, res, next) => {
 });
 
 // ================== SERVER START ==================
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

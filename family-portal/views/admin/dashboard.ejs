@@ -35,6 +35,7 @@
   margin: 0;
 }
 
+
     
 
     .header {
@@ -44,7 +45,19 @@
       padding: 2rem 1.5rem;
       margin: -2.5rem -2.5rem -2.5rem -2.5rem;
       box-shadow: var(--card-shadow);
-      display: flex ;
+
+      
+    
+
+    .header {
+      background: #0000007b;
+       color: #ffffff;
+      border-radius: 14px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
@@ -56,6 +69,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
       gap: 1.5rem;
+
       margin-bottom: 3rem;
        color: #ffffff;
       
@@ -64,13 +78,23 @@
 
     .stat-card {
       background: #fffcfc1d;
+
+      margin-bottom: 2rem;
+       color: #ffffff;
+    }
+
+    .stat-card {
+      background: #00000068;
+
       padding: 1rem;
       border-radius: 10px;
       text-align: center;
       box-shadow: var(--card-shadow);
        color: #ffffff;
+
       border: 1px solid rgba(255, 255, 255, 0.086);
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
     }
 
     .family-grid {
@@ -80,7 +104,11 @@
     }
 
     .family-card {
+
       background: #fffcfc1d;
+
+      background: #00000068;
+
       border-radius: 14px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
@@ -203,13 +231,25 @@
 
   <!-- HEADER -->
   <div class="header">
+
     <div style="flex: 1; text-align: center;">
+
+    <div>
+
       <h4 class="fw-bold mb-0" style="color:  #ad9149;">
         <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
       </h4>
       <small style="color: rgba(255, 254, 254, 0.799);">Manage and monitor family registrations</small>
     </div>
+
     <div style="display: flex; align-items: center; gap: 1rem;">
+
+
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <button class="btn btn-outline-light" onclick="confirmLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+
       <div class="dropdown">
         <button class="btn btn-lg" style="color:  #f2f1f1;" data-bs-toggle="dropdown">⋮</button>
         <ul class="dropdown-menu dropdown-menu-end">
@@ -217,9 +257,11 @@
           <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
         </ul>
       </div>
+
       <button class="btn btn-outline-light" onclick="confirmLogout()">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
+
     </div>
   </div>
 
@@ -259,14 +301,20 @@
   <% } %>
 
   <!-- SEARCH -->
+
   <div class="card mb-2 search-form" style="background-color: #fffcfc1d;">
+
+  <div class="card mb-2 search-form" style="background-color: #00000016;">
+
   <div class="card-body">
 
     <style>
       .search-form input,
       .search-form select {
         width: 170px;
+
         
+
       }
 
       .search-form button {
@@ -364,8 +412,14 @@
   </div>
 </div>
 
+
 <!-- LOGOUT CONFIRMATION MODAL -->
  
+
+
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+
 <div class="modal fade" id="logoutModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -383,6 +437,7 @@
     </div>
   </div>
 </div>
+
 
 
 
@@ -523,6 +578,7 @@ function downloadPdf() {
     modal.hide();
   }
 }
+
 // Logout confirmation
 function confirmLogout() {
   console.log('confirmLogout called');
