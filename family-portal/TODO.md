@@ -1,0 +1,6 @@
+- [x] Update .dashboard-image-container to flex column for vertical centering
+- [x] Position .welcome-text absolutely at top center of image
+- [x] Add blur overlay div behind quote text with glass effect (light blur, padding, rounded corners)
+- [x] Make quote text bold
+- [x] Ensure responsive alignment using flexbox for all screen sizes
+- [x] Add subtle fade-in effect enhancement

@@ -180,9 +180,20 @@
         <option value="daughter" <%= member.relationship === 'daughter' ? 'selected' : '' %>>Daughter</option>
       </select>
 
-      <% if (member.photo) { %>
-        <img src="/uploads/<%= member.photo %>" class="member-photo mb-2">
-      <% } %>
+      <label class="form-label">Address</label>
+      <input class="form-control mb-2" name="door_no" value="<%= member.door_no %>" placeholder="Door No">
+      <input class="form-control mb-2" name="street" value="<%= member.street %>" placeholder="Street">
+      <input class="form-control mb-2" name="district" value="<%= member.district %>" placeholder="District">
+      <input class="form-control mb-2" name="state" value="<%= member.state %>" placeholder="State">
+      <input class="form-control mb-2" name="pincode" value="<%= member.pincode %>" placeholder="Pincode">
+
+      <div class="mb-2">
+        <% if (member.photoSize > 0) { %>
+          <p>Image size: <%= member.photoSize %> bytes</p>
+        <% } else { %>
+          <p>No image uploaded</p>
+        <% } %>
+      </div>
 
       <input type="file" class="form-control mb-2" name="photo">
 

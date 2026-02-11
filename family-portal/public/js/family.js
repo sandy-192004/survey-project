@@ -479,9 +479,8 @@ function compressImage(file, maxSizeBytes, target) {
 // Update placeholder with selected photo info
 function updatePhotoPlaceholder(target, file, sizeBytes) {
   const placeholder = document.getElementById(`${target}_placeholder`);
-  const sizeKB = (sizeBytes / 1024).toFixed(2);
-  const url = URL.createObjectURL(file);
-  placeholder.innerHTML = `<img src="${url}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Size: ${sizeKB} KB</small>`;
+  const sizeMB = (sizeBytes / 1024 / 1024).toFixed(1);
+  placeholder.innerHTML = `<small class="text-muted">File size: ${sizeMB} MB</small>`;
 }
 
 // Assign compressed file to input field
@@ -860,12 +859,43 @@ async function openEditModal(relationship, memberId) {
 
         const relationshipInput = form.querySelector('[name="relationship"]');
         if (relationshipInput) relationshipInput.value = member.relationship || '';
+
+        // Check if child's address matches parents' address
+        const childDoorNo = member.door_no || '';
+        const childStreet = member.street || '';
+        const childState = member.state || '';
+        const childDistrict = member.district || '';
+        const childPincode = member.pincode || '';
+
+        const checkbox = document.getElementById('childSameAsParents');
+        if (childDoorNo === parentsAddress.door_no &&
+            childStreet === parentsAddress.street &&
+            childState === parentsAddress.state &&
+            childDistrict === parentsAddress.district &&
+            childPincode === parentsAddress.pincode) {
+          checkbox.checked = true;
+          // Disable address fields
+          const addressFields = ['door_no', 'street', 'state', 'district', 'pincode'];
+          addressFields.forEach(field => {
+            const element = document.querySelector(`#childEditModal [name="${field}"]`);
+            element.disabled = true;
+          });
+        } else {
+          checkbox.checked = false;
+          // Ensure address fields are enabled
+          const addressFields = ['door_no', 'street', 'state', 'district', 'pincode'];
+          addressFields.forEach(field => {
+            const element = document.querySelector(`#childEditModal [name="${field}"]`);
+            element.disabled = false;
+          });
+        }
       }
     }
 
     // Handle photo preview and placeholder
     const photoPreview = document.getElementById(photoPreviewId);
     const placeholder = document.getElementById(`${relationship}PhotoFile_placeholder`);
+    const photoPathElement = document.getElementById(`${relationship}PhotoPath`);
 
     if (member.photo && member.photo.trim() !== '') {
       let photoSrc = member.photo;
@@ -874,23 +904,31 @@ async function openEditModal(relationship, memberId) {
       if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
       if (photoSrc.startsWith('uploads/')) {
         photoPreview.src = '/' + photoSrc;
-        // Also show in placeholder
-        if (placeholder) {
-          placeholder.innerHTML = `<img src="/${photoSrc}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+        // Show path below placeholder
+        if (photoPathElement) {
+          photoPathElement.textContent = photoSrc;
         }
       } else {
         photoPreview.src = '/uploads/' + photoSrc;
-        // Also show in placeholder
-        if (placeholder) {
-          placeholder.innerHTML = `<img src="/uploads/${photoSrc}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+        // Show path below placeholder
+        if (photoPathElement) {
+          photoPathElement.textContent = photoSrc;
         }
       }
       photoPreview.style.display = 'block';
+      // Set placeholder to icon
+      if (placeholder) {
+        placeholder.innerHTML = '<i class="fas fa-image" style="font-size: 24px; color: #6c757d;"></i>';
+      }
     } else {
       photoPreview.style.display = 'none';
-      // Reset placeholder to default
+      // Reset placeholder to icon
       if (placeholder) {
-        placeholder.innerHTML = '<span class="text-muted">Click to upload or capture photo</span>';
+        placeholder.innerHTML = '<i class="fas fa-image" style="font-size: 24px; color: #6c757d;"></i>';
+      }
+      // Clear path
+      if (photoPathElement) {
+        photoPathElement.textContent = '';
       }
     }
 

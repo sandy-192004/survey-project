@@ -21,7 +21,7 @@
       height: 100vh;
       overflow: hidden;
       opacity: 0;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.8s ease-in-out;
     }
 
     .navbar {
@@ -41,53 +41,49 @@
       background-repeat: no-repeat;
       position: relative;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
     }
 .quote-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  max-width: 420px;
+  position: relative;
+  max-width: 720px;
   width: 85%;
-  padding: 1.6rem 1.8rem;
-
-  background: rgba(15, 7, 2, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  color: white;
+  padding: 1.6rem 3cqb;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  border-radius: 15px;
+  color: rgb(0, 0, 0);
   text-align: center;
   font-family: "Times New Roman", Times, serif;
-
-  border-radius: 16px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.4);
-
   z-index: 5;
 }
 
     .quote-text {
       position: relative;
       min-height: 4rem;
-      font-size: 1.2rem;
+      font-size: 1.8rem;
       font-style: italic;
+      font-weight: bold;
       margin-bottom: 1rem;
-      color: #ffd9a3;
+      color: #060605;
     }
 
     .welcome-text {
-      font-size: 1.0rem;
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3.0rem;
       font-weight: bold;
-      margin-top: 1rem;
-      color: #ffffff;
+      color: #000000;
+      z-index: 10;
     }
 
     .blessing-text {
-      font-size: 1.1rem;
+      font-size: 2.1rem;
       margin-top: 0.5rem;
-      color: #f5e6d3;
+      color: #0e0e0d;
     }
 
     @media (max-width: 768px) {
@@ -327,17 +323,10 @@
 <!-- ========== NEW DASHBOARD UI (REPLACED OLD CONTAINER) ========== -->
 
 <div class="dashboard-image-container">
+  <p class="welcome-text">Welcome to Temple Portal</p>
   <div class="quote-container">
-    <p class="welcome-text">Welcome to Temple Portal</p>
-
     <div class="quote-text">
       <p class="cycling-quote">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
-
-      <p class="cycling-quote">In the temple of your heart, let faith be the eternal flame that lights your path.</p>
-
-      <p class="cycling-quote">May the divine grace shower upon you and your loved ones, bringing prosperity and harmony.</p>
-
-      <p class="cycling-quote">Through devotion and righteousness, may you find the ultimate bliss and enlightenment.</p>
     </div>
   </div>
 </div>
