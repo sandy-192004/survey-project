@@ -737,7 +737,7 @@ exports.updateHusband = async (req, res) => {
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
     let photoPath = null;
     if (req.file) {
-      photoPath = `parents/${req.file.filename}`;
+      photoPath = `parent/${req.file.filename}`;
       const oldPath = path.join('uploads', req.file.filename);
       const newPath = path.join('uploads', photoPath);
       fs.renameSync(oldPath, newPath);

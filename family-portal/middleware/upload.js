@@ -67,14 +67,13 @@ const upload = multer({
 
 const resizeImage = async (filePath) => {
   try {
-    const tempPath = filePath + '.tmp';
     await sharp(filePath)
       .resize(500, 500, {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .toFile(tempPath);
-    fs.renameSync(tempPath, filePath);
+      .toBuffer()
+      .then((data) => fs.writeFileSync(filePath, data));
   } catch (err) {
     console.error("Error resizing image:", err);
   }

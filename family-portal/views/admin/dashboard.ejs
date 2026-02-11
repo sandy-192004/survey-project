@@ -170,6 +170,98 @@
       box-shadow: var(--card-shadow);
     }
 
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      body {
+        font-size: 14px;
+      }
+
+      .header {
+        padding: 1rem;
+        font-size: 1.2rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .stat-card {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .family-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .family-card {
+        border-radius: 10px;
+        box-shadow: var(--card-shadow);
+      }
+
+      .family-card-header {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .family-card-body {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+      }
+
+      .edit-btn, .delete-btn {
+        width: 25px;
+        height: 25px;
+        font-size: 0.7rem;
+      }
+
+      .btn {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .form-control {
+        font-size: 14px;
+      }
+
+      .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+      }
+
+      .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      }
+
+      .modal-header {
+        background-color: #8B4513;
+        color: white;
+      }
+
+      .modal-body {
+        background-color: #f5e6d3;
+      }
+
+      .modal-footer .btn {
+        background-color: #8B4513;
+        border-color: #8B4513;
+        color: white;
+      }
+
+      .pagination {
+        font-size: 0.8rem;
+      }
+
+      .pagination .page-link {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+      }
+    }
+
     .pagination .page-link:hover {
       background-color: var(--primary-color);
       color: rgb(19, 19, 19);

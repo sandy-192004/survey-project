@@ -354,8 +354,18 @@ function showPhotoOptions(target) {
   }).then((result) => {
     if (result.isConfirmed) {
       // Upload Photo
-      const fileInput = document.getElementById(`${target}_file`);
-      fileInput.click();
+      let fileInput = document.getElementById(`${target}_file`);
+      if (!fileInput) {
+        // For edit modals, use the specific ID
+        fileInput = document.getElementById(`${target.replace('_edit', '')}PhotoFile`);
+      }
+      if (!fileInput) {
+        // Fallback to direct ID
+        fileInput = document.getElementById(target);
+      }
+      if (fileInput) {
+        fileInput.click();
+      }
     } else if (result.isDenied) {
       // Take Photo
       openCamera(target);
@@ -467,10 +477,11 @@ function compressImage(file, maxSizeBytes, target) {
 }
 
 // Update placeholder with selected photo info
-function updatePhotoPlaceholder(target, sizeBytes) {
+function updatePhotoPlaceholder(target, file, sizeBytes) {
   const placeholder = document.getElementById(`${target}_placeholder`);
   const sizeKB = (sizeBytes / 1024).toFixed(2);
-  placeholder.innerHTML = `<span class="text-success">Photo Selected - Size: ${sizeKB} KB</span>`;
+  const url = URL.createObjectURL(file);
+  placeholder.innerHTML = `<img src="${url}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Size: ${sizeKB} KB</small>`;
 }
 
 // Assign compressed file to input field
@@ -852,8 +863,10 @@ async function openEditModal(relationship, memberId) {
       }
     }
 
-    // Handle photo preview
+    // Handle photo preview and placeholder
     const photoPreview = document.getElementById(photoPreviewId);
+    const placeholder = document.getElementById(`${relationship}PhotoFile_placeholder`);
+
     if (member.photo && member.photo.trim() !== '') {
       let photoSrc = member.photo;
       const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/);
@@ -861,12 +874,24 @@ async function openEditModal(relationship, memberId) {
       if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
       if (photoSrc.startsWith('uploads/')) {
         photoPreview.src = '/' + photoSrc;
+        // Also show in placeholder
+        if (placeholder) {
+          placeholder.innerHTML = `<img src="/${photoSrc}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+        }
       } else {
         photoPreview.src = '/uploads/' + photoSrc;
+        // Also show in placeholder
+        if (placeholder) {
+          placeholder.innerHTML = `<img src="/uploads/${photoSrc}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+        }
       }
       photoPreview.style.display = 'block';
     } else {
       photoPreview.style.display = 'none';
+      // Reset placeholder to default
+      if (placeholder) {
+        placeholder.innerHTML = '<span class="text-muted">Click to upload or capture photo</span>';
+      }
     }
 
     // Load states for the modal
