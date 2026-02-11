@@ -83,6 +83,10 @@ exports.pdf = async (req, res, next) => {
       title = `Family Details – ${state}`;
     } else if (district && district.toLowerCase() !== 'all') {
       title = `Family Details – ${district}`;
+
+    } else if (state && state.toLowerCase() === 'all' && district && district.toLowerCase() === 'all') {
+      title = `Family Details – All / All`;
+
     }
     doc.font('Helvetica-Bold').fontSize(16).text(title, { align: 'center' });
     doc.moveDown(2);
@@ -238,6 +242,7 @@ exports.exportToPdf = async (req, res) => {
     const { state, district } = req.query;
     console.log('PDF export params received:', { state, district });
 
+
     if (state && state.toLowerCase() !== 'all' && district && district.toLowerCase() !== 'all') {
       // New format for filtered exports
       let query = 'SELECT * FROM family_members WHERE member_type = \'parent\'';
@@ -274,6 +279,91 @@ exports.exportToPdf = async (req, res) => {
           families[member.family_id].wife_occupation = member.occupation;
           families[member.family_id].wife_mobile = member.mobile;
         }
+
+    let query = 'SELECT * FROM family_members WHERE 1=1';
+    let params = [];
+    let conditions = [];
+    if (state && state.toLowerCase() !== 'all') {
+      query += ' AND state = ?';
+      params.push(state);
+      conditions.push('state');
+    }
+    if (district && district.toLowerCase() !== 'all') {
+      query += ' AND district = ?';
+      params.push(district);
+      conditions.push('district');
+    }
+    query += ' ORDER BY family_id, member_type';
+    console.log('PDF export: Filters applied, query:', query, 'params:', params);
+
+    const [data] = await db.query(query, params);
+    console.log('PDF export: Fetched', data.length, 'rows from family_members');
+
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 20 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=family-data.pdf');
+
+    doc.pipe(res);
+
+    // Title
+    let title = 'Family Members Data Export';
+    if (state && state !== 'All' && district && district !== 'All') {
+      title = `Family Details – ${state} / ${district}`;
+    } else if (state && state !== 'All') {
+      title = `Family Details – ${state}`;
+    } else if (district && district !== 'All') {
+      title = `Family Details – ${district}`;
+    } else if (state === 'All' && district === 'All') {
+      title = `Family Details – All / All`;
+    }
+    doc.font('Helvetica-Bold').fontSize(16).text(title, { align: 'center' });
+    doc.moveDown(2);
+
+    if (data.length === 0) {
+      const message = conditions.length > 0 ? 'No data available for the selected filters.' : 'No data available.';
+      doc.fontSize(12).text(message);
+      doc.end();
+      return;
+    }
+
+    // Define table columns with explicit widths to fit A4 landscape (usable width ~802 points)
+    const columns = [
+  { header: 'ID', width: 35 },
+  { header: 'Family ID', width: 45 },
+  { header: 'Member Type', width: 60 },
+  { header: 'Name', width: 95 },
+  { header: 'Relationship', width: 70 },
+  { header: 'Mobile', width: 85 },
+  { header: 'Occupation', width: 90 },
+  { header: 'DOB', width: 65 },
+  { header: 'Gender', width: 55 },
+  { header: 'Door No', width: 55 },
+  { header: 'Street', width: 110 },
+  { header: 'District', width: 85 },
+  { header: 'State', width: 85 },
+  { header: 'Pincode', width: 65 },
+  { header: 'Photo', width: 90 },
+  { header: 'Created At', width: 75 }
+];
+
+
+    const startX = 20;
+    let y = 100;
+    const rowHeight = 25;
+    const fontSize = 8; // Reduced font size for table
+    const pageBottom = 550;
+
+    // Function to draw table header
+    const drawTableHeader = (doc, y) => {
+      let x = startX;
+      columns.forEach((col, index) => {
+        // Draw cell border
+        doc.lineWidth(1).rect(x, y, col.width, rowHeight).stroke();
+        // Draw header text
+        doc.font('Helvetica-Bold').fontSize(fontSize);
+        doc.text(col.header, x + 2, y + 2, { width: col.width - 4, height: rowHeight - 4, lineBreak: false });
+        x += col.width;
+
       });
       const processedData = Object.values(families);
       console.log('PDF export: Processed', processedData.length, 'families');

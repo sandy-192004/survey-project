@@ -7,7 +7,11 @@ const path = require("path");
 
 // Show login page
 exports.showLogin = (req, res) => {
-  res.render("family-login");
+  res.render("family-login", {
+    error: req.query.error,
+    registered: req.query.registered,
+    logout: req.query.logout
+  });
 };
 
 // Show register page
@@ -227,27 +231,18 @@ exports.saveFamily = async (req, res) => {
           if (relationship === 'husband') {
             const husbandFiles = req.files['parent[husband_photo]'];
             if (husbandFiles && husbandFiles[0]) {
-              photoPath = `parents/${husbandFiles[0].filename}`;
-              const filePath = path.join('uploads', photoPath);
-              const stats = fs.statSync(filePath);
-              photoPath = `${photoPath}(${stats.size})`;
+              photoPath = `parent/${husbandFiles[0].filename}`;
             }
           } else if (relationship === 'wife') {
             const wifeFiles = req.files['parent[wife_photo]'];
             if (wifeFiles && wifeFiles[0]) {
-              photoPath = `parents/${wifeFiles[0].filename}`;
-              const filePath = path.join('uploads', photoPath);
-              const stats = fs.statSync(filePath);
-              photoPath = `${photoPath}(${stats.size})`;
+              photoPath = `parent/${wifeFiles[0].filename}`;
             }
           }
         } else if (member_type === 'child') {
           const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
           if (childFiles && childFiles[0]) {
             photoPath = `children/${childFiles[0].filename}`;
-            const filePath = path.join('uploads', photoPath);
-            const stats = fs.statSync(filePath);
-            photoPath = `${photoPath}(${stats.size})`;
           }
         }
       }
@@ -401,11 +396,13 @@ exports.addChild = async (req, res) => {
 
     const { name, dob, gender, occupation, relationship, door_no, street, pincode, state, district } = req.body;
     let photoPath = null;
-    if (req.files && req.files['photo'] && req.files['photo'][0]) {
-      photoPath = `children/${req.files['photo'][0].filename}`;
-      const filePath = path.join('uploads', photoPath);
-      const stats = fs.statSync(filePath);
-      photoPath = `${photoPath}(${stats.size})`;
+    if (req.file) {
+      photoPath = `children/${req.file.filename}`;
+      const oldPath = req.file.path;
+      const newPath = path.join(__dirname, '../uploads', photoPath);
+      if (oldPath !== newPath) {
+        fs.renameSync(oldPath, newPath);
+      }
     }
     const validRelationship = relationship || 'other';
 
@@ -611,16 +608,26 @@ exports.updateFamily = async (req, res) => {
     let wifePhotoPath = null;
     if (req.files) {
       if (req.files['husband_photo'] && req.files['husband_photo'][0]) {
-        husbandPhotoPath = `parents/${req.files['husband_photo'][0].filename}`;
-        const filePath = path.join('uploads', husbandPhotoPath);
-        const stats = fs.statSync(filePath);
-        husbandPhotoPath = `${husbandPhotoPath}(${stats.size})`;
+        husbandPhotoPath = `parent/${req.files['husband_photo'][0].filename}`;
+        // Delete old husband photo if exists
+        const [husbandRows] = await db.query("SELECT photo FROM family_members WHERE family_id = ? AND relationship = 'husband'", [familyId]);
+        if (husbandRows.length > 0 && husbandRows[0].photo) {
+          const oldPath = path.join(__dirname, '../uploads', husbandRows[0].photo);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        }
       }
       if (req.files['wife_photo'] && req.files['wife_photo'][0]) {
-        wifePhotoPath = `parents/${req.files['wife_photo'][0].filename}`;
-        const filePath = path.join('uploads', wifePhotoPath);
-        const stats = fs.statSync(filePath);
-        wifePhotoPath = `${wifePhotoPath}(${stats.size})`;
+        wifePhotoPath = `parent/${req.files['wife_photo'][0].filename}`;
+        // Delete old wife photo if exists
+        const [wifeRows] = await db.query("SELECT photo FROM family_members WHERE family_id = ? AND relationship = 'wife'", [familyId]);
+        if (wifeRows.length > 0 && wifeRows[0].photo) {
+          const oldPath = path.join(__dirname, '../uploads', wifeRows[0].photo);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        }
       }
     }
 
@@ -676,13 +683,26 @@ exports.updateMember = async (req, res) => {
     const member = members[0];
     let photoPath = null;
     if (req.file) {
-      const folder = member.member_type === 'child' ? 'children' : 'parents';
-      photoPath = `${folder}/${req.file.filename}`;
-      const oldPath = path.join('uploads', req.file.filename);
-      const newPath = path.join('uploads', photoPath);
-      fs.renameSync(oldPath, newPath);
-      const stats = fs.statSync(newPath);
-      photoPath = `${photoPath}(${stats.size})`;
+      const folder = member.member_type === 'child' ? 'children' : 'parent';
+
+      // Delete old photo file if exists
+      if (member.photo) {
+        const fullOldPath = path.join(__dirname, '../uploads', member.photo);
+        if (fs.existsSync(fullOldPath)) {
+          fs.unlinkSync(fullOldPath);
+        }
+      }
+
+      // Generate new filename
+      const filename = req.file.filename;
+      photoPath = `${folder}/${filename}`;
+      const oldPath = req.file.path;
+      const newPath = path.join(__dirname, '../uploads', photoPath);
+
+      // Rename/move the file to the desired path
+      if (oldPath !== newPath) {
+        fs.renameSync(oldPath, newPath);
+      }
     }
 
 
@@ -717,7 +737,7 @@ exports.updateHusband = async (req, res) => {
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
     let photoPath = null;
     if (req.file) {
-      photoPath = `parents/${req.file.filename}`;
+      photoPath = `parent/${req.file.filename}`;
       const oldPath = path.join('uploads', req.file.filename);
       const newPath = path.join('uploads', photoPath);
       fs.renameSync(oldPath, newPath);

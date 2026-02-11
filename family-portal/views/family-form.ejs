@@ -83,7 +83,7 @@
 
           <input type="file" id="husband_file" class="form-control small d-none"
                  name="parent[husband_photo]" accept="image/*"
-                 onchange="handlePhotoSelect(this, 'husband_placeholder')">
+                 onchange="handlePhotoSelect(this, 'husband')">
 
           <div id="husband_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('husband')">
             <span class="text-muted">Click to upload or capture photo</span>
@@ -106,7 +106,7 @@
 
           <input type="file" id="wife_file" class="form-control small d-none"
                  name="parent[wife_photo]" accept="image/*"
-                 onchange="handlePhotoSelect(this, 'wife_placeholder')">
+                 onchange="handlePhotoSelect(this, 'wife')">
 
           <div id="wife_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('wife')">
             <span class="text-muted">Click to upload or capture photo</span>
@@ -157,24 +157,9 @@
 </form>
 </div>
 
-<script>
-function handlePhotoSelect(input, previewId) {
-  if(input.files && input.files[0]){
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e){
-      const img = document.getElementById(previewId);
-      img.src = e.target.result;
-      img.style.display = 'block';
-    }
-    reader.readAsDataURL(file);
-  }
-}
 
-function addChild() {
-  alert("Child section will be appended dynamically here.");
-}
-</script>
+
+
 
 <script src="/js/family.js"></script>
 

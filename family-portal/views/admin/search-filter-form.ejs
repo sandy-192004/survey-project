@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Search & Filter</title>
 
   <!-- Bootstrap CSS -->
@@ -103,6 +104,36 @@
     /* Allow dropdowns to appear downward */
     .card-body, .d-flex {
       overflow: visible !important;
+    }
+
+    .d-flex {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .d-flex > div {
+      flex: 1 1 auto;
+      min-width: 13.75rem;
+    }
+
+    .btn {
+      min-height: 2.75rem;
+    }
+
+    @media (max-width: 768px) {
+      .d-flex {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .d-flex > div {
+        min-width: 100%;
+      }
+
+      .ms-auto {
+        margin-left: 0 !important;
+        margin-top: 1rem;
+      }
     }
   </style>
 </head>

@@ -8,7 +8,7 @@ const exportController = require("../controllers/exportController");
 
 
 const db = require("../config/db");
-const { upload } = require("../middleware/upload");
+const { upload, processUpload } = require("../middleware/upload");
 
 // Get all families as JSON
 router.get('/families', async (req, res) => {
@@ -43,7 +43,7 @@ router.get("/create-family", (req, res) => {
 });
 
 // POST Create Family
-router.post("/create-family", upload.any(), controller.createFamily);
+router.post("/create-family", processUpload, controller.createFamily);
 
 // View and Edit routes
 router.get("/view/:id", controller.viewMember);

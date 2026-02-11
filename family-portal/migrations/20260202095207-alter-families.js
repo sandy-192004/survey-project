@@ -2,6 +2,16 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Check if user_id column exists, if not add it
+    const tableDescription = await queryInterface.describeTable('families');
+    if (!tableDescription.user_id) {
+      await queryInterface.addColumn('families', 'user_id', {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true
+      });
+    }
+
     // Make user_id nullable
     await queryInterface.changeColumn('families', 'user_id', {
       type: Sequelize.INTEGER,

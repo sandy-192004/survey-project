@@ -110,6 +110,93 @@ function addChild() {
 function removeChildRow(index) {
   const el = document.getElementById(`child-${index}`);
   if (el && el.parentNode) el.parentNode.removeChild(el);
+  reIndexChildren();
+}
+
+function reIndexChildren() {
+  const childrenContainer = document.getElementById("children");
+  const childCards = childrenContainer.querySelectorAll(".child-card");
+  childCards.forEach((card, newIndex) => {
+    // Update card id
+    card.id = `child-${newIndex}`;
+
+    // Update file input id
+    const fileInput = card.querySelector('input[type="file"]');
+    if (fileInput) fileInput.id = `child_${newIndex}_file`;
+
+    // Update placeholder id
+    const placeholder = card.querySelector('[id$="_placeholder"]');
+    if (placeholder) placeholder.id = `child_${newIndex}_placeholder`;
+
+    // Update file_info id
+    const fileInfo = card.querySelector('[id$="_file_info"]');
+    if (fileInfo) fileInfo.id = `child_${newIndex}_file_info`;
+
+    // Update delete icon id
+    const deleteIcon = card.querySelector('[id$="_delete"]');
+    if (deleteIcon) deleteIcon.id = `child_${newIndex}_delete`;
+
+    // Update file_name span id
+    const fileNameSpan = card.querySelector('[id$="_file_name"]');
+    if (fileNameSpan) fileNameSpan.id = `child_${newIndex}_file_name`;
+
+    // Update file_size span id
+    const fileSizeSpan = card.querySelector('[id$="_file_size"]');
+    if (fileSizeSpan) fileSizeSpan.id = `child_${newIndex}_file_size`;
+
+    // Update names for inputs and selects
+    const inputs = card.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      if (input.name) {
+        input.name = input.name.replace(/children\[\d+\]/, `children[${newIndex}]`);
+      }
+    });
+
+    // Update onclick for placeholder
+    if (placeholder) {
+      placeholder.onclick = () => showPhotoOptions(`child_${newIndex}`);
+    }
+
+    // Update onchange for file input
+    if (fileInput) {
+      fileInput.onchange = (e) => handleChildPhotoSelect(e.target, newIndex);
+    }
+
+    // Update onclick for delete icon
+    if (deleteIcon) {
+      deleteIcon.onclick = () => deleteChildPhoto(newIndex);
+    }
+
+    // Update same address checkbox
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+      checkbox.id = `sameAddressCheck_${newIndex}`;
+      checkbox.onchange = () => handleSameAddressCheck(newIndex);
+    }
+
+    // Update hidden input
+    const hiddenInput = card.querySelector('input[name*="use_parent_address"]');
+    if (hiddenInput) {
+      hiddenInput.id = `use_parent_address_${newIndex}`;
+    }
+
+    // Update state and district selects
+    const stateSelect = card.querySelector('select[name*="state"]');
+    if (stateSelect) {
+      stateSelect.id = `child_${newIndex}_state`;
+      stateSelect.onchange = () => loadDistrictsForChild(newIndex);
+    }
+    const districtSelect = card.querySelector('select[name*="district"]');
+    if (districtSelect) districtSelect.id = `child_${newIndex}_district`;
+
+    // Update address inputs
+    const doorNoInput = card.querySelector('input[name*="door_no"]');
+    if (doorNoInput) doorNoInput.id = `child_${newIndex}_door_no`;
+    const streetInput = card.querySelector('input[name*="street"]');
+    if (streetInput) streetInput.id = `child_${newIndex}_street`;
+    const pincodeInput = card.querySelector('input[name*="pincode"]');
+    if (pincodeInput) pincodeInput.id = `child_${newIndex}_pincode`;
+  });
 }
 
 // ========== LOAD CHILD MODAL STATES ==========
@@ -267,8 +354,18 @@ function showPhotoOptions(target) {
   }).then((result) => {
     if (result.isConfirmed) {
       // Upload Photo
-      const fileInput = document.getElementById(`${target}_file`);
-      fileInput.click();
+      let fileInput = document.getElementById(`${target}_file`);
+      if (!fileInput) {
+        // For edit modals, use the specific ID
+        fileInput = document.getElementById(`${target.replace('_edit', '')}PhotoFile`);
+      }
+      if (!fileInput) {
+        // Fallback to direct ID
+        fileInput = document.getElementById(target);
+      }
+      if (fileInput) {
+        fileInput.click();
+      }
     } else if (result.isDenied) {
       // Take Photo
       openCamera(target);
@@ -380,10 +477,11 @@ function compressImage(file, maxSizeBytes, target) {
 }
 
 // Update placeholder with selected photo info
-function updatePhotoPlaceholder(target, sizeBytes) {
+function updatePhotoPlaceholder(target, file, sizeBytes) {
   const placeholder = document.getElementById(`${target}_placeholder`);
   const sizeKB = (sizeBytes / 1024).toFixed(2);
-  placeholder.innerHTML = `<span class="text-success">Photo Selected - Size: ${sizeKB} KB</span>`;
+  const url = URL.createObjectURL(file);
+  placeholder.innerHTML = `<img src="${url}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Size: ${sizeKB} KB</small>`;
 }
 
 // Assign compressed file to input field
@@ -765,8 +863,10 @@ async function openEditModal(relationship, memberId) {
       }
     }
 
-    // Handle photo preview
+    // Handle photo preview and placeholder
     const photoPreview = document.getElementById(photoPreviewId);
+    const placeholder = document.getElementById(`${relationship}PhotoFile_placeholder`);
+
     if (member.photo && member.photo.trim() !== '') {
       let photoSrc = member.photo;
       const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/);
@@ -774,12 +874,24 @@ async function openEditModal(relationship, memberId) {
       if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
       if (photoSrc.startsWith('uploads/')) {
         photoPreview.src = '/' + photoSrc;
+        // Also show in placeholder
+        if (placeholder) {
+          placeholder.innerHTML = `<img src="/${photoSrc}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+        }
       } else {
         photoPreview.src = '/uploads/' + photoSrc;
+        // Also show in placeholder
+        if (placeholder) {
+          placeholder.innerHTML = `<img src="/uploads/${photoSrc}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+        }
       }
       photoPreview.style.display = 'block';
     } else {
       photoPreview.style.display = 'none';
+      // Reset placeholder to default
+      if (placeholder) {
+        placeholder.innerHTML = '<span class="text-muted">Click to upload or capture photo</span>';
+      }
     }
 
     // Load states for the modal
