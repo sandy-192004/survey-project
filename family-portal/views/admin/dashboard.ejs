@@ -38,15 +38,17 @@
     
 
     .header {
-      background: #0000007b;
+      background: #fffcfc1d;
        color: #ffffff;
-      border-radius: 14px;
-      padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
+      border-radius: 0px;
+      padding: 2rem 1.5rem;
+      margin: -2.5rem -2.5rem -2.5rem -2.5rem;
       box-shadow: var(--card-shadow);
-      display: flex;
+      display: flex ;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255,255,255,0.3);
 
     }
 
@@ -54,17 +56,21 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
       gap: 1.5rem;
-      margin-bottom: 2rem;
+      margin-bottom: 3rem;
        color: #ffffff;
+      
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .stat-card {
-      background: #00000068;
+      background: #fffcfc1d;
       padding: 1rem;
       border-radius: 10px;
       text-align: center;
       box-shadow: var(--card-shadow);
        color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .family-grid {
@@ -74,13 +80,15 @@
     }
 
     .family-card {
-      background: #00000068;
+      background: #fffcfc1d;
       border-radius: 14px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
       cursor: pointer;
       position: relative;
       transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .family-card:hover {
@@ -195,7 +203,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div>
+    <div style="flex: 1; text-align: center;">
       <h4 class="fw-bold mb-0" style="color:  #ad9149;">
         <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
       </h4>
@@ -251,13 +259,14 @@
   <% } %>
 
   <!-- SEARCH -->
-  <div class="card mb-2 search-form" style="background-color: #00000016;">
+  <div class="card mb-2 search-form" style="background-color: #fffcfc1d;">
   <div class="card-body">
 
     <style>
       .search-form input,
       .search-form select {
         width: 170px;
+        
       }
 
       .search-form button {
