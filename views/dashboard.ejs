@@ -233,7 +233,7 @@
 </div>
 
 <!-- Login Success Modal -->
-<div class="modal fade" id="loginSuccessModal" tabindex="-1">
+<!-- <div class="modal fade" id="loginSuccessModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
@@ -251,7 +251,7 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
 <!-- ================= NAVBAR (UNCHANGED) ================= -->
 <nav class="navbar navbar-dark shadow-sm">
@@ -396,11 +396,11 @@ if (urlParams.get('success') === 'true') {
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
-if (urlParams.get('login') === 'success') {
-  const loginModal = new bootstrap.Modal(document.getElementById('loginSuccessModal'));
-  loginModal.show();
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
+// if (urlParams.get('login') === 'success') {
+//   const loginModal = new bootstrap.Modal(document.getElementById('loginSuccessModal'));
+//   loginModal.show();
+//   window.history.replaceState({}, document.title, window.location.pathname);
+// }
 
 $("#familyBtn").on("click", function () {
   $.get("/family/check", function (res) {
