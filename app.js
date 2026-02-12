@@ -1,6 +1,6 @@
 const express = require("express");
 const session = require("express-session");
-const hemlet = require("helmet");
+// const hemlet = require("helmet");
 const path = require("path");
 require('dotenv').config();
 const familyRoutes = require("./routes/familyRoutes");
@@ -10,7 +10,7 @@ const db = require("./config/db");
 
 const app = express();
 
-app.use(hemlet());
+// app.use(hemlet());
 
 
 app.set("view engine", "ejs");
