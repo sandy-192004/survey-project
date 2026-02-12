@@ -44,6 +44,52 @@
         .text-primary {
             color: #8B4513 !important;
         }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            body {
+                background: linear-gradient(135deg, #f5e6d3 0%, #d4b08a 100%);
+                min-height: 100vh;
+                margin: 0;
+                padding-top: 20px; /* Avoid browser address bar overlap */
+                font-size: 14px;
+            }
+            .container {
+                padding: 0 15px;
+            }
+            .row.justify-content-center.align-items-center.min-vh-100 {
+                min-height: calc(100vh - 40px);
+            }
+            .card {
+                border-radius: 10px;
+                box-shadow: 0 4px 16px rgba(139, 69, 19, 0.1);
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .form-control {
+                font-size: 14px;
+            }
+            .alert {
+                position: fixed;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 80%;
+                max-width: 200px;
+                padding: 4px 8px;
+                font-size: 11px;
+                z-index: 1050;
+                border-radius: 5px;
+                text-align: center;
+                background-color: #8B4513;
+                color: white;
+                border: none;
+            }
+        }
     </style>
 </head>
 <body>

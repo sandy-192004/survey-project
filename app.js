@@ -62,6 +62,6 @@ app.use((err, req, res, next) => {
 });
 
 // ================== SERVER START ==================
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}`);
+app.listen(3000, () => {
+  console.log(`Server running on http://localhost:3000`);
 });        

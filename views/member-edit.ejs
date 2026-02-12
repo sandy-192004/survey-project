@@ -31,6 +31,29 @@
       margin-bottom: 15px;
     }
 
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      body {
+        font-size: 14px;
+      }
+      .btn {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .form-control {
+        font-size: 14px;
+      }
+      .img-thumbnail {
+        max-height: 80px;
+        display: block; /* Show existing photo in placeholder */
+      }
+    }
+
     .btn-primary {
       background-color: var(--brown-main);
       border-color: var(--brown-main);
@@ -92,13 +115,20 @@
             <h5 class="mb-3 small">Photo</h5>
             <div class="mb-3">
               <label class="form-label small">Member Photo</label>
-              <input type="file" class="form-control small" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'photo_preview')">
-              <img id="photo_preview" class="img-thumbnail">
+              <input type="file" class="form-control small d-none" name="photo" accept="image/*" id="photoFile_file" onchange="handlePhotoSelect(this, 'photoFile')">
+              <div id="photoFile_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('photoFile')">
+                <span class="text-muted">Click to upload or capture photo</span>
+              </div>
+              <img id="photo_preview" class="img-thumbnail" style="display: none;">
             </div>
           </div>
         </div>
 
         <h5 class="mt-4 mb-3 small">Address</h5>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="sameAsParents">
+          <label class="form-check-label small" for="sameAsParents">Same as Parents' Address</label>
+        </div>
         <div class="row g-2">
           <div class="col-12 col-md-6">
             <input class="form-control mb-2 small" name="door_no" placeholder="Door No">
@@ -128,19 +158,16 @@
 <script src="/js/family.js"></script>
 
 <script>
-  function handlePhotoSelect(input, previewId) {
-    if(input.files && input.files[0]){
-      const reader = new FileReader();
-      reader.onload = function(e){
-        const img = document.getElementById(previewId);
-        img.src = e.target.result;
-        img.style.display = 'block';
-      }
-      reader.readAsDataURL(input.files[0]);
+  let parentsAddress = {};
+
+  function handlePhotoSelect(input, target) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      processPhotoFile(file, target);
     }
   }
 
-  // Load existing member data
+  // Load existing member data and parents' address
   document.addEventListener("DOMContentLoaded", async () => {
     try {
       const memberId = window.location.pathname.split('/').pop();
@@ -156,18 +183,113 @@
         document.querySelector('select[name="relationship"]').value = member.relationship || '';
         document.querySelector('input[name="door_no"]').value = member.door_no || '';
         document.querySelector('input[name="street"]').value = member.street || '';
-        document.querySelector('select[name="state"]').value = member.state || '';
-        document.querySelector('select[name="district"]').value = member.district || '';
         document.querySelector('input[name="pincode"]').value = member.pincode || '';
 
         if (member.photo) {
           document.getElementById('photo_preview').src = '/' + member.photo;
           document.getElementById('photo_preview').style.display = 'block';
+
+          // Also show in placeholder
+          const placeholder = document.getElementById('photoFile_placeholder');
+          if (placeholder) {
+            placeholder.innerHTML = `<img src="/${member.photo}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+          }
+        }
+
+        // Load states and set district after states are loaded
+        await loadStatesForMemberEdit(member.state, member.district);
+      }
+
+      // Fetch parents' address
+      const parentsRes = await fetch('/my-family-json');
+      const familyData = await parentsRes.json();
+      if (familyData.success && familyData.members) {
+        const parents = familyData.members.filter(m => m.member_type === 'parent');
+        if (parents.length > 0) {
+          // Use the first parent's address (assuming husband or wife)
+          const parent = parents[0];
+          parentsAddress = {
+            door_no: parent.door_no || '',
+            street: parent.street || '',
+            state: parent.state || '',
+            district: parent.district || '',
+            pincode: parent.pincode || ''
+          };
         }
       }
     } catch (err) {
-      console.error("Error loading member data:", err);
+      console.error("Error loading data:", err);
     }
+  });
+
+  // Load states for member edit
+  async function loadStatesForMemberEdit(selectedState, selectedDistrict) {
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+
+    try {
+      const res = await fetch("/data/india-states-districts.json");
+      const indiaData = await res.json();
+
+      // Clear existing options
+      stateSelect.innerHTML = '<option value="">Select State</option>';
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+
+      // Add states
+      Object.keys(indiaData).forEach(state => {
+        const option = document.createElement("option");
+        option.value = state;
+        option.textContent = state;
+        if (state === selectedState) option.selected = true;
+        stateSelect.appendChild(option);
+      });
+
+      // Load districts if state is selected
+      if (selectedState && indiaData[selectedState]) {
+        indiaData[selectedState].forEach(district => {
+          const option = document.createElement("option");
+          option.value = district;
+          option.textContent = district;
+          if (district === selectedDistrict) option.selected = true;
+          districtSelect.appendChild(option);
+        });
+      }
+
+      // Add change event listener for state
+      stateSelect.addEventListener("change", function () {
+        const selectedState = this.value;
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+
+        if (selectedState && indiaData[selectedState]) {
+          indiaData[selectedState].forEach(district => {
+            const option = document.createElement("option");
+            option.value = district;
+            option.textContent = district;
+            districtSelect.appendChild(option);
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error("Error loading states for member edit:", error);
+    }
+  }
+
+  // Handle checkbox for same as parents address
+  document.getElementById('sameAsParents').addEventListener('change', function() {
+    const isChecked = this.checked;
+    const addressFields = ['door_no', 'street', 'state', 'district', 'pincode'];
+
+    addressFields.forEach(field => {
+      const element = document.querySelector(`[name="${field}"]`);
+      if (isChecked) {
+        element.value = parentsAddress[field] || '';
+        element.disabled = true;
+      } else {
+        element.disabled = false;
+        // Optionally clear fields or keep current values
+      }
+    });
   });
 
   document.getElementById('editMemberForm').addEventListener('submit', async (e) => {
