@@ -23,12 +23,31 @@
       opacity: 0;
       transition: opacity 0.8s ease-in-out;
     }
+    /* Temple Styled Button */
+.temple-btn {
+  background-color: #8B4513 !important;
+  border: none;
+  color: white;
+  width: 100%;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.temple-btn:hover {
+  background-color: #A0522D !important;
+  transform: translateY(-2px);
+}
+
 
     .navbar {
       background-color: rgba(30, 21, 11, 0.9) !important;
       backdrop-filter: blur(10px);
       color: white;
     }
+
     /* ========== NEW DASHBOARD UI (ONLY THIS PART CHANGED) ========== */
 
     .dashboard-image-container {
@@ -237,6 +256,39 @@
       color: #FF9933;
       font-weight: bold;
     }
+
+    /* 🔥 Animate ONLY Family Details Popup */
+#familyCheckModal .modal-content {
+  background: linear-gradient(
+    -45deg,
+    #3b2a1a,
+    #5a3e22,
+    #8b6a3d,
+    #e6d3a3,
+    #d4b87a
+  ) !important;
+  background-size: 350% 400%;
+  animation: familyGradient 8s ease infinite;
+  border: none;
+}
+
+/* Keep text readable */
+#familyCheckModal .modal-body {
+  background: transparent !important;
+}
+
+#familyCheckModal .modal-header {
+  background: transparent !important;
+  border-bottom: none;
+}
+
+/* Smooth animation */
+@keyframes familyGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
   </style>
 </head>
 <body>
@@ -503,7 +555,8 @@ familyModal.addEventListener('show.bs.modal', function (event) {
             <div class="alert alert-warning">
               <h5>Add Details</h5>
               <p>No family details found. Please add your family details.</p>
-              <button class="btn btn-primary" onclick="window.location.href='/family-form'">
+             <button class="btn temple-btn" onclick="window.location.href='/family-form'">
+
                 Add Details
               </button>
             </div>
