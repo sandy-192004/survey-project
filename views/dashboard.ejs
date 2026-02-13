@@ -29,7 +29,6 @@
       backdrop-filter: blur(10px);
       color: white;
     }
-
     /* ========== NEW DASHBOARD UI (ONLY THIS PART CHANGED) ========== */
 
     .dashboard-image-container {
@@ -87,6 +86,26 @@
     }
 
     @media (max-width: 768px) {
+      .navbar {
+    padding: 2px 8px !important;
+    min-height: 45px;
+  }
+
+  .navbar .btn {
+    padding: 3px 6px;
+  }
+
+  .navbar-toggler-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .welcome-text {
+    font-size: 1.1rem;
+    top: 15%;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;   /* force single line */
+  }
       body {
         font-size: 14px;
       }
@@ -296,6 +315,7 @@
   </div>
   <div class="offcanvas-body">
     <ul class="navbar-nav">
+       <div style="height: 40px; padding: 0 15px; line-height: 40px;"> </div>
       <li class="nav-item mb-2">
         <a class="nav-link" href="#" onclick="handleFamilyClick(); return false;">
           <i class="bi bi-people-fill"></i> Family
@@ -324,6 +344,7 @@
 
 <div class="dashboard-image-container">
   <p class="welcome-text">Welcome to Temple Portal</p>
+  
   <div class="quote-container">
     <div class="quote-text">
       <p class="cycling-quote">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
@@ -508,6 +529,5 @@ window.addEventListener('load', function() {
   document.body.style.opacity = '1';
 });
 </script>
-
 </body>
 </html>
