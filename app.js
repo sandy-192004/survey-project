@@ -61,7 +61,7 @@ app.use((err, req, res, next) => {
 });
 
 // ================== SERVER START ==================
-const PORT = parseInt(process.env.PORT, 10) || 3000;
+const PORT = parseInt(process.env.PORT, 10) || 3001;
 
 function startServer(port) {
   const server = app.listen(port, () => {
