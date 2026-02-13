@@ -2,7 +2,7 @@ const express = require("express");
 const session = require("express-session");
 // const hemlet = require("helmet");
 const path = require("path");
-require('dotenv').config();
+
 const familyRoutes = require("./routes/familyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminSearchRoutes = require("./routes/adminSearchRoutes");
@@ -11,6 +11,7 @@ const db = require("./config/db");
 const app = express();
 
 // app.use(hemlet());
+
 
 
 app.set("view engine", "ejs");
@@ -62,6 +63,21 @@ app.use((err, req, res, next) => {
 });
 
 // ================== SERVER START ==================
-app.listen(3000, () => {
-  console.log(`Server running on http://localhost:3000`);
-});        
+const PORT = parseInt(process.env.PORT, 10) || 3000;
+
+function startServer(port) {
+  const server = app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} is busy, trying ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+}
+
+startServer(PORT);
