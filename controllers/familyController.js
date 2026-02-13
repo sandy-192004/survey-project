@@ -35,8 +35,9 @@ exports.login = async (req, res) => {
       return res.redirect("/login?error=invalid");
     }
 
-    req.session.user = { id: user.id, email: user.email };
-    res.redirect("/dashboard?login=success");
+    req.session.user = { id: user.id, email: user.email, role: user.role };
+    const redirectUrl = user.role === 'admin' ? '/admin/dashboard' : '/dashboard?login=success';
+    res.redirect(redirectUrl);
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).send("Server error");
