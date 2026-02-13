@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-// const multer = require("multer");
+const multer = require("multer");
 const controller = require("../controllers/adminController");
 const familyController = require("../controllers/familyController"); // Newly added import for family controller
 
@@ -62,5 +62,9 @@ router.post("/create-family", upload.any(), controller.createFamily);
 
 // Delete family
 router.post("/delete/:id", controller.deleteFamily);
+
+// Logout
+router.post("/logout", controller.logout);
+
 
 module.exports = router;
