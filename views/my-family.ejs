@@ -316,7 +316,7 @@
                 %>
                 <%= gender %>
               </div>
-              <div class="info-item"><b>Address:</b> <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-' %></div>
+              <div class="info-item"><b>Address:</b> <%= [parentsAddress.door_no, parentsAddress.street, parentsAddress.district, parentsAddress.state, parentsAddress.pincode].filter(Boolean).join(', ') || '-' %></div>
             </div>
           </div>
 

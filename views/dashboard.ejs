@@ -8,7 +8,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- JQUERY (REQUIRED FOR YOUR CODE) -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
   <style>
@@ -218,13 +217,17 @@
       color: #FF9933;
       font-weight: bold;
     }
+
+    /* Toast */
+    #successToast { display: none; 
+  }
   </style>
 </head>
 <body>
 
 <!-- Success Toast -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
       <div class="toast-body">✓ Family saved successfully!</div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -291,8 +294,8 @@
 <!-- Mobile Sidebar (UNCHANGED) -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
   <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <h5 class="offcanvas-title">Menu</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
   </div>
   <div class="offcanvas-body">
     <ul class="navbar-nav">
@@ -320,19 +323,26 @@
   </div>
 </div>
 
+
 <!-- ========== NEW DASHBOARD UI (REPLACED OLD CONTAINER) ========== -->
+
 
 <div class="dashboard-image-container">
   <p class="welcome-text">Welcome to Temple Portal</p>
   <div class="quote-container">
     <div class="quote-text">
+
       <p class="cycling-quote">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
+
     </div>
   </div>
 </div>
 
 
+
 <!-- =================== MODALS (UNCHANGED) =================== -->
+
+<!-- Family Modal -->
 
 <div class="modal fade" id="familyCheckModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -341,6 +351,7 @@
         <h5 class="modal-title">Family Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+
       <div class="modal-body">
         <div id="familyContent">
           <div class="text-center">
@@ -363,6 +374,9 @@
       <div class="modal-footer">
         <button class="btn btn-primary" id="familyModalAction"></button>
       </div>
+
+      <div class="modal-body" id="familyContent"></div>
+
     </div>
   </div>
 </div>
@@ -371,9 +385,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title">
-          <i class="bi bi-clock"></i> Coming Soon
-        </h5>
+        <h5 class="modal-title"><i class="bi bi-clock"></i> Coming Soon</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center">
@@ -383,108 +395,61 @@
   </div>
 </div>
 
-<!-- =================== SCRIPTS (UNCHANGED) =================== -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  // Show success toast
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('success') === 'true') {
+    const toastElement = document.getElementById('successToast');
+    toastElement.style.display = 'flex';
+    new bootstrap.Toast(toastElement).show();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
-<script>
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('success') === 'true') {
-  const toastElement = document.getElementById('successToast');
-  toastElement.style.display = 'flex';
-  const toast = new bootstrap.Toast(toastElement);
-  toast.show();
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
+  // Show login modal
+  if (urlParams.get('login') === 'success') {
+    new bootstrap.Modal(document.getElementById('loginSuccessModal')).show();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
-if (urlParams.get('login') === 'success') {
-  const loginModal = new bootstrap.Modal(document.getElementById('loginSuccessModal'));
-  loginModal.show();
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
+  function showComingSoonModal() {
+    new bootstrap.Modal(document.getElementById('comingSoonModal')).show();
+  }
 
-$("#familyBtn").on("click", function () {
-  $.get("/family/check", function (res) {
-    if (res.exists) {
-      window.location.href = "/my-family";
-    } else {
-      showFamilyModal(
-        "No Details Found",
-        "No family details found. Please add your family details.",
-        "Add Family",
-        "/family-form"
-      );
+  function handleFamilyClick() {
+    if (sessionStorage.getItem('backFromMyFamily') === 'true') {
+      sessionStorage.removeItem('backFromMyFamily');
+      window.location.href = '/my-family';
+      return;
     }
-  });
-});
 
-function showFamilyModal(title, msg, btnText, redirectUrl) {
-  $("#familyModalTitle").text(title);
-  $("#familyModalMsg").text(msg);
-  $("#familyModalAction").text(btnText);
-
-  const modal = new bootstrap.Modal(document.getElementById("familyStatusModal"));
-  modal.show();
-
-  $("#familyModalAction").off("click").on("click", function () {
-    modal.hide();
-    window.location.href = redirectUrl;
-  });
-}
-
-function showComingSoonModal() {
-  const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
-  modal.show();
-}
-
-function handleFamilyClick() {
-  // Check if returning from my-family page - redirect directly without modal
-  if (sessionStorage.getItem('backFromMyFamily') === 'true') {
-    sessionStorage.removeItem('backFromMyFamily');
-    window.location.href = '/my-family';
-    return;
-  }
-
-  // Otherwise, show the modal
-  const modal = new bootstrap.Modal(document.getElementById('familyCheckModal'));
-  modal.show();
-}
-
-const familyModal = document.getElementById('familyCheckModal');
-familyModal.addEventListener('show.bs.modal', function (event) {
-  // Prevent modal from showing if returning from my-family page
-  if (sessionStorage.getItem('backFromMyFamily') === 'true') {
-    event.preventDefault();
-    sessionStorage.removeItem('backFromMyFamily');
-    window.location.href = '/my-family';
-    return;
-  }
-
-  const familyContent = document.getElementById('familyContent');
-
-  familyContent.innerHTML = `
-    <div class="text-center">
-      <div class="spinner-border"></div>
-    </div>
-  `;
-
-  fetch('/my-family-json')
-    .then(response => response.json())
-    .then(data => {
-      if (data.success && data.members && data.members.length > 0) {
-        // If family details exist, hide modal and redirect directly to /my-family
-        const modal = bootstrap.Modal.getInstance(document.getElementById('familyCheckModal'));
-        modal.hide();
-        sessionStorage.setItem('backFromMyFamily', 'true');
-        window.location.href = '/my-family';
-      } else {
+    // Fetch family data first
+    fetch('/my-family-json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.members && data.members.length > 0) {
+          sessionStorage.setItem('backFromMyFamily', 'true');
+          window.location.href = '/my-family';
+        } else {
+          const familyContent = document.getElementById('familyContent');
+          familyContent.innerHTML = `
+            <div class="text-center">
+              <div class="alert alert-warning">
+                <h5>Add Details</h5>
+                <p>No family details found. Please add your family details.</p>
+                <button class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
+              </div>
+            </div>
+          `;
+          new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        const familyContent = document.getElementById('familyContent');
         familyContent.innerHTML = `
           <div class="text-center">
-            <div class="alert alert-warning">
-              <h5>Add Details</h5>
-              <p>No family details found. Please add your family details.</p>
-              <button class="btn btn-primary" onclick="window.location.href='/family-form'">
-                Add Details
-              </button>
+            <div class="alert alert-danger">
+              <h5>Error Loading Family Details</h5>
+              <p>Please try again.</p>
             </div>
           </div>
         `;
