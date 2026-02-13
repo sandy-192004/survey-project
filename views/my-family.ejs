@@ -358,7 +358,10 @@
                 <input class="form-control mb-2" name="occupation" placeholder="Occupation">
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onclick="showPhotoOptions('husbandPhotoFile')">
+                <input type="file" id="husband_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleHusbandPhotoSelect(this)">
+                <div id="husband_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('husband_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -430,7 +433,10 @@
                 <input class="form-control mb-2" name="occupation" placeholder="Occupation">
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onclick="showPhotoOptions('wifePhotoFile')">
+                <input type="file" id="wife_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleWifePhotoSelect(this)">
+                <div id="wife_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('wife_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -520,7 +526,10 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onclick="showPhotoOptions('addChildPhotoFile')">
+                <input type="file" id="child_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleChildPhotoSelectEdit(this)">
+                <div id="child_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('child_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
               </div>
             </div>
             <div class="row">
