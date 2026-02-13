@@ -1,6 +1,7 @@
 const express = require("express");
 const session = require("express-session");
 
+// const hemlet = require("helmet");
 
 const path = require("path");
 
@@ -11,6 +12,7 @@ const db = require("./config/db");
 
 const app = express();
 
+// app.use(hemlet());
 
 // app.use(hemlet());
 

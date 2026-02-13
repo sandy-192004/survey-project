@@ -11,9 +11,25 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
   <style>
-    html, body { height: 100%; margin: 0; }
-    body { background-color: #f3eae2; height: 100vh; overflow: hidden; opacity: 0; transition: opacity 0.8s ease-in-out; }
-    .navbar { background-color: rgba(30,21,11,0.9) !important; backdrop-filter: blur(10px); color: white; }
+    html {
+      height: 100%;
+    }
+
+    body {
+      background-color: #f3eae2;
+      height: 100vh;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.8s ease-in-out;
+    }
+
+    .navbar {
+      background-color: rgba(30, 21, 11, 0.9) !important;
+      backdrop-filter: blur(10px);
+      color: white;
+    }
+
+    /* ========== NEW DASHBOARD UI (ONLY THIS PART CHANGED) ========== */
 
     .dashboard-image-container {
       width: 100%;
@@ -21,34 +37,185 @@
       background-image: url('./images/pic.png');
       background-size: cover;
       background-position: center top;
+      background-repeat: no-repeat;
+      position: relative;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
     }
+.quote-container {
+  position: relative;
+  max-width: 720px;
+  width: 85%;
+  padding: 1.6rem 3cqb;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  border-radius: 15px;
+  color: rgb(0, 0, 0);
+  text-align: center;
+  font-family: "Times New Roman", Times, serif;
+  z-index: 5;
+}
 
-    .quote-container {
+    .quote-text {
       position: relative;
-      max-width: 720px;
-      width: 85%;
-      padding: 1.6rem 3cqb;
-      background: rgba(255,255,255,0.8);
-      backdrop-filter: blur(5px);
-      border-radius: 15px;
-      color: #000;
-      text-align: center;
-      font-family: "Times New Roman", Times, serif;
-      z-index: 5;
+      min-height: 4rem;
+      font-size: 1.8rem;
+      font-style: italic;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #060605;
     }
 
-    .quote-text { font-size: 1.8rem; font-style: italic; font-weight: bold; margin-bottom: 1rem; color: #060605; }
-    .welcome-text { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); font-size: 3rem; font-weight: bold; color: #000; z-index: 10; }
+    .welcome-text {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3.0rem;
+      font-weight: bold;
+      color: #000000;
+      z-index: 10;
+    }
+
+    .blessing-text {
+      font-size: 2.1rem;
+      margin-top: 0.5rem;
+      color: #0e0e0d;
+    }
 
     @media (max-width: 768px) {
-      body { font-size: 14px; }
-      .quote-container { padding: 0.5rem 1rem; }
-      .quote-text { font-size: 0.9rem; }
-      .welcome-text { font-size: 1.2rem; }
+      body {
+        font-size: 14px;
+      }
+
+      .quote-container {
+        padding: 0.5rem 1rem;
+      }
+
+      .quote-text {
+        font-size: 0.9rem;
+      }
+
+      .welcome-text {
+        font-size: 1.2rem;
+      }
+
+      .blessing-text {
+        font-size: 0.9rem;
+      }
+
+      /* Side Menu Mobile */
+      .offcanvas {
+        width: 75% !important;
+        background-color: #f5e6d3;
+      }
+
+      .offcanvas-body .navbar-nav .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+        color: #8B4513;
+      }
+
+      .offcanvas-body .navbar-nav .nav-link i {
+        color: #8B4513;
+      }
+
+      /* Modals Mobile */
+      .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+      }
+
+      .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      }
+
+      /* Login Success Popup */
+      #loginSuccessModal .modal-dialog {
+        max-width: 85%;
+        margin: 20px auto;
+      }
+
+      #loginSuccessModal .modal-body {
+        padding: 0.8rem;
+        background-color: #f5e6d3;
+      }
+
+      #loginSuccessModal .modal-body i {
+        font-size: 1.8rem;
+      }
+
+      #loginSuccessModal .modal-body h4 {
+        font-size: 1.1rem;
+      }
+
+      #loginSuccessModal .modal-body p {
+        font-size: 0.85rem;
+      }
+
+      /* Other Popups */
+      #familyCheckModal .modal-dialog,
+      #familyStatusModal .modal-dialog,
+      #comingSoonModal .modal-dialog {
+        max-width: 95%;
+      }
+
+      #familyCheckModal .modal-header,
+      #familyStatusModal .modal-header,
+      #comingSoonModal .modal-header {
+        background-color: #8B4513;
+        color: white;
+      }
+
+      #familyCheckModal .modal-body,
+      #familyStatusModal .modal-body,
+      #comingSoonModal .modal-body {
+        background-color: #f5e6d3;
+      }
+
+      #familyCheckModal .btn,
+      #familyStatusModal .btn,
+      #comingSoonModal .btn {
+        background-color: #8B4513;
+        border-color: #8B4513;
+        color: white;
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      #familyCheckModal .btn:hover,
+      #familyStatusModal .btn:hover,
+      #comingSoonModal .btn:hover {
+        background-color: #A0522D;
+        border-color: #A0522D;
+      }
+
+      /* Cards in modals */
+      .member-card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .member-photo {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    #comingSoonModal .modal-dialog {
+      max-width: 400px;
+      min-height: 300px;
+    }
+    #comingSoonModal .modal-body {
+      background-color: #FFF8DC;
+    }
+    #comingSoonModal .modal-body p {
+      color: #FF9933;
+      font-weight: bold;
     }
 
     /* Toast */
@@ -89,12 +256,14 @@
   </div>
 </div>
 
-<!-- NAVBAR -->
+<!-- ================= NAVBAR (UNCHANGED) ================= -->
 <nav class="navbar navbar-dark shadow-sm">
   <div class="container-fluid">
     <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
       <span class="navbar-toggler-icon"></span>
     </button>
+
+   
     <div class="d-none d-lg-block ms-auto">
       <ul class="navbar-nav flex-row">
         <li class="nav-item mx-2">
@@ -122,8 +291,8 @@
   </div>
 </nav>
 
-<!-- Mobile Sidebar -->
-<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+<!-- Mobile Sidebar (UNCHANGED) -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title">Menu</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -154,17 +323,27 @@
   </div>
 </div>
 
-<!-- Dashboard UI -->
+
+<!-- ========== NEW DASHBOARD UI (REPLACED OLD CONTAINER) ========== -->
+
+
 <div class="dashboard-image-container">
   <p class="welcome-text">Welcome to Temple Portal</p>
   <div class="quote-container">
     <div class="quote-text">
-      <p>May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
+
+      <p class="cycling-quote">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
+
     </div>
   </div>
 </div>
 
+
+
+<!-- =================== MODALS (UNCHANGED) =================== -->
+
 <!-- Family Modal -->
+
 <div class="modal fade" id="familyCheckModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -172,12 +351,36 @@
         <h5 class="modal-title">Family Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="familyContent"></div>
+
+      <div class="modal-body">
+        <div id="familyContent">
+          <div class="text-center">
+            <div class="spinner-border"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Coming Soon Modal -->
+<div class="modal fade" id="familyStatusModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="familyModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="familyModalMsg"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="familyModalAction"></button>
+      </div>
+
+      <div class="modal-body" id="familyContent"></div>
+
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="comingSoonModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -192,8 +395,6 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
   // Show success toast
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('success') === 'true') {
@@ -252,16 +453,26 @@
             </div>
           </div>
         `;
-        new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
-      });
-  }
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      familyContent.innerHTML = `
+        <div class="text-center">
+          <div class="alert alert-danger">
+            <h5>Error Loading Family Details</h5>
+            <p>Please try again.</p>
+          </div>
+        </div>
+      `;
+    });
+});
 
-  // Fade in page
-  window.addEventListener('load', () => {
-    document.body.style.opacity = '1';
-  });
+// Fade in on page load
+window.addEventListener('load', function() {
+  document.body.style.opacity = '1';
+});
 </script>
 
 </body>
 </html>
-
