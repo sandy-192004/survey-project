@@ -16,7 +16,7 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
           <h1 class="h3 mb-1">
-            <i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard
+            <i class="bi me-2 text-primary"></i>Dashboard
           </h1>
           <p class="text-muted mb-0 small">Manage and monitor family registrations</p>
         </div>
@@ -140,61 +140,77 @@
 
       <!-- Search & Filter -->
       <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+        <div class="card-body py-3">
           <%- include('search-filter-form') %>
         </div>
       </div>
 
-      <!-- Family Cards Grid -->
-      <div class="row g-3 mb-4">
+      <!-- Family List -->
+      <div class="card border-0 shadow-sm mb-4">
         <% if (results && results.length > 0) { %>
-          <% results.forEach(member => { %>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 family-card" style="cursor: pointer; transition: var(--transition);" onclick="location='/admin/view/<%= member.id %>'">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div class="flex-grow-1">
-                    <h5 class="card-title mb-1 fw-bold">
-                      <i class="bi bi-person-circle text-primary me-2"></i><%= member.name %>
-                    </h5>
-                  </div>
-                  <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-light border-0" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'" title="Edit">
-                      <i class="bi bi-pencil-square text-primary"></i>
-                    </button>
-                    <button class="btn btn-sm btn-light border-0" onclick="event.stopPropagation(); confirmDelete('<%= member.id %>', '<%= member.name %>')" title="Delete">
-                      <i class="bi bi-trash text-danger"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="mb-2">
-                  <small class="text-muted d-block mb-1">
-                    <i class="bi bi-geo-alt-fill me-1"></i><%= member.district %>, <%= member.state %>
-                  </small>
-                  <small class="text-muted d-block mb-2">
-                    <i class="bi bi-briefcase-fill me-1"></i><%= member.occupation || 'N/A' %>
-                  </small>
-                  <span class="badge bg-light text-dark border">
-                    <i class="bi bi-people-fill me-1"></i><%= member.children_count || 0 %> Children
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th class="px-4 py-3 border-0">Family Head</th>
+                  <th class="py-3 border-0">Location</th>
+                  <th class="py-3 border-0">Occupation</th>
+                  <th class="py-3 border-0 text-center">Children</th>
+                  <th class="py-3 border-0 text-end px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% results.forEach(member => { %>
+                <tr style="cursor: pointer;" onclick="location='/admin/view/<%= member.id %>'">
+                  <td class="px-4 py-3">
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="rounded-circle bg-primary bg-opacity-10 p-2">
+                        <i class="bi bi-person-fill text-primary"></i>
+                      </div>
+                      <span class="fw-semibold"><%= member.name %></span>
+                    </div>
+                  </td>
+                  <td class="py-3">
+                    <div class="text-muted small">
+                      <i class="bi bi-geo-alt-fill me-1"></i><%= member.district %>, <%= member.state %>
+                    </div>
+                  </td>
+                  <td class="py-3">
+                    <span class="text-muted small">
+                      <i class="bi bi-briefcase-fill me-1"></i><%= member.occupation || 'N/A' %>
+                    </span>
+                  </td>
+                  <td class="py-3 text-center">
+                    <span class="badge bg-light text-dark border">
+                      <i class="bi bi-people-fill me-1"></i><%= member.children_count || 0 %>
+                    </span>
+                  </td>
+                  <td class="py-3 text-end px-4">
+                    <div class="d-flex gap-2 justify-content-end">
+                      <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); location='/admin/view/<%= member.id %>'" title="View">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'" title="Edit">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); confirmDelete('<%= member.id %>', '<%= member.name %>')" title="Delete">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
           </div>
-          <% }) %>
         <% } else { %>
-          <div class="col-12">
-            <div class="card border-0 shadow-sm">
-              <div class="card-body text-center py-5">
-                <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
-                <h5 class="text-muted">No families found</h5>
-                <p class="text-muted small mb-3">Try adjusting your search or filter criteria</p>
-                <a href="/admin/dashboard" class="btn btn-primary">
-                  <i class="bi bi-arrow-clockwise me-2"></i>Reset Filters
-                </a>
-              </div>
-            </div>
+          <div class="card-body text-center py-5">
+            <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+            <h5 class="text-muted">No families found</h5>
+            <p class="text-muted small mb-3">Try adjusting your search or filter criteria</p>
+            <a href="/admin/dashboard" class="btn btn-primary">
+              <i class="bi bi-arrow-clockwise me-2"></i>Reset Filters
+            </a>
           </div>
         <% } %>
       </div>
@@ -386,18 +402,6 @@
         modal.hide();
       }
     }
-
-    // Hover effect for cards
-    document.querySelectorAll('.family-card').forEach(card => {
-      card.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-4px)';
-        this.style.boxShadow = 'var(--shadow-lg)';
-      });
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = 'var(--shadow-sm)';
-      });
-    });
   </script>
 
 </body>
