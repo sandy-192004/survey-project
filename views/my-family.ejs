@@ -13,7 +13,7 @@
 
   body {
     margin: 0;
-    background-color: #f5e6d3;
+    background-color: #f8f9fa;
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
     font-family: 'Times New Roman', serif;
@@ -22,18 +22,19 @@
   .family-header {
     width: 100vw;
     margin-left: calc(-50vw + 50%);
-    background: linear-gradient(135deg, #8B4513, #A0522D);
+    background: linear-gradient(135deg, #495057, #6c757d);
     color: white;
     padding: 1.5rem 1rem;
     text-align: center;
     font-size: 2rem;
     font-weight: bold;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   }
 
   .section-title {
     margin: 1.5625rem 0 0.625rem;
     font-weight: bold;
-    color: #5a3e2b;
+    color: #343a40;
   }
 
   .parents-row,
@@ -47,16 +48,17 @@
   .member-card {
     min-width: 18.75rem;
     max-width: 31.25rem;
-    background-color: #f9f1e6;
+    background-color: #ffffff;
     border-radius: 0.875rem;
     padding: 1.25rem;
     position: relative;
-    box-shadow: 0 0.375rem 1.125rem rgba(0,0,0,0.15);
+    box-shadow: 0 0.375rem 1.125rem rgba(0,0,0,0.1);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    border: 1px solid #dee2e6;
   }
 
   .member-info {
@@ -67,13 +69,13 @@
   .member-name {
     font-size: 2rem;
     font-weight: bold;
-    color: #5a3e2b;
+    color: #343a40;
     margin-bottom: 0.1875rem;
   }
 
   .info-item {
     font-size: 1rem;
-    color: #4b3621;
+    color: #495057;
     margin-bottom: 0.25rem;
   }
 
@@ -83,7 +85,7 @@
     height: 16rem;
     object-fit: cover;
     border-radius: 0.75rem;
-    border: 0.125rem solid #d1b89a;
+    border: 0.125rem solid #ced4da;
     flex-shrink: 0;
   }
 
@@ -92,7 +94,7 @@
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
-    background-color: #8B4513;
+    background-color: #6c757d;
     color: white;
     padding: 0.375rem;
     border-radius: 50%;
@@ -106,10 +108,14 @@
     justify-content: center;
   }
 
+  .edit-icon:hover {
+    background-color: #495057;
+  }
+
   /* Keep Add Child bar but lighter look */
   .add-child-bar {
     margin: 1.25rem 0;
-    background-color: #8B4513;
+    background-color: #6c757d;
     color: white;
     text-align: center;
     padding: 0.625rem;
@@ -120,6 +126,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .add-child-bar:hover {
+    background-color: #495057;
   }
 
   @media (max-width: 768px) {
@@ -167,14 +177,14 @@
     }
 
     .section-title {
-      background-color: #f5efe9;
+      background-color: #f8f9fa;
       padding: 8px 12px;
       border-radius: 5px;
       margin-bottom: 1rem;
     }
 
     .add-child-bar {
-      background-color: #6f4e37;
+      background-color: #6c757d;
       color: white;
     }
   }
@@ -218,7 +228,7 @@
     %>
 
     <!-- ================= PARENTS ================= -->
-    <h5 class="section-title" style="background-color: #f5e6d3; color: #8B4513;">Parents</h5>
+    <h5 class="section-title" style="background-color: #f8f9fa; color: #495057;">Parents</h5>
     <div class="parents-row">
 
       <% members.forEach(member => { %>
@@ -274,7 +284,7 @@
     </div>
 
     <!-- ================= CHILDREN ================= -->
-    <h5 class="section-title" style="background-color: #f5e6d3; color: #8B4513;">Children</h5>
+    <h5 class="section-title" style="background-color: #f8f9fa; color: #495057;">Children</h5>
     <div class="children-row">
 
       <% members.forEach(member => { %>
@@ -339,7 +349,7 @@
   <div class="modal fade" id="husbandEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Edit Husband</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -414,7 +424,7 @@
   <div class="modal fade" id="wifeEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Edit Wife</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -489,7 +499,7 @@
   <div class="modal fade" id="childEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Edit Child</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -583,7 +593,7 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
 
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Add Child</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
