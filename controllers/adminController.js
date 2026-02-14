@@ -206,6 +206,8 @@ exports.editMember = async (req, res) => {
       pincode: c.pincode || parent?.pincode || ""
     }));
 
+    const { states, districts } = loadDropdownOptions();
+
     res.render("admin/edit", {
       familyId,
       parent: parent ? {
@@ -232,6 +234,8 @@ exports.editMember = async (req, res) => {
         photo: wife.photo
       } : null,
       children: formattedChildren,
+      states: states,
+      districts: districts,
       message: req.query.message || null
     });
 
@@ -567,3 +571,8 @@ exports.addChild = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+
+
+
+
