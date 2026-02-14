@@ -49,7 +49,13 @@ exports.register = async (req, res) => {
     const { email, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
 /*******  88ec1cc0-9866-4f21-88ad-db885cafd9bc  *******/
-      return res.status(400).send("Passwords do not match");
+      return res.redirect("/login?error=password");
+    }
+
+    // Check if user already exists
+    const [existingUser] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+    if (existingUser.length > 0) {
+      return res.redirect("/login?error=exists");
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -60,7 +66,7 @@ exports.register = async (req, res) => {
     res.redirect("/login?registered=true");
   } catch (err) {
     console.error("Registration error:", err);
-    res.status(500).send("Server error");
+    res.redirect("/login?error=server");
   }
 };
 

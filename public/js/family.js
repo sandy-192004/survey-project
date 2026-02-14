@@ -496,6 +496,14 @@ function handleChildPhotoSelect(input, childIndex) {
   }
 }
 
+// Handle photo selection for add child modal
+function handleAddChildPhotoSelect(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFile(file, 'add_child_photo');
+  }
+}
+
 function deleteChildPhoto(childIndex) {
   const fileInput = document.getElementById(`child_${childIndex}_file`);
   const fileNameSpan = document.getElementById(`child_${childIndex}_file_name`);
