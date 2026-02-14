@@ -16,31 +16,28 @@
 
   <style>
     :root {
-      --primary-color: #8B4513;
-      --secondary-color: #ecbd7bd5;
-      --success-color: #16A34A;
-      --warning-color: #F59E0B;
-      --danger-color: #DC2626;
-      --text-secondary: #ffffffd8;
-      --card-shadow: 0 8px 20px rgba(9, 8, 8, 0.08);
-      --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.12);
+      --primary-color: #495057;
+      --secondary-color: #6c757d;
+      --success-color: #5a6268;
+      --warning-color: #adb5bd;
+      --danger-color: #6c757d;
+      --text-secondary: #f8f9fa;
+      --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.2);
     }
 
     
       
     body {
   font-family: 'Inter', sans-serif;
-  background:
-    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-    url("/images/pic.png") no-repeat center center fixed;
-  background-size: cover;
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
   margin: 0;
 }
 
     
 
     .header {
-      background: #fffcfc1d;
+      background: linear-gradient(135deg, #495057, #6c757d);
        color: #ffffff;
       border-radius: 0px;
       padding: 2rem 1.5rem;
@@ -50,7 +47,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.086);
+      border: 1px solid rgba(255, 255, 255, 0.1);
 
     }
 
@@ -59,20 +56,20 @@
       grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
       gap: 1.5rem;
       margin-bottom: 3rem;
-       color: #ffffff;
+       color: #343a40;
       
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
     .stat-card {
-      background: #fffcfc1d;
+      background: #ffffff;
       padding: 1rem;
       border-radius: 10px;
       text-align: center;
       box-shadow: var(--card-shadow);
-       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.086);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+       color: #343a40;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
     .family-grid {
@@ -82,15 +79,15 @@
     }
 
     .family-card {
-      background: #fffcfc1d;
+      background: #ffffff;
       border-radius: 14px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
       cursor: pointer;
       position: relative;
       transition: all 0.3s ease;
-      border: 1px solid rgba(255, 255, 255, 0.086);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      border: 1px solid #dee2e6;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
 
     .family-card:hover {
@@ -102,7 +99,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #80353585;
+      background: rgba(108, 117, 125, 0.9);
       color: rgb(255, 255, 255);
       border: none;
       border-radius: 50%;
@@ -116,14 +113,14 @@
     }
 
     .edit-btn:hover {
-      background: #7a4545;
+      background: #495057;
     }
 
     .delete-btn {
       position: absolute;
       bottom: 10px;
       right: 10px;
-      background: #7a4545;
+      background: #6c757d;
       color: rgb(255, 255, 255);
       border: none;
       border-radius: 5px;
@@ -135,28 +132,29 @@
     }
 
     .delete-btn:hover {
-      background: #c82333;
+      background: #495057;
     }
 
     .family-card-header {
-      background: linear-gradient(135deg, #5b3722, #8a815b);
+      background: linear-gradient(135deg, #495057, #6c757d);
       padding: 0.75rem;
       color: #ffffff;
     }
 
     .family-card-body {
       padding: 1rem;
-      color: #ffffff;
+      color: #343a40;
     }
 
     .children-badge {
-      background: #c1a972;
-      color: var(--primary-color);
+      background: #e9ecef;
+      color: #495057;
       padding: 0.35rem 0.7rem;
       border-radius: 999px;
       font-size: 0.75rem;
       display: inline-block;
       margin-top: 0.5rem;
+      border: 1px solid #dee2e6;
     }
 
     /* Pagination Styles */
@@ -206,10 +204,10 @@
   <!-- HEADER -->
   <div class="header">
     <div style="flex: 1; text-align: center;">
-      <h4 class="fw-bold mb-0" style="color:  #ad9149;">
+      <h4 class="fw-bold mb-0" style="color:  #ffffff;">
         <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
       </h4>
-      <small style="color: rgba(255, 254, 254, 0.799);">Manage and monitor family registrations</small>
+      <small style="color: rgba(255, 254, 254, 0.9);">Manage and monitor family registrations</small>
     </div>
     <div style="display: flex; align-items: center; gap: 1rem;">
       <div class="dropdown">
@@ -261,7 +259,7 @@
   <% } %>
 
   <!-- SEARCH -->
-  <div class="card mb-2 search-form" style="background-color: #fffcfc1d;">
+  <div class="card mb-2 search-form" style="background-color: #ffffff; border: 1px solid #dee2e6;">
   <div class="card-body">
 
     <style>
