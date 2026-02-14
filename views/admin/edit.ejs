@@ -77,7 +77,7 @@
             <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>">
             <input class="form-control mb-2" name="street" value="<%= parent.street %>">
 
-            <!-- ✅ Dropdowns for State & District -->
+            <!--  Dropdowns for State & District -->
             <select class="form-control mb-2" id="stateSelect" name="state">
               <option value="">Select State</option>
             </select>
@@ -111,7 +111,7 @@
             <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>">
             <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>">
 
-            <!-- ✅ Dropdowns for State & District -->
+            <!-- Dropdowns for State & District -->
             <select class="form-control mb-2" id="wifeStateSelect" name="wife_state">
               <option value="">Select State</option>
             </select>
@@ -159,7 +159,7 @@
           <input class="form-control mb-2 child-door" name="children[<%=i%>][door_no]" value="<%=c.door_no%>">
           <input class="form-control mb-2 child-street" name="children[<%=i%>][street]" value="<%=c.street%>">
 
-          <!-- ✅ Child Dropdowns Added -->
+          <!--  Child Dropdowns Added -->
           <select class="form-control mb-2 child-state" name="children[<%=i%>][state]" id="childState_<%=i%>">
             <option value="">Select State</option>
           </select>
@@ -188,9 +188,9 @@
 </div>
 <% } %>
 
-<!-- ✅ State–District Script -->
+<!-- State–District Script -->
 <script>
-// ✅ Load all states and districts from JSON
+// Load all states and districts from JSON
 let stateDistricts = {};
 
 fetch("/data/india-states-districts.json")
@@ -200,7 +200,7 @@ fetch("/data/india-states-districts.json")
     populateAllDropdowns();
   });
 
-// ✅ Populate for Husband, Wife, and Children
+//  Populate for Husband, Wife, and Children
 function populateAllDropdowns() {
   const husbandState = document.getElementById("stateSelect");
   const husbandDistrict = document.getElementById("districtSelect");
@@ -247,7 +247,7 @@ function populateAllDropdowns() {
   });
 }
 
-// ✅ Helper to fill districts based on selected state
+// Helper to fill districts based on selected state
 function populateDistricts(state, districtDropdown, selectedDistrict = "") {
   districtDropdown.innerHTML = '<option value="">Select District</option>';
   if (state && stateDistricts[state]) {
@@ -338,7 +338,7 @@ function capturePhoto(inputId){
   .catch(()=>alert("Camera not available"));
 }
 
-// ✅ UPDATED — only show size, no preview image
+// UPDATED — only show size, no preview image
 function uploadImage(input){
   const file = input.files[0];
   if(!file) return;
