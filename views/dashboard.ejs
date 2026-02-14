@@ -1,83 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Portal - Dashboard</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-  <style>
-    html, body { height: 100%; margin: 0; }
-    body { background-color: #f8f9fa; height: 100vh; overflow: hidden; opacity: 0; transition: opacity 0.8s ease-in-out; }
-    .navbar { background-color: rgba(52, 58, 64, 0.95) !important; backdrop-filter: blur(10px); color: white; }
-
-    .dashboard-image-container {
-      width: 100%;
-      height: 100vh;
-      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-      background-size: cover;
-      background-position: center top;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .quote-container {
-      position: relative;
-      max-width: 720px;
-      width: 85%;
-      padding: 1.6rem 3cqb;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(5px);
-      border-radius: 15px;
-      color: #000;
-      text-align: center;
-      font-family: "Times New Roman", Times, serif;
-      z-index: 5;
-      border: 1px solid #dee2e6;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
-
-    .quote-text { font-size: 1.8rem; font-style: italic; font-weight: bold; margin-bottom: 1rem; color: #343a40; }
-    .welcome-text { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); font-size: 3rem; font-weight: bold; color: #495057; z-index: 10; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
-
-    @media (max-width: 768px) {
-      body { font-size: 14px; }
-      .quote-container { padding: 0.5rem 1rem; }
-      .quote-text { font-size: 0.9rem; }
-      .welcome-text { font-size: 1.2rem; }
-    }
-
-    #comingSoonModal .modal-dialog {
-      max-width: 400px;
-      min-height: 300px;
-    }
-    #comingSoonModal .modal-body {
-      background-color: #f8f9fa;
-    }
-    #comingSoonModal .modal-body p {
-      color: #6c757d;
-      font-weight: bold;
-    }
-
-    /* Toast */
-    #successToast { display: none; 
-  }
-  </style>
-</head>
-<body>
+<%- include('partials/head') %>
+<body class="d-flex flex-column min-vh-100">
 
 <!-- Success Toast -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;">
-  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" style="display: none;">
     <div class="d-flex">
-      <div class="toast-body">✓ Family saved successfully!</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>Family saved successfully!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
   </div>
 </div>
@@ -85,123 +16,55 @@
 <!-- Login Success Modal -->
 <div class="modal fade" id="loginSuccessModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-check-circle-fill me-2"></i>Success
-        </h5>
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-success text-white border-0">
+        <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Login Successful</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body text-center bg-light">
-        <div class="mb-4">
+      <div class="modal-body text-center py-4">
+        <div class="mb-3">
           <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
         </div>
-        <h4 class="text-success fw-bold mb-3">Login Successful!</h4>
-        <p class="text-muted">Welcome back to our temple digital seva portal. May your visit be blessed.</p>
+        <h4 class="fw-bold mb-2">Welcome Back!</h4>
+        <p class="text-muted">Welcome to Family Portal. May your visit be blessed.</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- NAVBAR -->
-<nav class="navbar navbar-dark shadow-sm">
-  <div class="container-fluid">
-    <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="d-none d-lg-block ms-auto">
-      <ul class="navbar-nav flex-row">
-        <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="#" onclick="handleFamilyClick(); return false;">
-            <i class="bi bi-people-fill"></i> Family
-          </a>
-        </li>
-        <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="#" onclick="showComingSoonModal(); return false;">
-            <i class="bi bi-calendar-heart"></i> Pooja Booking
-          </a>
-        </li>
-        <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="#" onclick="showComingSoonModal(); return false;">
-            <i class="bi bi-person-circle"></i> Profile
-          </a>
-        </li>
-        <li class="nav-item mx-2">
-          <a class="nav-link fw-500" href="/logout">
-            <i class="bi bi-box-arrow-right"></i> Logout
-          </a>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<%- include('partials/navbar') %>
 
-<!-- Mobile Sidebar -->
-<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title">Menu</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-  </div>
-  <div class="offcanvas-body">
-    <ul class="navbar-nav">
-      <li class="nav-item mb-2">
-        <a class="nav-link" href="#" onclick="handleFamilyClick(); return false;">
-          <i class="bi bi-people-fill"></i> Family
-        </a>
-      </li>
-      <li class="nav-item mb-2">
-        <a class="nav-link" href="#" onclick="showComingSoonModal(); return false;">
-          <i class="bi bi-calendar-heart"></i> Pooja Booking
-        </a>
-      </li>
-      <li class="nav-item mb-2">
-        <a class="nav-link" href="#" onclick="showComingSoonModal(); return false;">
-          <i class="bi bi-person-circle"></i> Profile
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/logout">
-          <i class="bi bi-box-arrow-right"></i> Logout
-        </a>
-      </li>
-    </ul>
-  </div>
-</div>
+<!-- Main Content -->
+<div class="flex-grow-1 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); min-height: 70vh;">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-10 col-xl-8">
+        <!-- Welcome Header -->
+        <div class="text-center mb-5">
+          <h1 class="display-4 fw-bold text-dark mb-3">Welcome to Family Portal</h1>
+          <p class="lead text-muted">Manage your family details and stay connected</p>
+        </div>
 
+        <!-- Quote Card -->
+        <div class="card border-0 shadow-lg mb-4">
+          <div class="card-body p-4 p-md-5 text-center">
+            <div class="mb-3">
+              <i class="bi bi-quote text-primary" style="font-size: 3rem; opacity: 0.3;"></i>
+            </div>
+            <blockquote class="mb-0">
+              <p class="fs-5 fst-italic text-dark mb-3">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
+            </blockquote>
+          </div>
+        </div>
 
-<!-- ========== NEW DASHBOARD UI (REPLACED OLD CONTAINER) ========== -->
-
-
-<div class="dashboard-image-container">
-  <p class="welcome-text">Welcome to Temple Portal</p>
-  <div class="quote-container">
-    <div class="quote-text">
-
-      <p class="cycling-quote">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
-
-    </div>
-  </div>
-</div>
-
-
-
-<!-- =================== MODALS (UNCHANGED) =================== -->
-
-<!-- Family Modal -->
-
-<div class="modal fade" id="familyCheckModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Family Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="familyContent"></div>
-
-      <div class="modal-body">
-        <div id="familyContent">
-          <div class="text-center">
-            <div class="spinner-border"></div>
+        <!-- Updates Coming Soon -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <div class="mb-3">
+              <i class="bi bi-clock-history text-primary" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="fw-bold mb-3">Updates Coming Soon</h3>
+            <p class="text-muted mb-0">We're working on exciting new features. Stay tuned!</p>
           </div>
         </div>
       </div>
@@ -209,20 +72,21 @@
   </div>
 </div>
 
-<div class="modal fade" id="familyStatusModal" tabindex="-1">
+<!-- Family Check Modal -->
+<div class="modal fade" id="familyCheckModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="familyModalTitle"></h5>
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Family Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="familyModalMsg"></div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" id="familyModalAction"></button>
+      <div class="modal-body" id="familyContent">
+        <div class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
       </div>
-
-      <div class="modal-body" id="familyContent"></div>
-
     </div>
   </div>
 </div>
@@ -230,19 +94,22 @@
 <!-- Coming Soon Modal -->
 <div class="modal fade" id="comingSoonModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title"><i class="bi bi-clock"></i> Coming Soon</h5>
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-warning bg-opacity-10 border-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-clock-history me-2 text-warning"></i>Coming Soon</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body text-center">
-        <p class="mb-0">Features coming soon!</p>
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-hourglass-split text-warning mb-3" style="font-size: 3rem;"></i>
+        <h5 class="fw-bold mb-2">Feature Under Development</h5>
+        <p class="text-muted mb-0">This feature is coming soon. Stay tuned!</p>
       </div>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<%- include('partials/footer') %>
+<%- include('partials/scripts') %>
 <script>
   // Show success toast
   const urlParams = new URLSearchParams(window.location.search);
@@ -280,12 +147,13 @@
         } else {
           const familyContent = document.getElementById('familyContent');
           familyContent.innerHTML = `
-            <div class="text-center">
-              <div class="alert alert-warning">
-                <h5>Add Details</h5>
-                <p>No family details found. Please add your family details.</p>
-                <button class="btn btn-primary" onclick="window.location.href='/family-form'">Add Details</button>
-              </div>
+            <div class="text-center py-3">
+              <i class="bi bi-exclamation-circle text-warning mb-3" style="font-size: 3rem;"></i>
+              <h5 class="fw-bold mb-3">No Family Details Found</h5>
+              <p class="text-muted mb-4">Please add your family details to continue.</p>
+              <button class="btn btn-primary" onclick="window.location.href='/family-form'">
+                <i class="bi bi-plus-lg me-2"></i>Add Family Details
+              </button>
             </div>
           `;
           new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
@@ -295,20 +163,26 @@
         console.error(err);
         const familyContent = document.getElementById('familyContent');
         familyContent.innerHTML = `
-          <div class="text-center">
-            <div class="alert alert-danger">
-              <h5>Error Loading Family Details</h5>
-              <p>Please try again.</p>
-            </div>
+          <div class="text-center py-3">
+            <i class="bi bi-x-circle text-danger mb-3" style="font-size: 3rem;"></i>
+            <h5 class="fw-bold mb-3">Error Loading Family Details</h5>
+            <p class="text-muted">Please try again later.</p>
           </div>
         `;
         new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
       });
   }
 
-  // Fade in page
-  window.addEventListener('load', () => {
-    document.body.style.opacity = '1';
+  // Card hover effects
+  document.querySelectorAll('.card[style*="cursor: pointer"]').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-4px)';
+      this.style.boxShadow = 'var(--shadow-lg)';
+    });
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = 'var(--shadow-sm)';
+    });
   });
 </script>
 
