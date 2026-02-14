@@ -1,0 +1,96 @@
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); box-shadow: var(--shadow-md);">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/dashboard">
+      <i class="bi bi-house-heart-fill fs-4"></i>
+      <span>Family Portal</span>
+    </a>
+    
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto gap-2">
+        <li class="nav-item">
+          <a class="nav-link px-3 rounded-2" href="/dashboard">
+            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 rounded-2" href="/my-family">
+            <i class="bi bi-people-fill me-1"></i>My Family
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 rounded-2" href="/family-form">
+            <i class="bi bi-plus-circle-fill me-1"></i>Add Family
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 rounded-2 text-danger" href="#" onclick="handleLogout(event)" style="cursor: pointer;">
+            <i class="bi bi-box-arrow-right me-1"></i>Logout
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar .nav-link {
+    transition: var(--transition);
+    font-weight: 500;
+  }
+  
+  .navbar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .navbar-brand:hover {
+    transform: scale(1.05);
+    transition: var(--transition);
+  }
+</style>
+
+<!-- Family Logout Confirmation Modal -->
+<div class="modal fade" id="familyLogoutModal" tabindex="-1" aria-labelledby="familyLogoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="familyLogoutModalLabel">
+          <i class="bi bi-exclamation-circle text-warning me-2"></i>Confirm Logout
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Are you sure you want to logout from the Family Portal?</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-2"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmFamilyLogoutBtn">
+          <i class="bi bi-box-arrow-right me-2"></i>Yes, Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function handleLogout(event) {
+    event.preventDefault();
+    const logoutModal = new bootstrap.Modal(document.getElementById('familyLogoutModal'));
+    logoutModal.show();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmFamilyLogoutBtn');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function() {
+        window.location.href = '/logout';
+      });
+    }
+  });
+</script>
