@@ -51,8 +51,21 @@
       .welcome-text { font-size: 1.2rem; }
     }
 
+    #comingSoonModal .modal-dialog {
+      max-width: 400px;
+      min-height: 300px;
+    }
+    #comingSoonModal .modal-body {
+      background-color: #FFF8DC;
+    }
+    #comingSoonModal .modal-body p {
+      color: #FF9933;
+      font-weight: bold;
+    }
+
     /* Toast */
-    #successToast { display: none; }
+    #successToast { display: none; 
+  }
   </style>
 </head>
 <body>
@@ -153,17 +166,27 @@
   </div>
 </div>
 
-<!-- Dashboard UI -->
+
+<!-- ========== NEW DASHBOARD UI (REPLACED OLD CONTAINER) ========== -->
+
+
 <div class="dashboard-image-container">
   <p class="welcome-text">Welcome to Temple Portal</p>
   <div class="quote-container">
     <div class="quote-text">
-      <p>May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
+
+      <p class="cycling-quote">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
+
     </div>
   </div>
 </div>
 
+
+
+<!-- =================== MODALS (UNCHANGED) =================== -->
+
 <!-- Family Modal -->
+
 <div class="modal fade" id="familyCheckModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -172,6 +195,32 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="familyContent"></div>
+
+      <div class="modal-body">
+        <div id="familyContent">
+          <div class="text-center">
+            <div class="spinner-border"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="familyStatusModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="familyModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="familyModalMsg"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="familyModalAction"></button>
+      </div>
+
+      <div class="modal-body" id="familyContent"></div>
+
     </div>
   </div>
 </div>
