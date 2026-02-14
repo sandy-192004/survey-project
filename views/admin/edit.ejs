@@ -10,32 +10,37 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
-.option-btn{
-background:#8B4513;
-color:white;
-border:none;
+.option-btn {
+  background: #8B4513;
+  color: white;
+  border: none;
 }
-.option-btn:hover{
-background:#6e340e;
+.option-btn:hover {
+  background: #6e340e;
 }
-
-.cancel-btn{
-background:#87CEEB;
-color:black;
-border:none;
+.cancel-btn {
+  background: #87CEEB;
+  color: black;
+  border: none;
 }
-.cancel-btn:hover{
-background:#5ec6e8;
+.cancel-btn:hover {
+  background: #5ec6e8;
+}
+.size-info {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-top: 5px;
 }
 </style>
-
 </head>
 <body>
 
 <% if (message) { %>
 <div class="alert alert-success alert-dismissible fade show">
-<%= message %>
-<button class="btn-close" data-bs-dismiss="alert"></button>
+  <%= message %>
+  <button class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 <% } %>
 
@@ -44,269 +49,299 @@ background:#5ec6e8;
 <% } else { %>
 
 <div class="container mt-4">
+  <div class="d-flex justify-content-between mb-3">
+    <h4>Edit Family</h4>
+    <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
+  </div>
 
-<div class="d-flex justify-content-between mb-3">
-<h4>Edit Family</h4>
-<a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
-</div>
+  <form id="editForm" method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
 
-<form method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
+    <div class="row">
+      <!-- HUSBAND -->
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header"><h5>Husband Details</h5></div>
+          <div class="card-body">
+            <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" required>
+            <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" required>
+            <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>">
 
-<div class="row">
+            <div class="mb-3 text-center">
+              <label>Husband Photo</label><br>
+              <input type="file" class="d-none" name="husband_photo" id="husband_photo_input" accept="image/*" onchange="uploadImage(this)">
+              <div class="border p-3 bg-light mt-2" onclick="showPhotoOptions('husband_photo_input')" style="cursor:pointer">Click to upload photo</div>
+              <div id="size_husband_photo_input" class="size-info"></div>
+            </div>
 
-<!-- HUSBAND -->
-<div class="col-md-6">
-<div class="card mb-4">
-<div class="card-header"><h5>Husband Details</h5></div>
-<div class="card-body">
+            <h6>Address</h6>
+            <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>">
+            <input class="form-control mb-2" name="street" value="<%= parent.street %>">
+            <input class="form-control mb-2" name="district" value="<%= parent.district %>">
+            <input class="form-control mb-2" name="state" value="<%= parent.state %>">
+            <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>">
+          </div>
+        </div>
+      </div>
 
-<input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" required>
-<input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" required>
-<input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>">
+      <!-- WIFE -->
+      <div class="col-md-6">
+        <% if (wife) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h5>Wife Details</h5></div>
+          <div class="card-body">
+            <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>">
+            <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>">
+            <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>">
 
-<div class="mb-3">
-<label>Husband Photo</label>
-<input type="file" class="d-none" name="husband_photo" id="husband_photo_input" accept="image/*">
+            <div class="mb-3 text-center">
+              <label>Wife Photo</label><br>
+              <input type="file" class="d-none" name="wife_photo" id="wife_photo_input" accept="image/*" onchange="uploadImage(this)">
+              <div class="border p-3 bg-light mt-2" onclick="showPhotoOptions('wife_photo_input')" style="cursor:pointer">Click to upload photo</div>
+              <div id="size_wife_photo_input" class="size-info"></div>
+            </div>
 
-<div class="border p-3 text-center bg-light"
-onclick="showPhotoOptions('husband_photo_input')" style="cursor:pointer">
-Click to upload photo
-</div>
+            <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>">
+            <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>">
+            <input class="form-control mb-2" name="wife_district" value="<%= wife.district %>">
+            <input class="form-control mb-2" name="wife_state" value="<%= wife.state %>">
+            <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>">
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
 
-<% if (parent.husband_photo) { %>
-<img src="/uploads/parents/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-<% } %>
-</div>
+    <!-- CHILDREN -->
+    <div class="card mb-4">
+      <div class="card-header"><h5>Children</h5></div>
+      <div class="card-body" id="children">
+        <% if (children && children.length > 0) { %>
+          <% children.forEach((c,i)=>{ %>
+            <div class="border p-3 mb-3 child">
+              <input type="hidden" name="children[<%=i%>][id]" value="<%=c.child_id%>">
+              <input class="form-control mb-1" name="children[<%=i%>][name]" value="<%=c.child_name%>">
+              <select class="form-control mb-1" name="children[<%=i%>][gender]">
+                <option>Select Gender</option>
+                <option value="Male" <%=c.gender==='Male'?'selected':''%>>Male</option>
+                <option value="Female" <%=c.gender==='Female'?'selected':''%>>Female</option>
+                <option value="Other" <%=c.gender==='Other'?'selected':''%>>Other</option>
+              </select>
+              <input class="form-control mb-1" name="children[<%=i%>][occupation]" value="<%=c.occupation%>">
+              <input type="date" class="form-control mb-1" name="children[<%=i%>][dob]" value="<%=c.date_of_birth? new Date(c.date_of_birth).toISOString().split('T')[0]:''%>">
 
-<h6>Address</h6>
-<input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>">
-<input class="form-control mb-2" name="street" value="<%= parent.street %>">
-<input class="form-control mb-2" name="district" value="<%= parent.district %>">
-<input class="form-control mb-2" name="state" value="<%= parent.state %>">
-<input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>">
+              <label>Photo</label>
+              <input type="file" class="d-none" id="child_photo_<%=i%>" name="children[<%=i%>][photo]" accept="image/*" onchange="uploadImage(this)">
+              <div class="border p-2 text-center bg-light" onclick="showPhotoOptions('child_photo_<%=i%>')" style="cursor:pointer">Upload Photo</div>
+              <div id="size_child_photo_<%=i%>" class="size-info"></div>
 
-</div>
-</div>
-</div>
+              <h6 class="mt-2">Address</h6>
+              <div class="form-check mb-2">
+                <input class="form-check-input same-address" type="checkbox" id="sameAddress_<%=i%>">
+                <label class="form-check-label" for="sameAddress_<%=i%>">Same as parents's address</label>
+              </div>
 
-<!-- WIFE -->
-<div class="col-md-6">
-<% if (wife) { %>
-<div class="card mb-4">
-<div class="card-header"><h5>Wife Details</h5></div>
-<div class="card-body">
+              <input class="form-control mb-2 child-door" name="children[<%=i%>][door_no]" value="<%=c.door_no%>">
+              <input class="form-control mb-2 child-street" name="children[<%=i%>][street]" value="<%=c.street%>">
+              <input class="form-control mb-2 child-district" name="children[<%=i%>][district]" value="<%=c.district%>">
+              <input class="form-control mb-2 child-state" name="children[<%=i%>][state]" value="<%=c.state%>">
+              <input class="form-control mb-2 child-pincode" name="children[<%=i%>][pincode]" value="<%=c.pincode%>">
 
-<input class="form-control mb-2" name="wife_name" value="<%= wife.name %>">
-<input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>">
-<input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>">
+              <button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p>No children added yet.</p>
+        <% } %>
+      </div>
+      <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
+    </div>
 
-<div class="mb-3">
-<label>Wife Photo</label>
-<input type="file" class="d-none" name="wife_photo" id="wife_photo_input" accept="image/*">
-
-<div class="border p-3 text-center bg-light"
-onclick="showPhotoOptions('wife_photo_input')" style="cursor:pointer">
-Click to upload photo
-</div>
-
-<% if (wife.photo) { %>
-<img src="/uploads/parents/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-<% } %>
-</div>
-
-<input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>">
-<input class="form-control mb-2" name="wife_street" value="<%= wife.street %>">
-<input class="form-control mb-2" name="wife_district" value="<%= wife.district %>">
-<input class="form-control mb-2" name="wife_state" value="<%= wife.state %>">
-<input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>">
-
-</div>
-</div>
-<% } %>
-</div>
-
-</div>
-
-<!-- CHILDREN -->
-<div class="card mb-4">
-<div class="card-header"><h5>Children</h5></div>
-<div class="card-body" id="children">
-
-<% if (children && children.length > 0) { %>
-<% children.forEach((c,i)=>{ %>
-
-<div class="border p-3 mb-3 child">
-
-<input type="hidden" name="children[<%=i%>][id]" value="<%=c.child_id%>">
-
-<input class="form-control mb-1" name="children[<%=i%>][name]" value="<%=c.child_name%>">
-
-<select class="form-control mb-1" name="children[<%=i%>][gender]">
-<option>Select Gender</option>
-<option value="Male" <%=c.gender==='Male'?'selected':''%>>Male</option>
-<option value="Female" <%=c.gender==='Female'?'selected':''%>>Female</option>
-<option value="Other" <%=c.gender==='Other'?'selected':''%>>Other</option>
-</select>
-
-<input class="form-control mb-1" name="children[<%=i%>][occupation]" value="<%=c.occupation%>">
-
-<input type="date" class="form-control mb-1" name="children[<%=i%>][dob]"
-value="<%=c.date_of_birth? new Date(c.date_of_birth).toISOString().split('T')[0]:''%>">
-
-<label>Photo</label>
-
-<input type="file" class="d-none" id="child_photo_<%=i%>" name="children[<%=i%>][photo]" accept="image/*">
-
-<div class="border p-2 text-center bg-light"
-onclick="showPhotoOptions('child_photo_<%=i%>')" style="cursor:pointer">
-Upload Photo
-</div>
-
-<% if(c.photo){ %>
-<img src="/uploads/children/<%=c.photo%>" class="img-thumbnail mt-1" style="max-width:100px;">
-<% } %>
-
-<button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
-</div>
-
-<% }) %>
-<% } else { %>
-<p>No children added yet.</p>
-<% } %>
-
-</div>
-
-<button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-</div>
-
-<div class="mt-3">
-<button class="btn btn-primary">Update Family</button>
-<a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
-</div>
-
-</form>
+    <div class="mt-3">
+      <button class="btn btn-primary">Update Family</button>
+      <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
 </div>
 <% } %>
 
 <!-- PHOTO OPTION MODAL -->
 <div class="modal fade" id="photoOptionModal">
-<div class="modal-dialog modal-dialog-centered">
-<div class="modal-content text-center p-4">
-
-<h5 class="mb-4">Select Option</h5>
-
-<div class="d-flex gap-3">
-
-<button class="btn flex-fill option-btn" id="browseBtn">
-Browse
-</button>
-
-<button class="btn flex-fill option-btn" id="cameraBtn">
-Take Picture
-</button>
-
-<button class="btn flex-fill cancel-btn" data-bs-dismiss="modal">
-Cancel
-</button>
-
-</div>
-
-</div>
-</div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4">
+      <h5 class="mb-4">Select Option</h5>
+      <div class="d-flex gap-3">
+        <button class="btn flex-fill option-btn" id="browseBtn">Browse</button>
+        <button class="btn flex-fill option-btn" id="cameraBtn">Take Picture</button>
+        <button class="btn flex-fill cancel-btn" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-let index = (children && children.length)?children.length:0;
-
-$("#addChild").click(()=>{
-$("#children").append(`
-<div class="border p-2 mb-2 child">
-<input class="form-control mb-1" name="children[${index}][name]">
-<select class="form-control mb-1" name="children[${index}][gender]">
-<option>Select Gender</option>
-<option>Male</option>
-<option>Female</option>
-<option>Other</option>
-</select>
-<input class="form-control mb-1" name="children[${index}][occupation]">
-<input type="date" class="form-control mb-1" name="children[${index}][dob]">
-<input type="file" class="d-none" id="child_photo_${index}" name="children[${index}][photo]">
-<div class="border p-2 text-center bg-light"
-onclick="showPhotoOptions('child_photo_${index}')" style="cursor:pointer">
-Upload Photo
-</div>
-<button type="button" class="btn btn-danger btn-sm removeChild mt-2">Remove</button>
-</div>
-`);
-index++;
-});
-
-$(document).on("click",".removeChild",function(){
-$(this).closest(".child").remove();
-});
-
-let currentInput=null;
+let currentInput = null;
+let childIndex = <%= children ? children.length : 0 %>;
 
 function showPhotoOptions(id){
-currentInput=id;
-new bootstrap.Modal(document.getElementById("photoOptionModal")).show();
+  currentInput = id;
+  new bootstrap.Modal(document.getElementById("photoOptionModal")).show();
 }
 
 document.getElementById("browseBtn").onclick=()=>{
-document.getElementById(currentInput).click();
+  if (!currentInput) return;
+  document.getElementById(currentInput).click();
 };
 
 document.getElementById("cameraBtn").onclick=()=>{
-capturePhoto(currentInput);
+  if (!currentInput) return;
+  capturePhoto(currentInput);
 };
 
 function capturePhoto(inputId){
-const input=document.getElementById(inputId);
-
-navigator.mediaDevices.getUserMedia({video:true})
-.then(stream=>{
-const video=document.createElement("video");
-video.srcObject=stream;
-video.play();
-
-const canvas=document.createElement("canvas");
-const ctx=canvas.getContext("2d");
-
-const modal=document.createElement("div");
-modal.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999";
-modal.appendChild(video);
-
-const cap=document.createElement("button");
-cap.innerText="Capture";
-cap.className="btn btn-primary mt-3";
-cap.onclick=()=>{
-canvas.width=video.videoWidth;
-canvas.height=video.videoHeight;
-ctx.drawImage(video,0,0);
-canvas.toBlob(blob=>{
-const file=new File([blob],"photo.jpg",{type:"image/jpeg"});
-const dt=new DataTransfer();
-dt.items.add(file);
-input.files=dt.files;
-stream.getTracks().forEach(t=>t.stop());
-modal.remove();
-});
-};
-
-const cancel=document.createElement("button");
-cancel.innerText="Cancel";
-cancel.className="btn btn-secondary mt-2";
-cancel.onclick=()=>{
-stream.getTracks().forEach(t=>t.stop());
-modal.remove();
-};
-
-modal.appendChild(cap);
-modal.appendChild(cancel);
-document.body.appendChild(modal);
-})
-.catch(()=>alert("Camera not available"));
+  const input=document.getElementById(inputId);
+  navigator.mediaDevices.getUserMedia({video:true})
+  .then(stream=>{
+    const video=document.createElement("video");
+    video.srcObject=stream;
+    video.play();
+    const canvas=document.createElement("canvas");
+    const ctx=canvas.getContext("2d");
+    const modal=document.createElement("div");
+    modal.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:20px";
+    modal.appendChild(video);
+    const controls=document.createElement("div");
+    controls.style.cssText="margin-top:10px;display:flex;gap:10px";
+    const cap=document.createElement("button");
+    cap.innerText="Capture";
+    cap.className="btn btn-primary";
+    cap.onclick=()=>{
+      canvas.width=video.videoWidth;
+      canvas.height=video.videoHeight;
+      ctx.drawImage(video,0,0);
+      canvas.toBlob(blob=>{
+        const file=new File([blob], `capture_${Date.now()}.jpg`, {type:"image/jpeg"});
+        const dt=new DataTransfer();
+        dt.items.add(file);
+        input.files=dt.files;
+        uploadImage(input);
+        stream.getTracks().forEach(t=>t.stop());
+        modal.remove();
+      }, 'image/jpeg', 0.9);
+    };
+    const cancel=document.createElement("button");
+    cancel.innerText="Cancel";
+    cancel.className="btn btn-secondary";
+    cancel.onclick=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      modal.remove();
+    };
+    controls.appendChild(cap);
+    controls.appendChild(cancel);
+    modal.appendChild(controls);
+    document.body.appendChild(modal);
+  })
+  .catch(()=>alert("Camera not available"));
 }
+
+// ✅ UPDATED — only show size, no preview image
+function uploadImage(input){
+  const file = input.files[0];
+  if(!file) return;
+
+  const fileSizeKB = (file.size / 1024).toFixed(2);
+  const sizeElementId = "size_" + input.id;
+
+  // Remove previous size info
+  const existing = document.getElementById(sizeElementId);
+  if (existing) existing.remove();
+
+  const sizeElement = document.createElement("div");
+  sizeElement.id = sizeElementId;
+  sizeElement.className = "size-info";
+  sizeElement.textContent = file.size < 1024*1024
+    ? `File size: ${fileSizeKB} KB`
+    : `File size: ${(file.size / (1024*1024)).toFixed(2)} MB`;
+
+  input.parentElement.appendChild(sizeElement);
+}
+
+// =============================
+// COPY FATHER ADDRESS TO CHILD
+// =============================
+$(document).on("change", ".same-address", function() {
+  const isChecked = $(this).is(":checked");
+  const parentCard = $(this).closest(".child");
+
+  if (isChecked) {
+    const fatherDoor = $("input[name='door_no']").val() || "";
+    const fatherStreet = $("input[name='street']").val() || "";
+    const fatherDistrict = $("input[name='district']").val() || "";
+    const fatherState = $("input[name='state']").val() || "";
+    const fatherPincode = $("input[name='pincode']").val() || "";
+
+    parentCard.find(".child-door").val(fatherDoor);
+    parentCard.find(".child-street").val(fatherStreet);
+    parentCard.find(".child-district").val(fatherDistrict);
+    parentCard.find(".child-state").val(fatherState);
+    parentCard.find(".child-pincode").val(fatherPincode);
+
+    parentCard.find(".child-door, .child-street, .child-district, .child-state, .child-pincode")
+      .attr("readonly", true)
+      .css("background-color", "#f8f9fa");
+  } else {
+    parentCard.find(".child-door, .child-street, .child-district, .child-state, .child-pincode")
+      .val("")
+      .removeAttr("readonly")
+      .css("background-color", "white");
+  }
+});
+
+// =============================
+// ADD CHILD SECTION DYNAMICALLY
+// =============================
+$("#addChild").click(function(){
+  const newChild = `
+  <div class="border p-3 mb-3 child">
+    <input class="form-control mb-1" name="children[${childIndex}][name]" placeholder="Child Name">
+    <select class="form-control mb-1" name="children[${childIndex}][gender]">
+      <option>Select Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+    <input class="form-control mb-1" name="children[${childIndex}][occupation]" placeholder="Occupation">
+    <input type="date" class="form-control mb-1" name="children[${childIndex}][dob]">
+
+    <label>Photo</label>
+    <input type="file" class="d-none" id="child_photo_${childIndex}" name="children[${childIndex}][photo]" accept="image/*" onchange="uploadImage(this)">
+    <div class="border p-2 text-center bg-light" onclick="showPhotoOptions('child_photo_${childIndex}')" style="cursor:pointer">Upload Photo</div>
+    <div id="size_child_photo_${childIndex}" class="size-info"></div>
+
+    <h6 class="mt-2">Address</h6>
+    <div class="form-check mb-2">
+      <input class="form-check-input same-address" type="checkbox" id="sameAddress_${childIndex}">
+      <label class="form-check-label" for="sameAddress_${childIndex}">Same as Father’s Address</label>
+    </div>
+
+    <input class="form-control mb-2 child-door" name="children[${childIndex}][door_no]" placeholder="Door No">
+    <input class="form-control mb-2 child-street" name="children[${childIndex}][street]" placeholder="Street">
+    <input class="form-control mb-2 child-district" name="children[${childIndex}][district]" placeholder="District">
+    <input class="form-control mb-2 child-state" name="children[${childIndex}][state]" placeholder="State">
+    <input class="form-control mb-2 child-pincode" name="children[${childIndex}][pincode]" placeholder="Pincode">
+
+    <button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
+  </div>
+  `;
+  $("#children").append(newChild);
+  childIndex++;
+});
+
+// =============================
+// REMOVE CHILD SECTION
+// =============================
+$(document).on("click", ".removeChild", function() {
+  $(this).closest(".child").remove();
+});
 </script>
 
 </body>
