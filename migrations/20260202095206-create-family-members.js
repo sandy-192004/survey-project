@@ -12,7 +12,7 @@ module.exports = {
 
       family_id: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: falsek
       },
 
       member_type: {
