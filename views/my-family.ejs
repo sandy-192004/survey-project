@@ -30,8 +30,12 @@
   <%
     let parentsAddress = {};
     const parents = members.filter(m => m.member_type === 'parent');
+    const husband = members.find(m => m.relationship === 'husband');
+    const wife = members.find(m => m.relationship === 'wife');
+    const children = members.filter(m => m.member_type === 'child');
+    
     if (parents.length > 0) {
-      const parent = parents[0]; // Use first parent
+      const parent = parents[0];
       parentsAddress = {
         door_no: parent.door_no || '',
         street: parent.street || '',
@@ -42,165 +46,322 @@
     }
   %>
 
-  <!-- Parents Section -->
-  <% if (parents.length > 0) { %>
-    <div class="mb-4">
-      <h5 class="fw-bold mb-3 text-dark">
-        <i class="bi bi-person-hearts text-primary me-2"></i>Parents
-      </h5>
-      <div class="row g-3">
-        <% members.forEach(member => { %>
-          <% if (member.member_type === 'parent') { %>
-            <div class="col-12 col-md-6">
-              <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 position-relative">
-                  
-                  <!-- Edit Button -->
-                  <button type="button" class="position-absolute top-0 end-0 m-2 btn btn-sm btn-light border-0 rounded-circle" 
-                          onclick="openEditModal('<%= member.relationship %>', '<%= member.id %>')" 
-                          style="width: 36px; height: 36px;">
-                    <i class="bi bi-pencil-square text-primary"></i>
-                  </button>
-                  
-                  <div class="row g-3">
-                    <!-- Photo -->
-                    <div class="col-auto">
-                      <% if (member.photo && member.photo.trim() !== "") { %>
-                        <% let photoSrc = member.photo; %>
-                        <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-                        <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-                        <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-                        <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
-                        <img src="/<%= photoSrc %>" class="rounded" style="width: 120px; height: 160px; object-fit: cover;" alt="<%= member.name %>">
-                      <% } else { %>
-                        <div class="rounded bg-light d-flex align-items-center justify-content-center" style="width: 120px; height: 160px;">
-                          <i class="bi bi-person-fill text-muted" style="font-size: 3rem;"></i>
-                        </div>
-                      <% } %>
-                    </div>
-                    
-                    <!-- Info -->
-                    <div class="col">
-                      <h5 class="fw-bold mb-2"><%= member.name %></h5>
-                      <div class="text-muted small mb-1">
-                        <i class="bi bi-heart-fill text-danger me-1"></i>
-                        <span class="text-capitalize"><%= member.relationship %></span>
-                      </div>
-                      <div class="text-muted small mb-1">
-                        <i class="bi bi-telephone-fill me-1"></i><%= member.mobile || 'N/A' %>
-                      </div>
-                      <div class="text-muted small mb-1">
-                        <i class="bi bi-briefcase-fill me-1"></i><%= member.occupation || 'N/A' %>
-                      </div>
-                      <div class="text-muted small mb-1">
-                        <i class="bi bi-gender-ambiguous me-1"></i>
-                        <%
-                          let gender = member.gender;
-                          if (!gender || gender === '-') {
-                            if (member.relationship === 'husband') gender = 'Male';
-                            else if (member.relationship === 'wife') gender = 'Female';
-                            else gender = 'N/A';
-                          }
-                        %>
-                        <%= gender %>
-                      </div>
-                      <div class="text-muted small">
-                        <i class="bi bi-geo-alt-fill me-1"></i>
-                        <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || 'N/A' %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% } %>
-        <% }) %>
-      </div>
-    </div>
-  <% } %>
+  <style>
+    .family-tree-container {
+      padding: 40px 20px;
+      overflow-x: auto;
+    }
+    
+    .tree-level {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      margin-bottom: 60px;
+      position: relative;
+    }
+    
+    .tree-member {
+      text-align: center;
+      position: relative;
+      max-width: 200px;
+    }
+    
+    .member-photo-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 0 auto 12px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .member-photo-circle img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .member-photo-circle .placeholder-icon {
+      font-size: 3rem;
+      color: var(--gray-400);
+    }
+    
+    .edit-btn-circle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .edit-btn-circle:hover {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .member-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      color: var(--gray-900);
+    }
+    
+    .member-role {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    
+    .member-details {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-top: 8px;
+      text-align: left;
+    }
+    
+    .member-detail-item {
+      font-size: 0.85rem;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Tree Connections */
+    .tree-connector {
+      position: absolute;
+      border: 2px solid var(--primary);
+      opacity: 0.3;
+    }
+    
+    .horizontal-line {
+      height: 2px;
+      background: var(--primary);
+      opacity: 0.3;
+      position: absolute;
+    }
+    
+    .vertical-line {
+      width: 2px;
+      background: var(--primary);
+      opacity: 0.3;
+      position: absolute;
+    }
+    
+    .marriage-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid var(--danger);
+      color: var(--danger);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .children-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-top: 40px;
+    }
+    
+    @media (max-width: 768px) {
+      .tree-level {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+      }
+      
+      .member-photo-circle {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .children-container {
+        gap: 20px;
+      }
+    }
+  </style>
 
-  <!-- Children Section -->
-  <div class="mb-4">
-    <h5 class="fw-bold mb-3 text-dark">
-      <i class="bi bi-person text-success me-2"></i>Children
-    </h5>
-    <div class="row g-3">
-      <%
-        const children = members.filter(m => m.member_type === 'child');
-        if (children.length > 0) {
-          children.forEach(member => {
-      %>
-        <div class="col-12 col-md-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-3 position-relative">
-              
-              <!-- Edit Button -->
-              <button type="button" class="position-absolute top-0 end-0 m-2 btn btn-sm btn-light border-0 rounded-circle" 
-                      onclick="openEditModal('child', '<%= member.id %>')" 
-                      style="width: 36px; height: 36px;">
-                <i class="bi bi-pencil-square text-primary"></i>
-              </button>
-              
-              <div class="row g-3">
-                <!-- Photo -->
-                <div class="col-auto">
-                  <% if (member.photo && member.photo.trim() !== "") { %>
-                    <% let photoSrc = member.photo; %>
-                    <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-                    <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-                    <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-                    <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
-                    <img src="/<%= photoSrc %>" class="rounded" style="width: 120px; height: 160px; object-fit: cover;" alt="<%= member.name %>">
-                  <% } else { %>
-                    <div class="rounded bg-light d-flex align-items-center justify-content-center" style="width: 120px; height: 160px;">
-                      <i class="bi bi-person-fill text-muted" style="font-size: 3rem;"></i>
-                    </div>
-                  <% } %>
-                </div>
-                
-                <!-- Info -->
-                <div class="col">
-                  <h5 class="fw-bold mb-2"><%= member.name %></h5>
-                  <div class="text-muted small mb-1">
-                    <i class="bi bi-heart-fill text-success me-1"></i>
-                    <span class="text-capitalize"><%= member.relationship || 'Child' %></span>
-                  </div>
-                  <div class="text-muted small mb-1">
-                    <i class="bi bi-briefcase-fill me-1"></i><%= member.occupation || 'N/A' %>
-                  </div>
-                  <div class="text-muted small mb-1">
-                    <i class="bi bi-gender-ambiguous me-1"></i>
-                    <%
-                      let gender = member.gender;
-                      if (!gender || gender === '-') {
-                        if (member.relationship === 'son') gender = 'Male';
-                        else if (member.relationship === 'daughter') gender = 'Female';
-                        else gender = 'N/A';
-                      }
-                    %>
-                    <%= gender %>
-                  </div>
-                  <div class="text-muted small">
-                    <i class="bi bi-geo-alt-fill me-1"></i>
-                    <%= [parentsAddress.door_no, parentsAddress.street, parentsAddress.district, parentsAddress.state, parentsAddress.pincode].filter(Boolean).join(', ') || 'N/A' %>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <!-- Family Tree View -->
+  <div class="family-tree-container">
+    
+    <!-- Parents Level -->
+    <% if (husband || wife) { %>
+    <div class="tree-level">
+      
+      <!-- Husband -->
+      <% if (husband) { %>
+      <div class="tree-member">
+        <div class="member-photo-circle">
+          <% if (husband.photo && husband.photo.trim() !== "") { %>
+            <% let photoSrc = husband.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= husband.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" onclick="openEditModal('husband', '<%= husband.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= husband.name %></div>
+        <div class="member-role text-primary"><i class="bi bi-person-badge"></i> Husband</div>
+        <div class="member-details">
+          <div class="member-detail-item">
+            <i class="bi bi-telephone-fill text-primary"></i>
+            <span><%= husband.mobile || 'N/A' %></span>
+          </div>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= husband.occupation || 'N/A' %></span>
           </div>
         </div>
-      <%
-          });
-        }
-      %>
+      </div>
+      <% } %>
+      
+      <!-- Marriage Connection -->
+      <% if (husband && wife) { %>
+      <div style="position: relative; width: 80px; display: flex; align-items: center; margin-top: 60px;">
+        <div class="horizontal-line" style="width: 100%; top: 0;"></div>
+        <div class="marriage-badge">
+          <i class="bi bi-heart-fill"></i>
+        </div>
+      </div>
+      <% } %>
+      
+      <!-- Wife -->
+      <% if (wife) { %>
+      <div class="tree-member">
+        <div class="member-photo-circle">
+          <% if (wife.photo && wife.photo.trim() !== "") { %>
+            <% let photoSrc = wife.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= wife.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" onclick="openEditModal('wife', '<%= wife.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= wife.name %></div>
+        <div class="member-role text-danger"><i class="bi bi-person-badge"></i> Wife</div>
+        <div class="member-details">
+          <div class="member-detail-item">
+            <i class="bi bi-telephone-fill text-primary"></i>
+            <span><%= wife.mobile || 'N/A' %></span>
+          </div>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= wife.occupation || 'N/A' %></span>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      
     </div>
     
+    <!-- Vertical Connector to Children -->
+    <% if (children.length > 0) { %>
+    <div style="display: flex; justify-content: center; position: relative;">
+      <div class="vertical-line" style="height: 40px; left: 50%;"></div>
+    </div>
+    <% } %>
+    <% } %>
+    
+    <!-- Children Level -->
+    <% if (children.length > 0) { %>
+    <div class="children-container">
+      <% children.forEach(member => { %>
+      <div class="tree-member">
+        <div class="member-photo-circle" style="border-color: var(--success);">
+          <% if (member.photo && member.photo.trim() !== "") { %>
+            <% let photoSrc = member.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= member.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" style="border-color: var(--success);" onclick="openEditModal('child', '<%= member.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= member.name %></div>
+        <div class="member-role text-success">
+          <i class="bi bi-person"></i> 
+          <span class="text-capitalize"><%= member.relationship || 'Child' %></span>
+        </div>
+        <div class="member-details">
+          <% if (member.occupation) { %>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= member.occupation %></span>
+          </div>
+          <% } %>
+          <%
+            let gender = member.gender;
+            if (!gender || gender === '-') {
+              if (member.relationship === 'son') gender = 'Male';
+              else if (member.relationship === 'daughter') gender = 'Female';
+            }
+            if (gender && gender !== '-') {
+          %>
+          <div class="member-detail-item">
+            <i class="bi bi-gender-ambiguous text-info"></i>
+            <span><%= gender %></span>
+          </div>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+    
     <!-- Add Child Button -->
-    <div class="mt-3">
-      <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addChildModal">
-        <i class="bi bi-plus-lg me-2"></i>Add Child
+    <div class="text-center mt-5">
+      <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addChildModal">
+        <i class="bi bi-plus-lg me-2"></i>Add Child to Family Tree
       </button>
     </div>
+    
   </div>
 
 </div>
