@@ -56,39 +56,50 @@
           <% } %>
         </select>
       </div>
+    </div>
 
-      <!-- District -->
-      <div style="width: 180px;">
-        <select name="district" class="form-select form-select-sm">
-          <option value="">All Districts</option>
-          <% if (districts && districts.length > 0) { %>
-            <% districts.forEach(function(district) { %>
-              <option value="<%= district %>" <%= selectedDistrict === district ? 'selected' : '' %>>
-                <%= district %>
-              </option>
-            <% }); %>
-          <% } %>
-        </select>
-      </div>
+    <!-- State -->
+    <div style="width: 180px;">
+      <select name="state" class="form-select form-select-sm">
+        <option value="">All States</option>
+        <% if (states && states.length > 0) { %>
+          <% states.forEach(function(state) { %>
+            <option value="<%= state %>" <%= selectedState === state ? 'selected' : '' %>>
+              <%= state %>
+            </option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
 
-      <!-- Filter Button -->
-      <div>
-        <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm">
-          <i class="bi bi-funnel me-1"></i> Filter
-        </button>
-      </div>
+    <!-- District -->
+    <div style="width: 180px;">
+      <select name="district" class="form-select form-select-sm">
+        <option value="">All Districts</option>
+        <% if (districts && districts.length > 0) { %>
+          <% districts.forEach(function(district) { %>
+            <option value="<%= district %>" <%= selectedDistrict === district ? 'selected' : '' %>>
+              <%= district %>
+            </option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
 
-      <!-- Push Add Family to Right -->
-      <div class="ms-auto">
-        <a href="/admin/create-family" class="btn btn-success btn-sm px-3">
-          <i class="fas fa-plus me-1"></i> Add Family
-        </a>
-      </div>
+    <!-- Filter Button -->
+    <div>
+      <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm">
+        <i class="bi bi-funnel me-1"></i> Filter
+      </button>
+    </div>
 
+    <!-- Push Add Family to Right -->
+    <div class="ms-auto">
+      <a href="/admin/create-family" class="btn btn-success btn-sm px-3">
+        <i class="fas fa-plus me-1"></i> Add Family
+      </a>
     </div>
 
   </div>
-</form>
 
-</body>
-</html>
+</form>
