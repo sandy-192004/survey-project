@@ -49,8 +49,14 @@ exports.register = async (req, res) => {
   try {
     const { email, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
-/*******  88ec1cc0-9866-4f21-88ad-db885cafd9bc  *******/
-      return res.status(400).send("Passwords do not match");
+      return res.redirect("/login?error=password");
+    }
+
+    // Check if user already exists
+    const [existingUser] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+    if (existingUser.length > 0) {
+      // User already exists - redirect to register page with error
+      return res.redirect("/login?error=exists");
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -553,15 +559,30 @@ exports.showFamilyEdit = async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    // Get parent members for this user
+    // Get all family members for this user
     const [members] = await db.query(
-      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ? AND fm.member_type = 'parent'",
+      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ?",
       [userId]
     );
 
     if (members.length === 0) {
       return res.redirect("/family-form");
     }
+
+    // Calculate photo file sizes
+    members.forEach(member => {
+      if (member.photo) {
+        const photoPath = path.join(__dirname, '../uploads', member.photo);
+        if (fs.existsSync(photoPath)) {
+          const stats = fs.statSync(photoPath);
+          member.photoSize = stats.size;
+        } else {
+          member.photoSize = 0;
+        }
+      } else {
+        member.photoSize = 0;
+      }
+    });
 
     res.render("family-edit", { family: null, members });
   } catch (err) {
@@ -738,7 +759,7 @@ exports.updateHusband = async (req, res) => {
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
     let photoPath = null;
     if (req.file) {
-      photoPath = `parents/${req.file.filename}`;
+      photoPath = `parent/${req.file.filename}`;
       const oldPath = path.join('uploads', req.file.filename);
       const newPath = path.join('uploads', photoPath);
       fs.renameSync(oldPath, newPath);

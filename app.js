@@ -1,5 +1,8 @@
 const express = require("express");
 const session = require("express-session");
+
+// const hemlet = require("helmet");
+
 const path = require("path");
 
 const familyRoutes = require("./routes/familyRoutes");
@@ -8,6 +11,11 @@ const adminSearchRoutes = require("./routes/adminSearchRoutes");
 const db = require("./config/db");
 
 const app = express();
+
+// app.use(hemlet());
+
+// app.use(hemlet());
+
 
 
 
@@ -61,6 +69,14 @@ app.use((err, req, res, next) => {
 });
 
 // ================== SERVER START ==================
+
 app.listen(3001, () => {
   console.log(`Server running on http://localhost:3001`);
 });        
+
+
+app.listen(3001, () => {
+  console.log(`Server running on http://localhost:3001`);
+});        
+
+
