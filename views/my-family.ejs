@@ -620,7 +620,15 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*">
+                <input type="file" id="add_child_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleAddChildPhotoSelect(this)">
+                <div id="add_child_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('add_child_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <img id="addChildPhotoPreview" src="" class="img-fluid mb-2" style="max-height: 200px; display: none;">
               </div>
             </div>
 
