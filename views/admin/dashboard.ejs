@@ -21,34 +21,32 @@
       --success-color: #16A34A;
       --warning-color: #F59E0B;
       --danger-color: #DC2626;
-      --text-secondary: #ffffffd8;
+      --text-secondary: #000000d8;
       --card-shadow: 0 8px 20px rgba(9, 8, 8, 0.08);
       --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.12);
     }
-
-    body {
+    
+   body {
   font-family: 'Inter', sans-serif;
-  background:
-    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-    url("/images/pic.png") no-repeat center center fixed;
-  background-size: cover;
-  margin: 0;
+  background: linear-gradient(135deg, #c6c4c3, #C4A484);
+  min-height: 100vh;
+  color: white;
 }
 
-      
     
 
     .header {
-      background: #0000007b;
-       color: #ffffff;
-      border-radius: 14px;
+      background:  #815333;
+      color: #ffffff;
+      border-radius: 0px;
       padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
+      margin: -2.5rem -2.5rem -2.5rem -2.5rem;
       box-shadow: var(--card-shadow);
-      display: flex;
-      justify-content: center;
+      display: flex ;
+      justify-content: space-between;
       align-items: center;
-      position: relative;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.086);
 
     }
 
@@ -56,33 +54,44 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
       gap: 1.5rem;
-      margin-bottom: 2rem;
-       color: #ffffff;
+      margin-bottom: 3rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
+   .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+    }
+  
+
+    
 
     .stat-card {
-      background: #00000068;
-      padding: 1rem;
-      border-radius: 10px;
+      background: #fffcfc1d;
+      padding: 2rem;
+      border-radius: 24px;
       text-align: center;
       box-shadow: var(--card-shadow);
-       color: #ffffff;
+       color: #070707;
+      border: 1px solid rgba(9, 8, 8, 0.086);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .family-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
+      gap: 2rem;
     }
 
     .family-card {
-      background: #00000068;
-      border-radius: 14px;
+      background: #fffcfc1d;
+      border-radius: 18px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
       cursor: pointer;
       position: relative;
       transition: all 0.3s ease;
+      border: 1px solid rgba(9, 8, 8, 0.086);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .family-card:hover {
@@ -94,8 +103,8 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #80353585;
-      color: rgb(255, 255, 255);
+      background: #592e2e;
+      color: rgb(214, 204, 204);
       border: none;
       border-radius: 50%;
       width: 30px;
@@ -108,15 +117,15 @@
     }
 
     .edit-btn:hover {
-      background: #7a4545;
+      background: #794444;
     }
 
     .delete-btn {
       position: absolute;
       bottom: 10px;
       right: 10px;
-      background: #7a4545;
-      color: rgb(255, 255, 255);
+      background: #834848;
+      color: rgb(214, 204, 204);
       border: none;
       border-radius: 5px;
       padding: 5px 10px;
@@ -131,14 +140,14 @@
     }
 
     .family-card-header {
-      background: linear-gradient(135deg, #5b3722, #8a815b);
+      background: linear-gradient(135deg, #815333, #815333);
       padding: 0.75rem;
-      color: #ffffff;
+      color: #e9dcdc;
     }
 
     .family-card-body {
       padding: 1rem;
-      color: #ffffff;
+      color: #000000;
     }
 
     .children-badge {
@@ -197,19 +206,23 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div>
-      <h4 class="fw-bold mb-0" style="color:  #ad9149;">
-        <i class="fas fa-tachometer-alt me-2"></i>Family Dashboard
+    <div style="flex: 1; text-align: center;">
+      <h4 class="fw-bold mb-0" style="color:  #ceb35a;">
+        <i class="fas  me-2"></i>Family Dashboard
       </h4>
-      <small style="color: rgba(255, 254, 254, 0.799);">Manage and monitor family registrations</small>
+      <small style="color: #fcfcfc">Manage and monitor family registrations</small>
     </div>
-
-    <div class="dropdown" style="position: absolute; right: 1.5rem;">
-      <button class="btn btn-lg" style="color:  #f2f1f1;" data-bs-toggle="dropdown">⋮</button>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
-        <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
-      </ul>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <div class="dropdown">
+        <button class="btn btn-lg" style="color:  #f2f1f1;" data-bs-toggle="dropdown">⋮</button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="/admin/export/excel"><i class="fas fa-file-excel"></i> Excel</a></li>
+          <li><a class="dropdown-item" href="#" onclick="openPdfExportModal()"><i class="fas fa-file-pdf"></i> PDF</a></li>
+        </ul>
+      </div>
+      <button class="btn btn-outline-light" onclick="confirmLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
     </div>
   </div>
 
@@ -249,13 +262,14 @@
   <% } %>
 
   <!-- SEARCH -->
-  <div class="card mb-2 search-form" style="background-color: #00000016;">
+  <div class="card mb-2 search-form" style="background-color: #0000001d;">
   <div class="card-body">
 
     <style>
       .search-form input,
       .search-form select {
         width: 170px;
+        
       }
 
       .search-form button {
@@ -348,6 +362,26 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+ 
+<div class="modal fade" id="logoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Logout</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to logout?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button class="btn btn-danger" id="confirmLogoutBtn">Yes, Logout</button>
       </div>
     </div>
   </div>
@@ -492,6 +526,24 @@ function downloadPdf() {
     modal.hide();
   }
 }
+// Logout confirmation
+function confirmLogout() {
+  console.log('confirmLogout called');
+  const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
+  logoutModal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('confirmLogoutBtn').addEventListener('click', function () {
+    console.log('confirmLogoutBtn clicked');
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/logout';
+    document.body.appendChild(form);
+    form.submit();
+  });
+});
+
 </script>
 </body>
-</html>  
+</html>
