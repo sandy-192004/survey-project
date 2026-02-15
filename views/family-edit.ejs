@@ -9,22 +9,23 @@
 
   <style>
     body {
-      background: #f5e6d3;
+      background: #f8f9fa;
     }
 
     .family-header {
-      background: linear-gradient(135deg, #8B4513, #A0522D);
+      background: linear-gradient(135deg, #495057, #6c757d);
       color: white;
       padding: 1.5rem;
       text-align: center;
       font-size: 2rem;
       font-weight: bold;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
 
     .section-title {
       margin: 1.875rem 0 0.9375rem;
       font-weight: bold;
-      color: #5a3e2b;
+      color: #343a40;
     }
 
     .cards-row {
@@ -34,12 +35,13 @@
     }
 
     .member-card {
-      background: #f9f1e6;
+      background: #ffffff;
       border-radius: 1rem;
       padding: 1.25rem;
       width: 100%;
       max-width: 32.5rem;
-      box-shadow: 0 0.375rem 1.125rem rgba(0,0,0,0.15);
+      box-shadow: 0 0.375rem 1.125rem rgba(0,0,0,0.1);
+      border: 1px solid #dee2e6;
     }
 
     .member-photo {
@@ -47,11 +49,21 @@
       height: 10rem;
       object-fit: cover;
       border-radius: 0.75rem;
-      border: 0.125rem solid #d1b89a;
+      border: 0.125rem solid #ced4da;
     }
 
     .btn {
       min-height: 2.75rem;
+    }
+
+    .btn-success {
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+
+    .btn-success:hover {
+      background-color: #495057;
+      border-color: #495057;
     }
 
     @media (max-width: 768px) {

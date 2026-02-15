@@ -1,345 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Family</title>
+<%- include('partials/head') %>
+<body class="d-flex flex-column min-vh-100">
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<%- include('partials/navbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4" style="flex: 1; background-color: var(--gray-50);">
+  
+  <!-- Page Header -->
+  <div class="mb-4">
+    <h1 class="h3 fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>My Family</h1>
+  </div>
+  <% members = members || []; %>
+
+  <% if (!members.length) { %>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+        <h4 class="fw-bold mb-3">No Family Data Found</h4>
+        <p class="text-muted mb-4">Start by adding your family details</p>
+        <a href="/family-form" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-2"></i>Add Family Details
+        </a>
+      </div>
+    </div>
+  <% } %>
+
+  <% // Get parents' address for children display %>
+  <%
+    let parentsAddress = {};
+    const parents = members.filter(m => m.member_type === 'parent');
+    const husband = members.find(m => m.relationship === 'husband');
+    const wife = members.find(m => m.relationship === 'wife');
+    const children = members.filter(m => m.member_type === 'child');
+    
+    if (parents.length > 0) {
+      const parent = parents[0];
+      parentsAddress = {
+        door_no: parent.door_no || '',
+        street: parent.street || '',
+        district: parent.district || '',
+        state: parent.state || '',
+        pincode: parent.pincode || ''
+      };
+    }
+  %>
 
   <style>
-
-  body {
-    margin: 0;
-    background-color: #f5e6d3;
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-    font-family: 'Times New Roman', serif;
-  }
-
-  .family-header {
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    background: linear-gradient(135deg, #8B4513, #A0522D);
-    color: white;
-    padding: 1.5rem 1rem;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: bold;
-  }
-
-  .section-title {
-    margin: 1.5625rem 0 0.625rem;
-    font-weight: bold;
-    color: #5a3e2b;
-  }
-
-  .parents-row,
-  .children-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-
-  /* ==== THIS IS THE KEY MATCHING CARD STYLE ==== */
-  .member-card {
-    min-width: 18.75rem;
-    max-width: 31.25rem;
-    background-color: #f9f1e6;
-    border-radius: 0.875rem;
-    padding: 1.25rem;
-    position: relative;
-    box-shadow: 0 0.375rem 1.125rem rgba(0,0,0,0.15);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .member-info {
-    text-align: left;
-    flex: 1;
-  }
-
-  .member-name {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #5a3e2b;
-    margin-bottom: 0.1875rem;
-  }
-
-  .info-item {
-    font-size: 1rem;
-    color: #4b3621;
-    margin-bottom: 0.25rem;
-  }
-
-  /* ==== MATCHED PHOTO SIZE ==== */
-  .member-photo {
-    width: 12rem;
-    height: 16rem;
-    object-fit: cover;
-    border-radius: 0.75rem;
-    border: 0.125rem solid #d1b89a;
-    flex-shrink: 0;
-  }
-
-  /* Keep your edit icon but visually consistent */
-  .edit-icon {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background-color: #8B4513;
-    color: white;
-    padding: 0.375rem;
-    border-radius: 50%;
-    font-size: 0.75rem;
-    cursor: pointer;
-    border: none;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Keep Add Child bar but lighter look */
-  .add-child-bar {
-    margin: 1.25rem 0;
-    background-color: #8B4513;
-    color: white;
-    text-align: center;
-    padding: 0.625rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-weight: bold;
-    min-height: 2.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  @media (max-width: 768px) {
-    body {
-      font-size: 14px;
+    .family-tree-container {
+      padding: 40px 20px;
+      overflow-x: auto;
     }
-    .parents-row,
-    .children-row {
-      grid-template-columns: 1fr;
-      gap: 1rem;
+    
+    .tree-level {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      margin-bottom: 60px;
+      position: relative;
     }
-
-    .member-card {
-      min-width: 100%;
-      padding: 0.75rem;
-      flex-direction: row;
-      justify-content: space-between;
+    
+    .tree-member {
+      text-align: center;
+      position: relative;
+      max-width: 200px;
+    }
+    
+    .member-photo-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 0 auto 12px;
+      background: white;
+      display: flex;
       align-items: center;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      justify-content: center;
+      position: relative;
     }
-
-    .member-info {
-      text-align: left;
-      flex: 1;
-    }
-
-    .member-name {
-      font-size: 1.5rem;
-    }
-
-    .info-item {
-      font-size: 0.9rem;
-    }
-
-    .member-photo {
-      width: 9rem;
-      height: 12rem;
-    }
-
-    .btn {
+    
+    .member-photo-circle img {
       width: 100%;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
     }
-
-    .section-title {
-      background-color: #f5efe9;
-      padding: 8px 12px;
-      border-radius: 5px;
-      margin-bottom: 1rem;
+    
+    .member-photo-circle .placeholder-icon {
+      font-size: 3rem;
+      color: var(--gray-400);
     }
-
-    .add-child-bar {
-      background-color: #6f4e37;
+    
+    .edit-btn-circle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .edit-btn-circle:hover {
+      background: var(--primary);
       color: white;
+      transform: scale(1.1);
     }
-  }
-</style>
-
-  </style>
-</head>
-
-<body>
-
-  <!-- HEADER -->
-  <div class="family-header">
-    My Family
-  </div>
-
-  <div class="container mt-4">
-
-    <% members = members || []; %>
-
-    <% if (!members.length) { %>
-      <div class="text-center mt-4 text-muted">
-        <h4>No family data found</h4>
-        <a href="/family-form" class="btn btn-primary mt-2">Add Family</a>
-      </div>
-    <% } %>
-
-    <% // Get parents' address for children display %>
-    <%
-      let parentsAddress = {};
-      const parents = members.filter(m => m.member_type === 'parent');
-      if (parents.length > 0) {
-        const parent = parents[0]; // Use first parent
-        parentsAddress = {
-          door_no: parent.door_no || '',
-          street: parent.street || '',
-          district: parent.district || '',
-          state: parent.state || '',
-          pincode: parent.pincode || ''
-        };
+    
+    .member-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      color: var(--gray-900);
+    }
+    
+    .member-role {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    
+    .member-details {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-top: 8px;
+      text-align: left;
+    }
+    
+    .member-detail-item {
+      font-size: 0.85rem;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Tree Connections */
+    .tree-connector {
+      position: absolute;
+      border: 2px solid var(--primary);
+      opacity: 0.3;
+    }
+    
+    .horizontal-line {
+      height: 2px;
+      background: var(--primary);
+      opacity: 0.3;
+      position: absolute;
+    }
+    
+    .vertical-line {
+      width: 2px;
+      background: var(--primary);
+      opacity: 0.3;
+      position: absolute;
+    }
+    
+    .marriage-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid var(--danger);
+      color: var(--danger);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .children-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-top: 40px;
+    }
+    
+    @media (max-width: 768px) {
+      .tree-level {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
       }
-    %>
+      
+      .member-photo-circle {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .children-container {
+        gap: 20px;
+      }
+    }
+  </style>
 
-    <!-- ================= PARENTS ================= -->
-    <h5 class="section-title" style="background-color: #f5e6d3; color: #8B4513;">Parents</h5>
-    <div class="parents-row">
-
-      <% members.forEach(member => { %>
-        <% if (member.member_type === 'parent') { %>
-
-          <div class="member-card">
-            <% if (member.relationship === 'husband') { %>
-              <button type="button" class="edit-icon" onclick="openEditModal('husband', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
-            <% } else if (member.relationship === 'wife') { %>
-              <button type="button" class="edit-icon" onclick="openEditModal('wife', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
-            <% } %>
-
-            <% if (member.photo && member.photo.trim() !== "") { %>
-              <% let photoSrc = member.photo; %>
-              <% // Remove size from photo path if present %>
-              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-              <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
-              <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
-              <% } %>
-            <% } else { %>
-              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
-            <% } %>
-
-            <div class="member-info">
-              <div class="member-name"><%= member.name %></div>
-              <div class="info-item"><b>Relationship:</b> <%= member.relationship %></div>
-              <div class="info-item"><b>Mobile:</b> <%= member.mobile || '-' %></div>
-              <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
-              <div class="info-item"><b>Gender:</b>
-                <%
-                  let gender = member.gender;
-                  if (!gender || gender === '-') {
-                    if (member.relationship === 'husband') gender = 'Male';
-                    else if (member.relationship === 'wife') gender = 'Female';
-                    else if (member.relationship === 'son') gender = 'Male';
-                    else if (member.relationship === 'daughter') gender = 'Female';
-                    else gender = '-';
-                  }
-                %>
-                <%= gender %>
-              </div>
-              <div class="info-item"><b>Address:</b> <%= [member.door_no, member.street, member.district, member.state, member.pincode].filter(Boolean).join(', ') || '-' %></div>
-            </div>
+  <!-- Family Tree View -->
+  <div class="family-tree-container">
+    
+    <!-- Parents Level -->
+    <% if (husband || wife) { %>
+    <div class="tree-level">
+      
+      <!-- Husband -->
+      <% if (husband) { %>
+      <div class="tree-member">
+        <div class="member-photo-circle">
+          <% if (husband.photo && husband.photo.trim() !== "") { %>
+            <% let photoSrc = husband.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= husband.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" onclick="openEditModal('husband', '<%= husband.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= husband.name %></div>
+        <div class="member-role text-primary"><i class="bi bi-person-badge"></i> Husband</div>
+        <div class="member-details">
+          <div class="member-detail-item">
+            <i class="bi bi-telephone-fill text-primary"></i>
+            <span><%= husband.mobile || 'N/A' %></span>
           </div>
-
-        <% } %>
-      <% }) %>
-
-    </div>
-
-    <!-- ================= CHILDREN ================= -->
-    <h5 class="section-title" style="background-color: #f5e6d3; color: #8B4513;">Children</h5>
-    <div class="children-row">
-
-      <% members.forEach(member => { %>
-        <% if (member.member_type === 'child') { %>
-
-          <div class="member-card">
-            <button type="button" class="edit-icon" onclick="openEditModal('child', '<%= member.id %>')"><i class="fas fa-edit"></i></button>
-
-            <% if (member.photo && member.photo.trim() !== "") { %>
-              <% let photoSrc = member.photo; %>
-              <% // Remove size from photo path if present %>
-              <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
-              <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
-              <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
-              <% if (photoSrc.startsWith('uploads/')) { %>
-                <img src="/<%= photoSrc %>" class="member-photo">
-              <% } else { %>
-                <img src="/uploads/<%= photoSrc %>" class="member-photo">
-              <% } %>
-            <% } else { %>
-              <img src="https://via.placeholder.com/120x120?text=No+Photo" class="member-photo">
-            <% } %>
-
-            <div class="member-info">
-              <div class="member-name"><%= member.name %></div>
-              <div class="info-item"><b>Name:</b> <%= member.name %></div>
-              <div class="info-item"><b>Relationship:</b> <%= member.relationship || '-' %></div>
-              <div class="info-item"><b>Occupation:</b> <%= member.occupation || '-' %></div>
-              <div class="info-item"><b>Gender:</b>
-                <%
-                  let gender = member.gender;
-                  if (!gender || gender === '-') {
-                    if (member.relationship === 'husband') gender = 'Male';
-                    else if (member.relationship === 'wife') gender = 'Female';
-                    else if (member.relationship === 'son') gender = 'Male';
-                    else if (member.relationship === 'daughter') gender = 'Female';
-                    else gender = '-';
-                  }
-                %>
-                <%= gender %>
-              </div>
-              <div class="info-item"><b>Address:</b> <%= [parentsAddress.door_no, parentsAddress.street, parentsAddress.district, parentsAddress.state, parentsAddress.pincode].filter(Boolean).join(', ') || '-' %></div>
-            </div>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= husband.occupation || 'N/A' %></span>
           </div>
-
-        <% } %>
+        </div>
+      </div>
+      <% } %>
+      
+      <!-- Marriage Connection -->
+      <% if (husband && wife) { %>
+      <div style="position: relative; width: 80px; display: flex; align-items: center; margin-top: 60px;">
+        <div class="horizontal-line" style="width: 100%; top: 0;"></div>
+        <div class="marriage-badge">
+          <i class="bi bi-heart-fill"></i>
+        </div>
+      </div>
+      <% } %>
+      
+      <!-- Wife -->
+      <% if (wife) { %>
+      <div class="tree-member">
+        <div class="member-photo-circle">
+          <% if (wife.photo && wife.photo.trim() !== "") { %>
+            <% let photoSrc = wife.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= wife.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" onclick="openEditModal('wife', '<%= wife.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= wife.name %></div>
+        <div class="member-role text-danger"><i class="bi bi-person-badge"></i> Wife</div>
+        <div class="member-details">
+          <div class="member-detail-item">
+            <i class="bi bi-telephone-fill text-primary"></i>
+            <span><%= wife.mobile || 'N/A' %></span>
+          </div>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= wife.occupation || 'N/A' %></span>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      
+    </div>
+    
+    <!-- Vertical Connector to Children -->
+    <% if (children.length > 0) { %>
+    <div style="display: flex; justify-content: center; position: relative;">
+      <div class="vertical-line" style="height: 40px; left: 50%;"></div>
+    </div>
+    <% } %>
+    <% } %>
+    
+    <!-- Children Level -->
+    <% if (children.length > 0) { %>
+    <div class="children-container">
+      <% children.forEach(member => { %>
+      <div class="tree-member">
+        <div class="member-photo-circle" style="border-color: var(--success);">
+          <% if (member.photo && member.photo.trim() !== "") { %>
+            <% let photoSrc = member.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= member.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" style="border-color: var(--success);" onclick="openEditModal('child', '<%= member.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= member.name %></div>
+        <div class="member-role text-success">
+          <i class="bi bi-person"></i> 
+          <span class="text-capitalize"><%= member.relationship || 'Child' %></span>
+        </div>
+        <div class="member-details">
+          <% if (member.occupation) { %>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= member.occupation %></span>
+          </div>
+          <% } %>
+          <%
+            let gender = member.gender;
+            if (!gender || gender === '-') {
+              if (member.relationship === 'son') gender = 'Male';
+              else if (member.relationship === 'daughter') gender = 'Female';
+            }
+            if (gender && gender !== '-') {
+          %>
+          <div class="member-detail-item">
+            <i class="bi bi-gender-ambiguous text-info"></i>
+            <span><%= gender %></span>
+          </div>
+          <% } %>
+        </div>
+      </div>
       <% }) %>
-
     </div>
-
-    <div class="add-child-bar" data-bs-toggle="modal" data-bs-target="#addChildModal">
-      + Add Child
+    <% } %>
+    
+    <!-- Add Child Button -->
+    <div class="text-center mt-5">
+      <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addChildModal">
+        <i class="bi bi-plus-lg me-2"></i>Add Child to Family Tree
+      </button>
     </div>
-
+    
   </div>
 
-  <!-- EDIT MODALS -->
+</div>
 
-  <!-- EDIT MODALS -->
+<!-- EDIT MODALS -->
 
   <!-- HUSBAND EDIT MODAL -->
   <div class="modal fade" id="husbandEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Edit Husband</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -358,7 +391,10 @@
                 <input class="form-control mb-2" name="occupation" placeholder="Occupation">
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onclick="showPhotoOptions('husbandPhotoFile')">
+                <input type="file" id="husband_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleHusbandPhotoSelect(this)">
+                <div id="husband_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('husband_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -369,8 +405,10 @@
             <!-- Address Section -->
             <h6 class="mt-3 mb-2">Address</h6>
             <div class="form-check mb-2">
-              <input class="form-check-input" type="checkbox" id="childSameAsParents">
-            
+              <input class="form-check-input" type="checkbox" id="husbandSameAsParents">
+              <label class="form-check-label" for="husbandSameAsParents">
+                Same as Parents Address
+              </label>
             </div>
             <div class="row">
               <div class="col-md-6">
@@ -409,7 +447,7 @@
   <div class="modal fade" id="wifeEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Edit Wife</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -428,7 +466,10 @@
                 <input class="form-control mb-2" name="occupation" placeholder="Occupation">
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onclick="showPhotoOptions('wifePhotoFile')">
+                <input type="file" id="wife_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleWifePhotoSelect(this)">
+                <div id="wife_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('wife_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -438,6 +479,12 @@
             </div>
             <!-- Address Section -->
             <h6 class="mt-3 mb-2">Address</h6>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="wifeSameAsParents">
+              <label class="form-check-label" for="wifeSameAsParents">
+                Same as Parents Address
+              </label>
+            </div>
             <div class="row">
               <div class="col-md-6">
                 <input class="form-control mb-2" name="door_no" placeholder="Door No">
@@ -475,7 +522,7 @@
   <div class="modal fade" id="childEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Edit Child</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -512,7 +559,10 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*" onclick="showPhotoOptions('addChildPhotoFile')">
+                <input type="file" id="child_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleChildPhotoSelectEdit(this)">
+                <div id="child_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('child_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -566,7 +616,7 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
 
-        <div class="modal-header" style="background:#A0522D;color:white;">
+        <div class="modal-header" style="background:#6c757d;color:white;">
           <h5 class="modal-title">Add Child</h5>
           <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -603,7 +653,15 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <input type="file" class="form-control mb-2" name="photo" accept="image/*">
+                <input type="file" id="add_child_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleAddChildPhotoSelect(this)">
+                <div id="add_child_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('add_child_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <img id="addChildPhotoPreview" src="" class="img-fluid mb-2" style="max-height: 200px; display: none;">
               </div>
             </div>
 
@@ -650,16 +708,16 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <%- include('partials/footer') %>
+  
+  <!-- SweetAlert2 - Required by family.js -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <%- include('partials/scripts') %>
   <script src="/js/family.js"></script>
 
   <script>
     let parentsAddress = {};
-
-    // Fade in on page load
-    window.addEventListener('load', function() {
-      document.body.style.opacity = '1';
-    });
 
     // Load parents' address on page load
     document.addEventListener("DOMContentLoaded", async () => {
@@ -684,21 +742,87 @@
       }
     });
 
-    // Handle checkbox for same as parents address in child edit modal
-    document.getElementById('childSameAsParents').addEventListener('change', function() {
-      const isChecked = this.checked;
-      const addressFields = ['door_no', 'street', 'state', 'district', 'pincode'];
-
+    // Function to populate address fields from parents address
+    async function populateAddressFields(modalId, isChecked) {
+      const addressFields = ['door_no', 'street', 'pincode'];
+      
+      // First populate simple fields
       addressFields.forEach(field => {
-        const element = document.querySelector(`#childEditModal [name="${field}"]`);
-        if (isChecked) {
-          element.value = parentsAddress[field] || '';
-          element.disabled = true;
-        } else {
-          element.disabled = false;
+        const element = document.querySelector(`#${modalId} [name="${field}"]`);
+        if (element) {
+          if (isChecked) {
+            element.value = parentsAddress[field] || '';
+          } else {
+            element.value = '';
+          }
         }
       });
-    });
+      
+      // Handle state and district specially
+      const stateElement = document.querySelector(`#${modalId} [name="state"]`);
+      const districtElement = document.querySelector(`#${modalId} [name="district"]`);
+      
+      if (stateElement && districtElement) {
+        if (isChecked) {
+          const parentState = parentsAddress.state || '';
+          const parentDistrict = parentsAddress.district || '';
+          
+          // Set state first
+          stateElement.value = parentState;
+          
+          // Load districts for the selected state
+          if (parentState && indiaData[parentState]) {
+            districtElement.innerHTML = '<option value="">Select District</option>';
+            indiaData[parentState].forEach(district => {
+              const option = document.createElement("option");
+              option.value = district;
+              option.textContent = district;
+              districtElement.appendChild(option);
+            });
+            
+            // Set district after a small delay to allow options to populate
+            setTimeout(() => {
+              districtElement.value = parentDistrict;
+            }, 50);
+          }
+        } else {
+          stateElement.value = '';
+          districtElement.value = '';
+        }
+      }
+    }
+
+    // Handle checkbox for same as parents address in husband edit modal
+    const husbandSameAsParentsCheckbox = document.getElementById('husbandSameAsParents');
+    if (husbandSameAsParentsCheckbox) {
+      husbandSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('husbandEditModal', this.checked);
+      });
+    }
+
+    // Handle checkbox for same as parents address in wife edit modal
+    const wifeSameAsParentsCheckbox = document.getElementById('wifeSameAsParents');
+    if (wifeSameAsParentsCheckbox) {
+      wifeSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('wifeEditModal', this.checked);
+      });
+    }
+
+    // Handle checkbox for same as parents address in child edit modal
+    const childSameAsParentsCheckbox = document.getElementById('childSameAsParents');
+    if (childSameAsParentsCheckbox) {
+      childSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('childEditModal', this.checked);
+      });
+    }
+
+    // Handle checkbox for same as parents address in add child modal
+    const addChildSameAsParentsCheckbox = document.getElementById('addChildSameAsParents');
+    if (addChildSameAsParentsCheckbox) {
+      addChildSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('addChildModal', this.checked);
+      });
+    }
   </script>
 
 </body>

@@ -496,6 +496,116 @@ function handleChildPhotoSelect(input, childIndex) {
   }
 }
 
+// Handle photo selection for add child modal
+function handleAddChildPhotoSelect(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFile(file, 'add_child_photo');
+  }
+}
+
+// Handler functions for edit modals in my processPhotoFile(file-family.ejs
+function handleHusbandPhotoSelect(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFileEdit(file, 'husband_photo', 'husbandPhotoPreview');
+  }
+}
+
+function handleWifePhotoSelect(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFileEdit(file, 'wife_photo', 'wifePhotoPreview');
+  }
+}
+
+function handleChildPhotoSelectEdit(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFileEdit(file, 'child_photo', 'childPhotoPreview');
+  }
+}
+
+// Process photo file for edit modals
+function processPhotoFileEdit(file, target, previewId) {
+  const maxSizeKB = 250;
+  const maxSizeBytes = maxSizeKB * 1024;
+
+  if (file.size <= maxSizeBytes) {
+    // File is already small enough
+    updatePhotoPlaceholder(target, file.size);
+    assignFileToInput(file, target);
+    // Show preview
+    const preview = document.getElementById(previewId);
+    if (preview) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  } else {
+    // Compress the image
+    compressImageEdit(file, maxSizeBytes, target, previewId);
+  }
+}
+
+// Compress image for edit modals
+function compressImageEdit(file, maxSizeBytes, target, previewId) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+
+  img.onload = function() {
+    let quality = 0.8;
+
+    const compress = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob.size <= maxSizeBytes) {
+          updatePhotoPlaceholder(target, blob.size);
+          assignFileToInput(blob, target);
+          // Show preview
+          const preview = document.getElementById(previewId);
+          if (preview) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              preview.src = e.target.result;
+              preview.style.display = 'block';
+            };
+            reader.readAsDataURL(blob);
+          }
+        } else if (quality > 0.1) {
+          quality -= 0.1;
+          compress();
+        } else {
+          // Even at lowest quality, still too big - use as is
+          updatePhotoPlaceholder(target, blob.size);
+          assignFileToInput(blob, target);
+          // Show preview
+          const preview = document.getElementById(previewId);
+          if (preview) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              preview.src = e.target.result;
+              preview.style.display = 'block';
+            };
+            reader.readAsDataURL(blob);
+          }
+        }
+      }, 'image/jpeg', quality);
+    };
+
+    compress();
+  };
+
+  img.src = URL.createObjectURL(file);
+}
+
 function deleteChildPhoto(childIndex) {
   const fileInput = document.getElementById(`child_${childIndex}_file`);
   const fileNameSpan = document.getElementById(`child_${childIndex}_file_name`);
