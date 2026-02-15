@@ -5,6 +5,11 @@ if (typeof indiaData === "undefined") {
 
 let childIndex = 0;
 
+function isAddChildMode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get("mode") === "addChild";
+}
+
 // ========== LOAD INDIA DATA ==========
 async function loadIndiaData() {
   try {
@@ -238,6 +243,34 @@ async function loadStatesForChildModal() {
 
 // ================== CHILD ADDRESS AND PHOTO FUNCTIONS ==================
 
+// Store parent address for add child mode
+let parentAddressData = null;
+
+async function fetchParentAddress() {
+  try {
+    const response = await fetch('/my-family-json', {
+      method: 'GET',
+      credentials: 'include'
+    });
+    const result = await response.json();
+    if (result.success && result.members && result.members.length > 0) {
+      // Get first parent (husband or wife)
+      const parent = result.members.find(m => m.member_type === 'parent');
+      if (parent) {
+        parentAddressData = {
+          door_no: parent.door_no || '',
+          street: parent.street || '',
+          state: parent.state || '',
+          district: parent.district || '',
+          pincode: parent.pincode || ''
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching parent address:', error);
+  }
+}
+
 function handleSameAddressCheck(childIndex) {
   const checkbox = document.getElementById(`sameAddressCheck_${childIndex}`);
   const hiddenFlag = document.getElementById(`use_parent_address_${childIndex}`);
@@ -248,12 +281,32 @@ function handleSameAddressCheck(childIndex) {
   const pincode = document.getElementById(`child_${childIndex}_pincode`);
 
   if (checkbox.checked) {
-    // Copy parent address
-    const parentDoorNo = document.querySelector('input[name="parent[door_no]"]').value;
-    const parentStreet = document.querySelector('input[name="parent[street]"]').value;
-    const parentState = document.querySelector('select[name="parent[state]"]').value;
-    const parentDistrict = document.querySelector('select[name="parent[district]"]').value;
-    const parentPincode = document.querySelector('input[name="parent[pincode]"]').value;
+    let parentDoorNo, parentStreet, parentState, parentDistrict, parentPincode;
+
+    // Prefer fetched parent data in add-child mode (parent form is hidden).
+    const parentDoorNoInput = document.querySelector('input[name="parent[door_no]"]');
+    const parentSection = document.getElementById("parentSection");
+    const shouldUseParentFormInputs = !isAddChildMode() && parentDoorNoInput && parentSection && parentSection.style.display !== "none";
+
+    if (shouldUseParentFormInputs) {
+      // Normal mode - parent section is visible and editable
+      parentDoorNo = parentDoorNoInput.value;
+      parentStreet = document.querySelector('input[name="parent[street]"]').value;
+      parentState = document.querySelector('select[name="parent[state]"]').value;
+      parentDistrict = document.querySelector('select[name="parent[district]"]').value;
+      parentPincode = document.querySelector('input[name="parent[pincode]"]').value;
+    } else if (parentAddressData) {
+      // Add child mode - use fetched parent data
+      parentDoorNo = parentAddressData.door_no;
+      parentStreet = parentAddressData.street;
+      parentState = parentAddressData.state;
+      parentDistrict = parentAddressData.district;
+      parentPincode = parentAddressData.pincode;
+    } else {
+      alert('Parent address not available. Please uncheck this option.');
+      checkbox.checked = false;
+      return;
+    }
 
     doorNo.value = parentDoorNo;
     street.value = parentStreet;
@@ -261,11 +314,13 @@ function handleSameAddressCheck(childIndex) {
     pincode.value = parentPincode;
 
     // Load districts for the selected state
-    loadDistrictsForChild(childIndex);
-    // After loading districts, set the district value
-    setTimeout(() => {
-      district.value = parentDistrict;
-    }, 100);
+    if (parentState) {
+      loadDistrictsForChild(childIndex);
+      // After loading districts, set the district value
+      setTimeout(() => {
+        district.value = parentDistrict;
+      }, 100);
+    }
 
     // Make inputs readonly but keep selects enabled for form submission
     doorNo.readOnly = true;
@@ -626,6 +681,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load initial India data
   loadIndiaData();
 
+  // Check if in add child mode and fetch parent address
+  const inAddChildMode = isAddChildMode();
+  if (inAddChildMode) {
+    // Parent section is hidden in this mode; remove browser validation blocks from hidden required fields.
+    const parentSection = document.getElementById("parentSection");
+    if (parentSection) {
+      parentSection.querySelectorAll("[required]").forEach((field) => {
+        field.required = false;
+      });
+    }
+
+    fetchParentAddress();
+  }
+
   // ========== ADD CHILD FORM SUBMIT ==========
   const addChildForm = document.getElementById("addChildForm");
   if (addChildForm) {
@@ -691,6 +760,73 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
 
       const formData = new FormData(form);
+      
+      // Check if we're in "Add Child" mode
+      const inAddChildModeSubmit = isAddChildMode();
+
+      if (inAddChildModeSubmit) {
+        // Handle Add Child submission
+        const childrenContainer = document.getElementById("children");
+        const childCards = childrenContainer.querySelectorAll(".child-card");
+        
+        if (childCards.length === 0) {
+          alert("No child information to submit");
+          return;
+        }
+
+        // Get first child's data (in add child mode, there should only be one)
+        const childFormData = new FormData();
+        
+        childFormData.append('name', formData.get('children[0][name]') || '');
+        childFormData.append('relationship', formData.get('children[0][relationship]') || 'other');
+        childFormData.append('dob', formData.get('children[0][dob]') || '');
+        childFormData.append('gender', formData.get('children[0][gender]') || '');
+        childFormData.append('occupation', formData.get('children[0][occupation]') || '');
+        childFormData.append('door_no', formData.get('children[0][door_no]') || '');
+        childFormData.append('street', formData.get('children[0][street]') || '');
+        childFormData.append('pincode', formData.get('children[0][pincode]') || '');
+        childFormData.append('state', formData.get('children[0][state]') || '');
+        childFormData.append('district', formData.get('children[0][district]') || '');
+        
+        const childPhoto = formData.get('children[0][photo]');
+        if (childPhoto && childPhoto.size > 0) {
+          childFormData.append('photo', childPhoto);
+        }
+
+        try {
+          const response = await fetch("/add-child", {
+            method: "POST",
+            body: childFormData,
+            credentials: "include"
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Child Added Successfully!',
+              text: 'The child has been added to your family.',
+              showConfirmButton: false,
+              timer: 2000
+            }).then(() => {
+              window.location.href = "/my-family";
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed to Add Child',
+              text: result.message || 'An error occurred'
+            });
+          }
+        } catch (error) {
+          console.error("Network error:", error);
+          alert("Server not reachable");
+        }
+        return;
+      }
+
+      // Normal family save mode
       const members = [];
 
       // Add husband

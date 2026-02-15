@@ -15,18 +15,18 @@
 
 <!-- Login Success Modal -->
 <div class="modal fade" id="loginSuccessModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-success text-white border-0">
-        <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Login Successful</h5>
+      <div class="modal-header bg-success text-white border-0 py-2">
+        <h6 class="modal-title mb-0"><i class="bi bi-check-circle-fill me-2"></i>Login Successful</h6>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body text-center py-4">
-        <div class="mb-3">
-          <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+      <div class="modal-body text-center py-3">
+        <div class="mb-2">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
         </div>
-        <h4 class="fw-bold mb-2">Welcome Back!</h4>
-        <p class="text-muted">Welcome to Family Portal. May your visit be blessed.</p>
+        <h5 class="fw-bold mb-2">Welcome Back!</h5>
+        <p class="text-muted small mb-0">Welcome to Family Portal</p>
       </div>
     </div>
   </div>
@@ -74,14 +74,14 @@
 
 <!-- Family Check Modal -->
 <div class="modal fade" id="familyCheckModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Family Details</h5>
+      <div class="modal-header border-0 py-2">
+        <h6 class="modal-title fw-bold mb-0">Family Details</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="familyContent">
-        <div class="text-center py-3">
+      <div class="modal-body p-3" id="familyContent">
+        <div class="text-center py-2">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
@@ -93,16 +93,16 @@
 
 <!-- Coming Soon Modal -->
 <div class="modal fade" id="comingSoonModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-warning bg-opacity-10 border-0">
-        <h5 class="modal-title fw-bold"><i class="bi bi-clock-history me-2 text-warning"></i>Coming Soon</h5>
+      <div class="modal-header bg-warning bg-opacity-10 border-0 py-2">
+        <h6 class="modal-title fw-bold mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Coming Soon</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body text-center py-4">
-        <i class="bi bi-hourglass-split text-warning mb-3" style="font-size: 3rem;"></i>
-        <h5 class="fw-bold mb-2">Feature Under Development</h5>
-        <p class="text-muted mb-0">This feature is coming soon. Stay tuned!</p>
+      <div class="modal-body text-center py-3">
+        <i class="bi bi-hourglass-split text-warning mb-2" style="font-size: 2.5rem;"></i>
+        <h6 class="fw-bold mb-1">Feature Under Development</h6>
+        <p class="text-muted small mb-0">This feature is coming soon!</p>
       </div>
     </div>
   </div>
@@ -131,28 +131,23 @@
   }
 
   function handleFamilyClick() {
-    if (sessionStorage.getItem('backFromMyFamily') === 'true') {
-      sessionStorage.removeItem('backFromMyFamily');
-      window.location.href = '/my-family';
-      return;
-    }
-
     // Fetch family data first
     fetch('/my-family-json')
       .then(res => res.json())
       .then(data => {
         if (data.success && data.members && data.members.length > 0) {
-          sessionStorage.setItem('backFromMyFamily', 'true');
+          // Family exists - redirect to my-family page
           window.location.href = '/my-family';
         } else {
+          // No family - show modal with add button
           const familyContent = document.getElementById('familyContent');
           familyContent.innerHTML = `
             <div class="text-center py-3">
               <i class="bi bi-exclamation-circle text-warning mb-3" style="font-size: 3rem;"></i>
-              <h5 class="fw-bold mb-3">No Family Details Found</h5>
-              <p class="text-muted mb-4">Please add your family details to continue.</p>
-              <button class="btn btn-primary" onclick="window.location.href='/family-form'">
-                <i class="bi bi-plus-lg me-2"></i>Add Family Details
+              <h6 class="fw-bold mb-2">No Family Details Found</h6>
+              <p class="text-muted small mb-3">Please add your family details to continue.</p>
+              <button class="btn btn-primary btn-sm" onclick="window.location.href='/family-form'">
+                <i class="bi bi-plus-lg me-1"></i>Add Family Details
               </button>
             </div>
           `;
@@ -165,8 +160,8 @@
         familyContent.innerHTML = `
           <div class="text-center py-3">
             <i class="bi bi-x-circle text-danger mb-3" style="font-size: 3rem;"></i>
-            <h5 class="fw-bold mb-3">Error Loading Family Details</h5>
-            <p class="text-muted">Please try again later.</p>
+            <h6 class="fw-bold mb-2">Error Loading Family Details</h6>
+            <p class="text-muted small">Please try again later.</p>
           </div>
         `;
         new bootstrap.Modal(document.getElementById('familyCheckModal')).show();

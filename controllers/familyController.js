@@ -330,6 +330,11 @@ exports.myFamily = async (req, res) => {
       members = rows || [];
     }
 
+    // If no family members, redirect to form
+    if (!members || members.length === 0) {
+      return res.redirect('/family-form');
+    }
+
     return res.render("my-family", {
       family,
       members
@@ -829,5 +834,22 @@ exports.deleteFamily = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to delete family", error: err.message });
   } finally {
     connection.release();
+  }
+};
+
+/* ================= GET MEMBER BY ID ================= */
+exports.getMember = async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const [rows] = await db.query('SELECT * FROM family_members WHERE id = ?', [memberId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Member not found' });
+    }
+    
+    res.json({ success: true, member: rows[0] });
+  } catch (err) {
+    console.error('Get member error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch member' });
   }
 };

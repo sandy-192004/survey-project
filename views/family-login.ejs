@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <%- include('partials/head') %>
-<body class="d-flex flex-column min-vh-100" style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);">
+<body class="d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);">
     <div class="container">
         <!-- Logout Message -->
-        <div id="logoutMessage" class="alert alert-info text-center" style="display: none; color: blue !important;">
+        <div id="logoutMessage" class="alert alert-info text-center position-fixed top-0 start-50 translate-middle-x mt-3" style="display: none; z-index: 9999; max-width: 90%;">
             Account logged out successfully.
         </div>
 
-        <div class="row justify-content-center align-items-center min-vh-100 py-5">
+        <div class="row justify-content-center">
             <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
                 <!-- Login Form -->
                 <div id="loginForm" class="card border-0 shadow-lg">
-                    <div class="card-body p-4 p-md-5">
-                        <div class="text-center mb-4">
-                            <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-3 mb-3">
-                                <i class="bi bi-person-circle text-primary" style="font-size: 3rem;"></i>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-3 mb-2">
+                                <i class="bi bi-person-circle text-primary" style="font-size: 2.5rem;"></i>
                             </div>
-                            <h2 class="fw-bold mb-2">Welcome Back</h2>
-                            <p class="text-muted small">Sign in to your family account</p>
+                            <h2 class="fw-bold mb-1 h4">Welcome Back</h2>
+                            <p class="text-muted small mb-0">Sign in to your family account</p>
                         </div>
                         
                         <form id="loginSubmit" method="POST" action="/login">
                             <div class="mb-3">
-                                <label for="loginEmail" class="form-label">Email Address</label>
+                                <label for="loginEmail" class="form-label small">Email Address</label>
                                 <input 
                                     type="email" 
                                     class="form-control" 
@@ -35,7 +35,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="loginPassword" class="form-label">Password</label>
+                                <label for="loginPassword" class="form-label small">Password</label>
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -53,37 +53,41 @@
                                     id="rememberMe" 
                                     name="remember"
                                 >
-                                <label class="form-check-label" for="rememberMe">
+                                <label class="form-check-label small" for="rememberMe">
                                     Remember me
                                 </label>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
+                            <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary px-3 py-2 mb-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </button>
+                        </div>
                         </form>
 
-                        <hr>
+                        <hr class="my-3">
 
                         <p class="text-center mb-0">
                             Don't have an account? 
-                            <a href="#" onclick="toggleForms()" class="text-decoration-none">Sign Up</a>
+                            <a href="#" onclick="toggleForms(); return false;" class="text-decoration-none">Sign Up</a>
                         </p>
                     </div>
                 </div>
 
                 <!-- Signup Form (Hidden by default) -->
                 <div id="signupForm" class="card border-0 shadow-lg d-none">
-                    <div class="card-body p-4 p-md-5">
-                        <div class="text-center mb-4">
-                            <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-3">
-                                <i class="bi bi-person-plus text-success" style="font-size: 3rem;"></i>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-2">
+                                <i class="bi bi-person-plus text-success" style="font-size: 2.5rem;"></i>
                             </div>
-                            <h2 class="fw-bold mb-2">Create Account</h2>
-                            <p class="text-muted small">Join our family portal</p>
+                            <h2 class="fw-bold mb-1 h4">Create Account</h2>
+                            <p class="text-muted small mb-0">Join our family portal</p>
                         </div>
                         
                         <form id="signupSubmit" method="POST" action="/register">
                             <div class="mb-3">
-                                <label for="signupEmail" class="form-label">Email Address</label>
+                                <label for="signupEmail" class="form-label small">Email Address</label>
                                 <input 
                                     type="email" 
                                     class="form-control" 
@@ -95,7 +99,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="signupPassword" class="form-label">Password</label>
+                                <label for="signupPassword" class="form-label small">Password</label>
+                                <input 
+                                    type="password" 
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -108,7 +114,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <label for="confirmPassword" class="form-label small">Confirm Password</label>
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -119,14 +125,18 @@
                                 >
                             </div>
 
-                            <button type="submit" class="btn btn-success w-100 mb-3">Create Account</button>
+                            <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-success px-3 py-2 mb-2">
+                                <i class="bi bi-person-plus-fill me-2"></i>Register
+                            </button>
+                        </div>
                         </form>
 
-                        <hr>
+                        <hr class="my-3">
 
                         <p class="text-center mb-0">
                             Already have an account? 
-                            <a href="#" onclick="toggleForms()" class="text-decoration-none">Sign In</a>
+                            <a href="#" onclick="toggleForms(); return false;" class="text-decoration-none">Sign In</a>
                         </p>
                     </div>
                 </div>

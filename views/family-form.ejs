@@ -45,6 +45,7 @@
         <div class="card p-4">
 
           <!-- ===== PARENT DETAILS ===== -->
+          <div id="parentSection">
       <div class="row g-2">
         <div class="col-12 col-md-6">
           <h5 class="mb-3 small">Husband Details</h5>
@@ -113,6 +114,7 @@
       </div>
 
       <input class="form-control mb-3 small" name="parent[pincode]" placeholder="Pincode" type="text">
+      </div>
 
       <!-- ===== CHILDREN SECTION ===== -->
       <h5 class="mt-4 mb-3 small">Children</h5>
@@ -123,9 +125,9 @@
       </button>
 
       <!-- ===== SAVE BUTTON ===== -->
-      <div class="mt-4">
-        <button type="submit" class="btn btn-primary w-100">
-          Save Family
+      <div class="mt-4 text-center">
+        <button type="submit" class="btn btn-primary px-5">
+          <i class="bi bi-check-lg me-2"></i>Save Family
         </button>
       </div>
 
@@ -145,6 +147,37 @@
 
 <%- include('partials/scripts') %>
 <script src="/js/family.js"></script>
+
+<script>
+// Check if in add child mode
+const urlParams = new URLSearchParams(window.location.search);
+const mode = urlParams.get('mode');
+
+if (mode === 'addChild') {
+  // Hide parent section
+  const parentSection = document.getElementById('parentSection');
+  if (parentSection) {
+    parentSection.style.display = 'none';
+  }
+  
+  // Change page title
+  const pageTitle = document.querySelector('h1');
+  if (pageTitle) {
+    pageTitle.innerHTML = '<i class="bi bi-person-plus-fill text-success me-2"></i>Add Child';
+  }
+  
+  // Change submit button text
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Child';
+  }
+  
+  // Auto-add one child form
+  if (typeof addChild === 'function') {
+    setTimeout(() => addChild(), 100);
+  }
+}
+</script>
 
 </body>
 </html>

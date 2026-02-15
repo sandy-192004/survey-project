@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head') %>
+<body class="d-flex flex-column min-vh-100">
+
+<%- include('partials/navbar') %>
+
+<div class="container-fluid px-3 px-md-4 py-4" style="flex: 1; background-color: var(--gray-50);">
+  
+  <!-- Page Header -->
+  <div class="mb-4">
+    <h1 class="h3 fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>My Family</h1>
+  </div>
+  <% members = members || []; %>
+
+  <% if (!members.length) { %>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+        <h4 class="fw-bold mb-3">No Family Data Found</h4>
+        <p class="text-muted mb-4">Start by adding your family details</p>
+        <a href="/family-form" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-2"></i>Add Family Details
+        </a>
+      </div>
+    </div>
+  <% } %>
+
+  <% // Get parents' address for children display %>
+  <%
+    let parentsAddress = {};
+    const parents = members.filter(m => m.member_type === 'parent');
+    const husband = members.find(m => m.relationship === 'husband');
+    const wife = members.find(m => m.relationship === 'wife');
+    const children = members.filter(m => m.member_type === 'child');
+    
+    if (parents.length > 0) {
+      const parent = parents[0];
+      parentsAddress = {
+        door_no: parent.door_no || '',
+        street: parent.street || '',
+        district: parent.district || '',
+        state: parent.state || '',
+        pincode: parent.pincode || ''
+      };
+    }
+  %>
+
+  <style>
+    .family-tree-container {
+      padding: 40px 20px;
+      overflow-x: auto;
+    }
+    
+    .tree-level {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      margin-bottom: 60px;
+      position: relative;
+    }
+    
+    .tree-member {
+      text-align: center;
+      position: relative;
+      max-width: 200px;
+    }
+    
+    .member-photo-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 0 auto 12px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .member-photo-circle img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .member-photo-circle .placeholder-icon {
+      font-size: 3rem;
+      color: var(--gray-400);
+    }
+    
+    .edit-btn-circle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .edit-btn-circle:hover {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .member-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      color: var(--gray-900);
+    }
+    
+    .member-role {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    
+    .member-details {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-top: 8px;
+      text-align: left;
+    }
+    
+    .member-detail-item {
+      font-size: 0.85rem;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Tree Connections */
+    .tree-connector {
+      position: absolute;
+      border: 2px solid var(--primary);
+      opacity: 0.3;
+    }
+    
+    .horizontal-line {
+      height: 2px;
+      background: var(--primary);
+      opacity: 0.3;
+      position: absolute;
+    }
+    
+    .vertical-line {
+      width: 2px;
+      background: var(--primary);
+      opacity: 0.3;
+      position: absolute;
+    }
+    
+    .marriage-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid var(--danger);
+      color: var(--danger);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .children-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-top: 40px;
+    }
+    
+    @media (max-width: 768px) {
+      .tree-level {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+      }
+      
+      .member-photo-circle {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .children-container {
+        gap: 20px;
+      }
+    }
+  </style>
+
+  <!-- Family Tree View -->
+  <div class="family-tree-container">
+    
+    <!-- Parents Level -->
+    <% if (husband || wife) { %>
+    <div class="tree-level">
+      
+      <!-- Husband -->
+      <% if (husband) { %>
+      <div class="tree-member">
+        <div class="member-photo-circle">
+          <% if (husband.photo && husband.photo.trim() !== "") { %>
+            <% let photoSrc = husband.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= husband.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" onclick="openEditModal('husband', '<%= husband.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= husband.name %></div>
+        <div class="member-role text-primary"><i class="bi bi-person-badge"></i> Husband</div>
+        <div class="member-details">
+          <div class="member-detail-item">
+            <i class="bi bi-telephone-fill text-primary"></i>
+            <span><%= husband.mobile || 'N/A' %></span>
+          </div>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= husband.occupation || 'N/A' %></span>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      
+      <!-- Marriage Connection -->
+      <% if (husband && wife) { %>
+      <div style="position: relative; width: 80px; display: flex; align-items: center; margin-top: 60px;">
+        <div class="horizontal-line" style="width: 100%; top: 0;"></div>
+        <div class="marriage-badge">
+          <i class="bi bi-heart-fill"></i>
+        </div>
+      </div>
+      <% } %>
+      
+      <!-- Wife -->
+      <% if (wife) { %>
+      <div class="tree-member">
+        <div class="member-photo-circle">
+          <% if (wife.photo && wife.photo.trim() !== "") { %>
+            <% let photoSrc = wife.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= wife.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" onclick="openEditModal('wife', '<%= wife.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= wife.name %></div>
+        <div class="member-role text-danger"><i class="bi bi-person-badge"></i> Wife</div>
+        <div class="member-details">
+          <div class="member-detail-item">
+            <i class="bi bi-telephone-fill text-primary"></i>
+            <span><%= wife.mobile || 'N/A' %></span>
+          </div>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= wife.occupation || 'N/A' %></span>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      
+    </div>
+    
+    <!-- Vertical Connector to Children -->
+    <% if (children.length > 0) { %>
+    <div style="display: flex; justify-content: center; position: relative;">
+      <div class="vertical-line" style="height: 40px; left: 50%;"></div>
+    </div>
+    <% } %>
+    <% } %>
+    
+    <!-- Children Level -->
+    <% if (children.length > 0) { %>
+    <div class="children-container">
+      <% children.forEach(member => { %>
+      <div class="tree-member">
+        <div class="member-photo-circle" style="border-color: var(--success);">
+          <% if (member.photo && member.photo.trim() !== "") { %>
+            <% let photoSrc = member.photo; %>
+            <% const sizeMatch = photoSrc.match(/^(.+)\(\d+\)$/); %>
+            <% if (sizeMatch) photoSrc = sizeMatch[1]; %>
+            <% if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1); %>
+            <% if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc; %>
+            <img src="/<%= photoSrc %>" alt="<%= member.name %>">
+          <% } else { %>
+            <i class="bi bi-person-fill placeholder-icon"></i>
+          <% } %>
+          <button class="edit-btn-circle" style="border-color: var(--success);" onclick="openEditModal('child', '<%= member.id %>')">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+        </div>
+        <div class="member-name"><%= member.name %></div>
+        <div class="member-role text-success">
+          <i class="bi bi-person"></i> 
+          <span class="text-capitalize"><%= member.relationship || 'Child' %></span>
+        </div>
+        <div class="member-details">
+          <% if (member.occupation) { %>
+          <div class="member-detail-item">
+            <i class="bi bi-briefcase-fill text-success"></i>
+            <span><%= member.occupation %></span>
+          </div>
+          <% } %>
+          <%
+            let gender = member.gender;
+            if (!gender || gender === '-') {
+              if (member.relationship === 'son') gender = 'Male';
+              else if (member.relationship === 'daughter') gender = 'Female';
+            }
+            if (gender && gender !== '-') {
+          %>
+          <div class="member-detail-item">
+            <i class="bi bi-gender-ambiguous text-info"></i>
+            <span><%= gender %></span>
+          </div>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+    
+    <!-- Add Child Button -->
+    <div class="text-center mt-5">
+      <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addChildModal">
+        <i class="bi bi-plus-lg me-2"></i>Add Child to Family Tree
+      </button>
+    </div>
+    
+  </div>
+
+</div>
+
+<!-- EDIT MODALS -->
+
+  <!-- HUSBAND EDIT MODAL -->
+  <div class="modal fade" id="husbandEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#6c757d;color:white;">
+          <h5 class="modal-title">Edit Husband</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="husbandEditForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="name" placeholder="Husband Name" required>
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="mobile" placeholder="Mobile">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+              <div class="col-md-6">
+                <input type="file" id="husband_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleHusbandPhotoSelect(this)">
+                <div id="husband_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('husband_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <img id="husbandPhotoPreview" src="" class="img-fluid mb-2" style="max-height: 200px; display: none;">
+              </div>
+            </div>
+            <!-- Address Section -->
+            <h6 class="mt-3 mb-2">Address</h6>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="husbandSameAsParents">
+              <label class="form-check-label" for="husbandSameAsParents">
+                Same as Parents Address
+              </label>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="door_no" placeholder="Door No">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="street" placeholder="Street">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <input class="form-control mb-2" name="pincode" placeholder="Pincode" pattern="[0-9]{6}" title="Enter 6-digit pincode">
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="state" id="husbandState">
+                  <option value="">Select State</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="district" id="husbandDistrict">
+                  <option value="">Select District</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIFE EDIT MODAL -->
+  <div class="modal fade" id="wifeEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#6c757d;color:white;">
+          <h5 class="modal-title">Edit Wife</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="wifeEditForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="name" placeholder="Wife Name" required>
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="mobile" placeholder="Mobile">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+              <div class="col-md-6">
+                <input type="file" id="wife_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleWifePhotoSelect(this)">
+                <div id="wife_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('wife_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <img id="wifePhotoPreview" src="" class="img-fluid mb-2" style="max-height: 200px; display: none;">
+              </div>
+            </div>
+            <!-- Address Section -->
+            <h6 class="mt-3 mb-2">Address</h6>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="wifeSameAsParents">
+              <label class="form-check-label" for="wifeSameAsParents">
+                Same as Parents Address
+              </label>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="door_no" placeholder="Door No">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="street" placeholder="Street">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <input class="form-control mb-2" name="pincode" placeholder="Pincode" pattern="[0-9]{6}" title="Enter 6-digit pincode">
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="state" id="wifeState">
+                  <option value="">Select State</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="district" id="wifeDistrict">
+                  <option value="">Select District</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHILD EDIT MODAL -->
+  <div class="modal fade" id="childEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#6c757d;color:white;">
+          <h5 class="modal-title">Edit Child</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="childEditForm" enctype="multipart/form-data">
+          <input type="hidden" name="member_id" value="">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="name" placeholder="Child Name" required>
+              </div>
+              <div class="col-md-6">
+                <input type="date" class="form-control mb-2" name="dob">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <select class="form-control mb-2" name="gender">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <select class="form-control mb-2" name="relationship">
+                  <option value="">Relationship</option>
+                  <option value="son">Son</option>
+                  <option value="daughter">Daughter</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input type="file" id="child_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleChildPhotoSelectEdit(this)">
+                <div id="child_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('child_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <img id="childPhotoPreview" src="" class="img-fluid mb-2" style="max-height: 200px; display: none;">
+              </div>
+            </div>
+            <!-- Address Section -->
+            <h6 class="mt-3 mb-2">Address</h6>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="childSameAsParents">
+              <label class="form-check-label" for="childSameAsParents">
+                Same as Parents Address
+              </label>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="door_no" placeholder="Door No">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="street" placeholder="Street">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <input class="form-control mb-2" name="pincode" placeholder="Pincode" pattern="[0-9]{6}" title="Enter 6-digit pincode">
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="state" id="editChildState">
+                  <option value="">Select State</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="district" id="editChildDistrict">
+                  <option value="">Select District</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD CHILD MODAL -->
+  <div class="modal fade" id="addChildModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header" style="background:#6c757d;color:white;">
+          <h5 class="modal-title">Add Child</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form id="addChildForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="name" placeholder="Child Name" required>
+              </div>
+              <div class="col-md-6">
+                <input type="date" class="form-control mb-2" name="dob">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <select class="form-control mb-2" name="gender">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="occupation" placeholder="Occupation">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <select class="form-control mb-2" name="relationship">
+                  <option value="">Relationship</option>
+                  <option value="son">Son</option>
+                  <option value="daughter">Daughter</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input type="file" id="add_child_photo_file" class="form-control mb-2 d-none" name="photo" accept="image/*" onchange="handleAddChildPhotoSelect(this)">
+                <div id="add_child_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('add_child_photo')">
+                  <span class="text-muted">Click to upload or capture photo</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <img id="addChildPhotoPreview" src="" class="img-fluid mb-2" style="max-height: 200px; display: none;">
+              </div>
+            </div>
+
+            <!-- Address Section -->
+            <h6 class="mt-3 mb-2">Address</h6>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="addChildSameAsParents">
+              <label class="form-check-label" for="addChildSameAsParents">
+                Same as Parents Address
+              </label>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="door_no" placeholder="Door No">
+              </div>
+              <div class="col-md-6">
+                <input class="form-control mb-2" name="street" placeholder="Street">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <input class="form-control mb-2" name="pincode" placeholder="Pincode" pattern="[0-9]{6}" title="Enter 6-digit pincode">
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="state" id="childState">
+                  <option value="">Select State</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-control mb-2" name="district" id="childDistrict">
+                  <option value="">Select District</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+  
+  <!-- SweetAlert2 - Required by family.js -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <%- include('partials/scripts') %>
+  <script src="/js/family.js"></script>
+
+  <script>
+    let parentsAddress = {};
+
+    // Load parents' address on page load
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const parentsRes = await fetch('/my-family-json');
+        const familyData = await parentsRes.json();
+        if (familyData.success && familyData.members) {
+          const parents = familyData.members.filter(m => m.member_type === 'parent');
+          if (parents.length > 0) {
+            const parent = parents[0];
+            parentsAddress = {
+              door_no: parent.door_no || '',
+              street: parent.street || '',
+              state: parent.state || '',
+              district: parent.district || '',
+              pincode: parent.pincode || ''
+            };
+          }
+        }
+      } catch (err) {
+        console.error("Error loading parents' address:", err);
+      }
+    });
+
+    // Function to populate address fields from parents address
+    async function populateAddressFields(modalId, isChecked) {
+      const addressFields = ['door_no', 'street', 'pincode'];
+      
+      // First populate simple fields
+      addressFields.forEach(field => {
+        const element = document.querySelector(`#${modalId} [name="${field}"]`);
+        if (element) {
+          if (isChecked) {
+            element.value = parentsAddress[field] || '';
+          } else {
+            element.value = '';
+          }
+        }
+      });
+      
+      // Handle state and district specially
+      const stateElement = document.querySelector(`#${modalId} [name="state"]`);
+      const districtElement = document.querySelector(`#${modalId} [name="district"]`);
+      
+      if (stateElement && districtElement) {
+        if (isChecked) {
+          const parentState = parentsAddress.state || '';
+          const parentDistrict = parentsAddress.district || '';
+          
+          // Set state first
+          stateElement.value = parentState;
+          
+          // Load districts for the selected state
+          if (parentState && indiaData[parentState]) {
+            districtElement.innerHTML = '<option value="">Select District</option>';
+            indiaData[parentState].forEach(district => {
+              const option = document.createElement("option");
+              option.value = district;
+              option.textContent = district;
+              districtElement.appendChild(option);
+            });
+            
+            // Set district after a small delay to allow options to populate
+            setTimeout(() => {
+              districtElement.value = parentDistrict;
+            }, 50);
+          }
+        } else {
+          stateElement.value = '';
+          districtElement.value = '';
+        }
+      }
+    }
+
+    // Handle checkbox for same as parents address in husband edit modal
+    const husbandSameAsParentsCheckbox = document.getElementById('husbandSameAsParents');
+    if (husbandSameAsParentsCheckbox) {
+      husbandSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('husbandEditModal', this.checked);
+      });
+    }
+
+    // Handle checkbox for same as parents address in wife edit modal
+    const wifeSameAsParentsCheckbox = document.getElementById('wifeSameAsParents');
+    if (wifeSameAsParentsCheckbox) {
+      wifeSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('wifeEditModal', this.checked);
+      });
+    }
+
+    // Handle checkbox for same as parents address in child edit modal
+    const childSameAsParentsCheckbox = document.getElementById('childSameAsParents');
+    if (childSameAsParentsCheckbox) {
+      childSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('childEditModal', this.checked);
+      });
+    }
+
+    // Handle checkbox for same as parents address in add child modal
+    const addChildSameAsParentsCheckbox = document.getElementById('addChildSameAsParents');
+    if (addChildSameAsParentsCheckbox) {
+      addChildSameAsParentsCheckbox.addEventListener('change', function() {
+        populateAddressFields('addChildModal', this.checked);
+      });
+    }
+  </script>
+
+</body>
+</html>
