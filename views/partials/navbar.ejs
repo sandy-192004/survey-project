@@ -46,7 +46,6 @@
       <i class="bi bi-house-heart-fill"></i>
       Family Portal
     </h5>
-    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body p-0">
     <ul class="navbar-nav py-2">
@@ -96,7 +95,8 @@
   }
 
   .family-mobile-nav {
-    width: min(82vw, 320px);
+    --bs-offcanvas-width: 50vw;
+    width: 50vw;
     background: linear-gradient(180deg, var(--primary-dark) 0%, #2b2a74 100%);
   }
 
