@@ -25,7 +25,7 @@
     }
     /* Temple Styled Button */
 .temple-btn {
-  background-color: #8B4513 !important;
+  background-color: rgba(40, 28, 15, 0.9)!important;
   border: none;
   color: white;
   width: 100%;
@@ -37,7 +37,7 @@
 }
 
 .temple-btn:hover {
-  background-color: #A0522D !important;
+  background-color: #4a1b05 !important;
   transform: translateY(-2px);
 }
 
@@ -63,6 +63,7 @@
       justify-content: center;
       align-items: center;
     }
+    
 .quote-container {
   position: relative;
   max-width: 720px;
@@ -76,7 +77,7 @@
   font-family: "Times New Roman", Times, serif;
   z-index: 5;
 }
-
+  
     .quote-text {
       position: relative;
       min-height: 4rem;
@@ -154,7 +155,7 @@
       .offcanvas-body .navbar-nav .nav-link {
         padding: 8px 12px;
         font-size: 14px;
-        color: #8B4513;
+        color:  rgba(40, 28, 15, 0.9);
       }
 
       .offcanvas-body .navbar-nav .nav-link i {
@@ -168,7 +169,7 @@
       }
 
       .modal-content {
-        border-radius: 10px;
+        border-radius: 15px;
         box-shadow: 0 4px 16px rgba(0,0,0,0.2);
       }
 
@@ -218,7 +219,7 @@
       #familyCheckModal .btn,
       #familyStatusModal .btn,
       #comingSoonModal .btn {
-        background-color: #8B4513;
+        background-color:rgba(40, 28, 15, 0.9);
         border-color: #8B4513;
         color: white;
         width: 100%;
@@ -229,13 +230,13 @@
       #familyCheckModal .btn:hover,
       #familyStatusModal .btn:hover,
       #comingSoonModal .btn:hover {
-        background-color: #A0522D;
+        background-color:rgba(40, 28, 15, 0.9);
         border-color: #A0522D;
       }
 
       /* Cards in modals */
       .member-card {
-        border-radius: 8px;
+        border-radius: 55px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
 
@@ -256,38 +257,6 @@
       color: #FF9933;
       font-weight: bold;
     }
-
-    /* 🔥 Animate ONLY Family Details Popup */
-#familyCheckModal .modal-content {
-  background: linear-gradient(
-    -45deg,
-    #3b2a1a,
-    #5a3e22,
-    #8b6a3d,
-    #e6d3a3,
-    #d4b87a
-  ) !important;
-  background-size: 350% 400%;
-  animation: familyGradient 8s ease infinite;
-  border: none;
-}
-
-/* Keep text readable */
-#familyCheckModal .modal-body {
-  background: transparent !important;
-}
-
-#familyCheckModal .modal-header {
-  background: transparent !important;
-  border-bottom: none;
-}
-
-/* Smooth animation */
-@keyframes familyGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
 
   </style>
 </head>
@@ -553,7 +522,7 @@ familyModal.addEventListener('show.bs.modal', function (event) {
         familyContent.innerHTML = `
           <div class="text-center">
             <div class="alert alert-warning">
-              <h5>Add Details</h5>
+              <h5>Family Details</h5>
               <p>No family details found. Please add your family details.</p>
              <button class="btn temple-btn" onclick="window.location.href='/family-form'">
 
