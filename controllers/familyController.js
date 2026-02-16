@@ -708,6 +708,14 @@ exports.updateMember = async (req, res) => {
     }
 
     const member = members[0];
+    const normalizedRelationship = typeof relationship === 'string' ? relationship.trim() : relationship;
+    const finalRelationship = normalizedRelationship || member.relationship;
+    const finalDob = typeof dob === 'string' && dob.trim() === '' ? null : dob;
+
+    if (!finalRelationship) {
+      return res.status(400).json({ success: false, message: "Relationship is required" });
+    }
+
     let photoPath = null;
     if (req.file) {
       const folder = member.member_type === 'child' ? 'children' : 'parent';
@@ -740,14 +748,14 @@ exports.updateMember = async (req, res) => {
         SET name=?, relationship=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?, photo=?
         WHERE id=?
       `;
-      params = [name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photoPath, memberId];
+      params = [name, finalRelationship, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, photoPath, memberId];
     } else {
       sql = `
         UPDATE family_members
         SET name=?, relationship=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?
         WHERE id=?
       `;
-      params = [name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, memberId];
+      params = [name, finalRelationship, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, memberId];
     }
 
     await db.query(sql, params);
