@@ -44,6 +44,7 @@ router.post("/add-child", isLoggedIn, upload.single('photo'), controller.addChil
 router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
 router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
 router.get("/get-child/:id", isLoggedIn, controller.getChild);
+router.get("/get-member/:id", isLoggedIn, controller.getMember);
 router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
 router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
 

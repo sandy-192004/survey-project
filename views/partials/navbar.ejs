@@ -1,0 +1,217 @@
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); box-shadow: var(--shadow-md);">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/dashboard">
+      <i class="bi bi-house-heart-fill fs-4"></i>
+      <span class="navbar-brand-title">Sri Veeramathi Amman Thiru Kovil</span>
+    </a>
+    
+    <button class="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#familyMobileNav" aria-controls="familyMobileNav" aria-label="Open navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <ul class="navbar-nav ms-auto gap-2 d-none d-lg-flex flex-row align-items-lg-center">
+      <li class="nav-item">
+        <a class="nav-link px-3 rounded-2" href="/dashboard">
+          <i class="bi bi-house-door me-1"></i>Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-3 rounded-2" href="/my-family">
+          <i class="bi bi-people-fill me-1"></i>My Family
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-3 rounded-2" href="#" onclick="showComingSoonModal('Donations'); return false;">
+          <i class="bi bi-heart-fill me-1"></i>Donations
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-3 rounded-2" href="#" onclick="showComingSoonModal('Pooja Booking'); return false;">
+          <i class="bi bi-calendar-check me-1"></i>Pooja Booking
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-3 rounded-2 text-danger" href="#" onclick="handleLogout(event)" style="cursor: pointer;">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Mobile Side Navigation -->
+<div class="offcanvas offcanvas-start text-bg-dark family-mobile-nav d-lg-none" tabindex="-1" id="familyMobileNav" aria-labelledby="familyMobileNavLabel">
+  <div class="offcanvas-header border-bottom border-light border-opacity-25">
+    <h5 class="offcanvas-title d-flex align-items-center gap-2 mb-0" id="familyMobileNavLabel">
+      <i class="bi bi-house-heart-fill"></i>
+      Family Portal
+    </h5>
+  </div>
+  <div class="offcanvas-body p-0">
+    <ul class="navbar-nav py-2">
+      <li class="nav-item">
+        <a class="nav-link px-4 py-3" href="/dashboard">
+          <i class="bi bi-house-door me-2"></i>Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-4 py-3" href="/my-family">
+          <i class="bi bi-people-fill me-2"></i>My Family
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-4 py-3" href="#" onclick="showComingSoonModal('Donations'); return false;">
+          <i class="bi bi-heart-fill me-2"></i>Donations
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-4 py-3" href="#" onclick="showComingSoonModal('Pooja Booking'); return false;">
+          <i class="bi bi-calendar-check me-2"></i>Pooja Booking
+        </a>
+      </li>
+      <li class="nav-item mt-2 border-top border-light border-opacity-25">
+        <a class="nav-link px-4 py-3 text-danger" href="#" onclick="handleLogout(event)">
+          <i class="bi bi-box-arrow-right me-2"></i>Logout
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .navbar .nav-link {
+    transition: var(--transition);
+    font-weight: 500;
+  }
+  
+  .navbar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .navbar-brand:hover {
+    transform: scale(1.05);
+    transition: var(--transition);
+  }
+
+  .navbar-brand {
+    min-width: 0;
+    max-width: min(72vw, 420px);
+  }
+
+  .navbar-brand i {
+    flex-shrink: 0;
+  }
+
+  .navbar-brand-title {
+    display: block;
+    min-width: 0;
+    font-size: clamp(0.72rem, 2.3vw, 1rem);
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 992px) {
+    .navbar-brand {
+      max-width: none;
+    }
+
+    .navbar-brand-title {
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow-wrap: normal;
+    }
+  }
+
+  .family-mobile-nav {
+    --bs-offcanvas-width: 50vw;
+    width: 50vw;
+    background: linear-gradient(180deg, var(--primary-dark) 0%, #2b2a74 100%);
+  }
+
+  .family-mobile-nav .nav-link {
+    color: rgba(255, 255, 255, 0.92);
+    transition: var(--transition);
+    font-weight: 500;
+  }
+
+  .family-mobile-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+</style>
+
+<!-- Family Logout Confirmation Modal -->
+<div class="modal fade" id="familyLogoutModal" tabindex="-1" aria-labelledby="familyLogoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header border-0 py-2">
+        <h6 class="modal-title mb-0" id="familyLogoutModalLabel">
+          <i class="bi bi-exclamation-circle text-warning me-2"></i>Confirm Logout
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-3">
+        <p class="mb-0 small">Are you sure you want to logout?</p>
+      </div>
+      <div class="modal-footer border-0 py-2">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-sm btn-danger" id="confirmFamilyLogoutBtn">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Coming Soon Modal -->
+<div class="modal fade" id="navbarComingSoonModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-warning bg-opacity-10 border-0 py-2">
+        <h6 class="modal-title mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Coming Soon</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-3">
+        <i class="bi bi-hourglass-split text-warning mb-2" style="font-size: 2.5rem;"></i>
+        <h6 class="fw-bold mb-1" id="comingSoonFeatureName">Feature</h6>
+        <p class="text-muted small mb-0">This feature is coming soon!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function closeMobileNav() {
+    const mobileNav = document.getElementById('familyMobileNav');
+    if (!mobileNav) return;
+    const offcanvas = bootstrap.Offcanvas.getInstance(mobileNav);
+    if (offcanvas) offcanvas.hide();
+  }
+
+  function handleLogout(event) {
+    event.preventDefault();
+    closeMobileNav();
+    const logoutModal = new bootstrap.Modal(document.getElementById('familyLogoutModal'));
+    logoutModal.show();
+  }
+
+  function showComingSoonModal(featureName) {
+    closeMobileNav();
+    document.getElementById('comingSoonFeatureName').textContent = featureName;
+    const modal = new bootstrap.Modal(document.getElementById('navbarComingSoonModal'));
+    modal.show();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmFamilyLogoutBtn');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function() {
+        window.location.href = '/logout';
+      });
+    }
+  });
+</script>

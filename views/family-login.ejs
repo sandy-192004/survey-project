@@ -1,114 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Portal - Login & Signup</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f5e6d3 0%, #d4b08a 100%);
-            min-height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(139, 69, 19, 0.2);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.1);
-        }
-        .btn-primary {
-            background-color: #8B4513;
-            border-color: #8B4513;
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            background-color: #A0522D;
-            border-color: #A0522D;
-            transform: translateY(-1px);
-        }
-        .btn-success {
-            background-color: #A0522D;
-            border-color: #A0522D;
-            transition: all 0.3s ease;
-        }
-        .btn-success:hover {
-            background-color: #8B4513;
-            border-color: #8B4513;
-            transform: translateY(-1px);
-        }
-        .form-control:focus {
-            border-color: #8B4513;
-            box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
-        }
-        .text-primary {
-            color: #8B4513 !important;
-        }
-
-        /* Mobile-specific styles */
-        @media (max-width: 768px) {
-            body {
-                background: linear-gradient(135deg, #f5e6d3 0%, #d4b08a 100%);
-                min-height: 100vh;
-                margin: 0;
-                padding-top: 20px; /* Avoid browser address bar overlap */
-                font-size: 14px;
-            }
-            .container {
-                padding: 0 15px;
-            }
-            .row.justify-content-center.align-items-center.min-vh-100 {
-                min-height: calc(100vh - 40px);
-            }
-            .card {
-                border-radius: 10px;
-                box-shadow: 0 4px 16px rgba(139, 69, 19, 0.1);
-            }
-            .btn {
-                width: 100%;
-                margin-bottom: 10px;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .form-control {
-                font-size: 14px;
-            }
-            .alert {
-                position: fixed;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 80%;
-                max-width: 200px;
-                padding: 4px 8px;
-                font-size: 11px;
-                z-index: 1050;
-                border-radius: 5px;
-                text-align: center;
-                background-color: #8B4513;
-                color: white;
-                border: none;
-            }
-        }
-    </style>
-</head>
-<body>
+<%- include('partials/head') %>
+<body class="d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);">
     <div class="container">
         <!-- Logout Message -->
-        <div id="logoutMessage" class="alert alert-info text-center" style="display: none; color: blue !important;">
+        <div id="logoutMessage" class="alert alert-info text-center position-fixed top-0 start-50 translate-middle-x mt-3" style="display: none; z-index: 9999; max-width: 90%;">
             Account logged out successfully.
         </div>
 
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-md-6">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
                 <!-- Login Form -->
-                <div id="loginForm" class="card shadow-lg">
-                    <div class="card-body p-5">
-                        <h2 class="card-title text-center mb-4">Family Portal Login</h2>
+                <div id="loginForm" class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-3 mb-2">
+                                <i class="bi bi-person-circle text-primary" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h2 class="fw-bold mb-1 h4">Welcome Back</h2>
+                            <p class="text-muted small mb-0">Sign in to your family account</p>
+                        </div>
                         
                         <form id="loginSubmit" method="POST" action="/login">
                             <div class="mb-3">
-                                <label for="loginEmail" class="form-label">Email Address</label>
+                                <label for="loginEmail" class="form-label small">Email Address</label>
                                 <input 
                                     type="email" 
                                     class="form-control" 
@@ -120,7 +35,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="loginPassword" class="form-label">Password</label>
+                                <label for="loginPassword" class="form-label small">Password</label>
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -138,31 +53,41 @@
                                     id="rememberMe" 
                                     name="remember"
                                 >
-                                <label class="form-check-label" for="rememberMe">
+                                <label class="form-check-label small" for="rememberMe">
                                     Remember me
                                 </label>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
+                            <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary px-3 py-2 mb-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </button>
+                        </div>
                         </form>
 
-                        <hr>
+                        <hr class="my-3">
 
                         <p class="text-center mb-0">
                             Don't have an account? 
-                            <a href="#" onclick="toggleForms()" class="text-decoration-none">Sign Up</a>
+                            <a href="#" onclick="toggleForms(); return false;" class="text-decoration-none">Sign Up</a>
                         </p>
                     </div>
                 </div>
 
                 <!-- Signup Form (Hidden by default) -->
-                <div id="signupForm" class="card shadow-lg d-none">
-                    <div class="card-body p-5">
-                        <h2 class="card-title text-center mb-4">Create Account</h2>
+                <div id="signupForm" class="card border-0 shadow-lg d-none">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-2">
+                                <i class="bi bi-person-plus text-success" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h2 class="fw-bold mb-1 h4">Create Account</h2>
+                            <p class="text-muted small mb-0">Join our family portal</p>
+                        </div>
                         
                         <form id="signupSubmit" method="POST" action="/register">
                             <div class="mb-3">
-                                <label for="signupEmail" class="form-label">Email Address</label>
+                                <label for="signupEmail" class="form-label small">Email Address</label>
                                 <input 
                                     type="email" 
                                     class="form-control" 
@@ -174,7 +99,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="signupPassword" class="form-label">Password</label>
+                                <label for="signupPassword" class="form-label small">Password</label>
+                                <input 
+                                    type="password" 
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -187,7 +114,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <label for="confirmPassword" class="form-label small">Confirm Password</label>
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -198,14 +125,18 @@
                                 >
                             </div>
 
-                            <button type="submit" class="btn btn-success w-100 mb-3">Create Account</button>
+                            <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-success px-3 py-2 mb-2">
+                                <i class="bi bi-person-plus-fill me-2"></i>Register
+                            </button>
+                        </div>
                         </form>
 
-                        <hr>
+                        <hr class="my-3">
 
                         <p class="text-center mb-0">
                             Already have an account? 
-                            <a href="#" onclick="toggleForms()" class="text-decoration-none">Sign In</a>
+                            <a href="#" onclick="toggleForms(); return false;" class="text-decoration-none">Sign In</a>
                         </p>
                     </div>
                 </div>
@@ -255,6 +186,48 @@
       </div>
     </div>
 
+    <!-- Error Modal for User Already Exists -->
+    <div class="modal fade" id="userExistsModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-circle-fill me-2"></i>User Already Exists
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center bg-light">
+            <div class="mb-4">
+              <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-warning fw-bold mb-3">Account Already Exists</h4>
+            <p class="text-muted">An account with this email already exists. Please login or use a different email address.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Modal for Password Mismatch -->
+    <div class="modal fade" id="passwordErrorModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>Error
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center bg-light">
+            <div class="mb-4">
+              <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-danger fw-bold mb-3">Password Mismatch</h4>
+     %- include('partials/scripts') %
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleForms() {
@@ -285,6 +258,28 @@
         // Check for invalid credentials error
         if (urlParams.get('error') === 'invalid') {
             const modal = new bootstrap.Modal(document.getElementById('invalidCredentialsModal'));
+            modal.show();
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Check for user already exists error
+        if (urlParams.get('error') === 'exists') {
+            // Show the signup form instead of login form
+            document.getElementById('loginForm').classList.add('d-none');
+            document.getElementById('signupForm').classList.remove('d-none');
+            const modal = new bootstrap.Modal(document.getElementById('userExistsModal'));
+            modal.show();
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Check for password mismatch error
+        if (urlParams.get('error') === 'password') {
+            // Show the signup form instead of login form
+            document.getElementById('loginForm').classList.add('d-none');
+            document.getElementById('signupForm').classList.remove('d-none');
+            const modal = new bootstrap.Modal(document.getElementById('passwordErrorModal'));
             modal.show();
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);

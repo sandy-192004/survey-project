@@ -13,30 +13,34 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background: url("/images/pic.png") no-repeat center center fixed;
-      background-size: cover;
+      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
       margin: 0;
       padding: 20px;
     }
     .container {
-      background: rgba(255, 255, 255, 0.95);
+      background: #ffffff;
       border-radius: 10px;
       padding: 30px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border: 1px solid #dee2e6;
     }
     .form-section {
       background: #f8f9fa;
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 20px;
+      border: 1px solid #dee2e6;
     }
     .btn-primary {
-      background-color: #8B4513;
-      border-color: #8B4513;
+      background-color: #495057;
+      border-color: #495057;
     }
     .btn-primary:hover {
-      background-color: #6b3410;
-      border-color: #6b3410;
+      background-color: #343a40;
+      border-color: #343a40;
+    }
+    .text-primary {
+      color: #495057 !important;
     }
   </style>
 </head>
@@ -49,17 +53,6 @@
   </div>
 
   <form id="createFamilyForm" enctype="multipart/form-data">
-
-    <!-- Family Code -->
-    <div class="form-section">
-      <h5>Family Information</h5>
-      <div class="row">
-        <div class="col-md-6">
-          <label class="form-label">Family Code (Optional)</label>
-          <input type="text" class="form-control" name="family_code" placeholder="Auto-generated if empty">
-        </div>
-      </div>
-    </div>
 
     <!-- Husband Details -->
     <div class="form-section">
