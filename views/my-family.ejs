@@ -444,6 +444,7 @@
 
 <%- include('partials/footer') %>
 <%- include('partials/scripts') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 // Check if no family exists and show modal
@@ -562,7 +563,12 @@ function openEditModal(type, memberId) {
     })
     .catch(err => {
       console.error('Error fetching member:', err);
-      alert('Failed to load member details');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load member details',
+        confirmButtonColor: '#4F46E5'
+      });
     });
 }
 
@@ -588,15 +594,31 @@ document.getElementById('editMemberForm').addEventListener('submit', function(e)
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      alert('Member updated successfully!');
-      window.location.reload();
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Member updated successfully!',
+        confirmButtonColor: '#4F46E5'
+      }).then(() => {
+        window.location.reload();
+      });
     } else {
-      alert('Failed to update member: ' + (data.message || 'Unknown error'));
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: data.message || 'Failed to update member',
+        confirmButtonColor: '#4F46E5'
+      });
     }
   })
   .catch(err => {
     console.error('Error:', err);
-    alert('An error occurred while updating the member');
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'An error occurred while updating the member',
+      confirmButtonColor: '#4F46E5'
+    });
   });
 });
 </script>

@@ -2,7 +2,7 @@
   <div class="container-fluid px-4">
     <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/dashboard">
       <i class="bi bi-house-heart-fill fs-4"></i>
-      <span>Family Portal</span>
+      <span class="navbar-brand-title">Sri Veeramathi Amman Thiru Kovil</span>
     </a>
     
     <button class="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#familyMobileNav" aria-controls="familyMobileNav" aria-label="Open navigation">
@@ -92,6 +92,36 @@
   .navbar-brand:hover {
     transform: scale(1.05);
     transition: var(--transition);
+  }
+
+  .navbar-brand {
+    min-width: 0;
+    max-width: min(72vw, 420px);
+  }
+
+  .navbar-brand i {
+    flex-shrink: 0;
+  }
+
+  .navbar-brand-title {
+    display: block;
+    min-width: 0;
+    font-size: clamp(0.72rem, 2.3vw, 1rem);
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 992px) {
+    .navbar-brand {
+      max-width: none;
+    }
+
+    .navbar-brand-title {
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow-wrap: normal;
+    }
   }
 
   .family-mobile-nav {
