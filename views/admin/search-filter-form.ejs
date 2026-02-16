@@ -1,24 +1,23 @@
-<form action="/admin/search" method="GET" class="mb-4">
-
-  <div class="d-flex align-items-center gap-3">
-
-    <!-- Search -->
-    <div style="width: 220px;">
-      <div class="input-group input-group-sm">
-        <span class="input-group-text bg-white">
-          <i class="fas fa-search"></i>
+<form action="/admin/search" method="GET">
+  <div class="row g-2 align-items-center">
+    
+    <!-- Search Input -->
+    <div class="col-12 col-md-4 col-lg-3">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="bi bi-search text-muted"></i>
         </span>
         <input type="text"
                name="q"
-               class="form-control"
-               placeholder="Search"
+               class="form-control border-start-0 ps-0"
+               placeholder="Search by name..."
                value="<%= searchValue || '' %>">
       </div>
     </div>
 
-    <!-- State -->
-    <div style="width: 180px;">
-      <select name="state" class="form-select form-select-sm">
+    <!-- State Filter -->
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="state" class="form-select">
         <option value="">All States</option>
         <% if (states && states.length > 0) { %>
           <% states.forEach(function(state) { %>
@@ -30,9 +29,9 @@
       </select>
     </div>
 
-    <!-- District -->
-    <div style="width: 180px;">
-      <select name="district" class="form-select form-select-sm">
+    <!-- District Filter -->
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="district" class="form-select">
         <option value="">All Districts</option>
         <% if (districts && districts.length > 0) { %>
           <% districts.forEach(function(district) { %>
@@ -45,19 +44,11 @@
     </div>
 
     <!-- Filter Button -->
-    <div>
-      <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm">
-        <i class="bi bi-funnel me-1"></i> Filter
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary px-3">
+        <i class="bi bi-funnel me-1"></i>Filter
       </button>
     </div>
 
-    <!-- Push Add Family to Right -->
-    <div class="ms-auto">
-      <a href="/admin/create-family" class="btn btn-success btn-sm px-3">
-        <i class="fas fa-plus me-1"></i> Add Family
-      </a>
-    </div>
-
   </div>
-
 </form>

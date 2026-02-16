@@ -223,30 +223,35 @@ exports.saveFamily = async (req, res) => {
         pincode
       } = m;
 
+      const normalizedMemberType = (member_type || "").toString().trim().toLowerCase();
+      const normalizedRelationship = (relationship || "").toString().trim().toLowerCase();
+      const finalMemberType = normalizedMemberType || "child";
+      const finalRelationship = normalizedRelationship || (finalMemberType === "child" ? "other" : null);
+
       // Default gender for husband
       let finalGender = gender;
-      if (relationship === 'husband' && !gender) {
+      if (finalRelationship === "husband" && !gender) {
         finalGender = 'Male';
       }
 
-      if (!name || !relationship) continue;
+      if (!name || !finalRelationship) continue;
 
       // Handle file uploads
       let photoPath = null;
       if (req.files) {
-        if (member_type === 'parent') {
-          if (relationship === 'husband') {
+        if (finalMemberType === 'parent') {
+          if (finalRelationship === 'husband') {
             const husbandFiles = req.files['parent[husband_photo]'];
             if (husbandFiles && husbandFiles[0]) {
               photoPath = `parent/${husbandFiles[0].filename}`;
             }
-          } else if (relationship === 'wife') {
+          } else if (finalRelationship === 'wife') {
             const wifeFiles = req.files['parent[wife_photo]'];
             if (wifeFiles && wifeFiles[0]) {
               photoPath = `parent/${wifeFiles[0].filename}`;
             }
           }
-        } else if (member_type === 'child') {
+        } else if (finalMemberType === 'child') {
           const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
           if (childFiles && childFiles[0]) {
             photoPath = `children/${childFiles[0].filename}`;
@@ -261,13 +266,13 @@ exports.saveFamily = async (req, res) => {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           familyId,
-          member_type || "child",
+          finalMemberType,
           name,
-          relationship,
+          finalRelationship,
           mobile || null,
           occupation || null,
           dob || null,
-          gender || null,
+          finalGender || null,
           door_no || null,
           street || null,
           district || null,
@@ -328,6 +333,11 @@ exports.myFamily = async (req, res) => {
       );
 
       members = rows || [];
+    }
+
+    // If no family members, redirect to form
+    if (!members || members.length === 0) {
+      return res.redirect('/family-form');
     }
 
     return res.render("my-family", {
@@ -703,6 +713,14 @@ exports.updateMember = async (req, res) => {
     }
 
     const member = members[0];
+    const normalizedRelationship = typeof relationship === 'string' ? relationship.trim() : relationship;
+    const finalRelationship = normalizedRelationship || member.relationship;
+    const finalDob = typeof dob === 'string' && dob.trim() === '' ? null : dob;
+
+    if (!finalRelationship) {
+      return res.status(400).json({ success: false, message: "Relationship is required" });
+    }
+
     let photoPath = null;
     if (req.file) {
       const folder = member.member_type === 'child' ? 'children' : 'parent';
@@ -735,14 +753,14 @@ exports.updateMember = async (req, res) => {
         SET name=?, relationship=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?, photo=?
         WHERE id=?
       `;
-      params = [name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photoPath, memberId];
+      params = [name, finalRelationship, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, photoPath, memberId];
     } else {
       sql = `
         UPDATE family_members
         SET name=?, relationship=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?
         WHERE id=?
       `;
-      params = [name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, memberId];
+      params = [name, finalRelationship, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, memberId];
     }
 
     await db.query(sql, params);
@@ -829,5 +847,22 @@ exports.deleteFamily = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to delete family", error: err.message });
   } finally {
     connection.release();
+  }
+};
+
+/* ================= GET MEMBER BY ID ================= */
+exports.getMember = async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const [rows] = await db.query('SELECT * FROM family_members WHERE id = ?', [memberId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Member not found' });
+    }
+    
+    res.json({ success: true, member: rows[0] });
+  } catch (err) {
+    console.error('Get member error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch member' });
   }
 };

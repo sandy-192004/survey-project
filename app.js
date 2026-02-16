@@ -1,6 +1,6 @@
 const express = require("express");
 const session = require("express-session");
-
+require('dotenv').config();
 // const hemlet = require("helmet");
 
 const path = require("path");
@@ -70,7 +70,11 @@ app.use((err, req, res, next) => {
 
 // ================== SERVER START ==================
 
-app.listen(3000, () => {
-  console.log(`Server running on http://localhost:3000`);
+app.listen(process.env.PORT || 3001, () => {
+  console.log(`Server running on http://localhost:${process.env.PORT || 3001}`);
 });        
+
+
+     
+
 

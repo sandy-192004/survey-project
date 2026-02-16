@@ -1,270 +1,443 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Family Member</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Family Member</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+.option-btn {
+  background: #8B4513;
+  color: white;
+  border: none;
+}
+.option-btn:hover {
+  background: #6e340e;
+}
+.cancel-btn {
+  background: #87CEEB;
+  color: black;
+  border: none;
+}
+.cancel-btn:hover {
+  background: #5ec6e8;
+}
+.size-info {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-top: 5px;
+}
+</style>
 </head>
 <body>
+
 <% if (message) { %>
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <%= message %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
+<div class="alert alert-success alert-dismissible fade show">
+  <%= message %>
+  <button class="btn-close" data-bs-dismiss="alert"></button>
+</div>
 <% } %>
 
 <% if (!parent) { %>
-  <div class="alert alert-danger">Parent record missing</div>
+<div class="alert alert-danger">Parent record missing</div>
 <% } else { %>
+
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex justify-content-between mb-3">
     <h4>Edit Family</h4>
     <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
   </div>
 
-  <form method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
+  <form id="editForm" method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
+
     <div class="row">
+      <!-- HUSBAND -->
       <div class="col-md-6">
-        <!-- Husband Details -->
         <div class="card mb-4">
           <div class="card-header"><h5>Husband Details</h5></div>
           <div class="card-body">
-            <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" placeholder="Husband Name" required>
-            <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" placeholder="Mobile" required>
-            <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>" placeholder="Occupation">
-            <div class="mb-3">
-              <label>Husband Photo</label>
-              <input type="file" class="form-control" name="husband_photo" accept="image/*" id="husband_photo_input">
-              <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('husband_photo_input')">Capture Photo</button>
-              <% if (parent.husband_photo) { %>
-                <img src="/uploads/parents/<%= parent.husband_photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-              <% } %>
+            <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" required>
+            <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" required>
+            <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>">
+
+            <div class="mb-3 text-center">
+              <label>Husband Photo</label><br>
+              <input type="file" class="d-none" name="husband_photo" id="husband_photo_input" accept="image/*" onchange="uploadImage(this)">
+              <div class="border p-3 bg-light mt-2" onclick="showPhotoOptions('husband_photo_input')" style="cursor:pointer">Click to upload photo</div>
+              <div id="size_husband_photo_input" class="size-info"></div>
             </div>
+
             <h6>Address</h6>
-            <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>" placeholder="Door No">
-            <input class="form-control mb-2" name="street" value="<%= parent.street %>" placeholder="Street">
-            <input class="form-control mb-2" name="district" value="<%= parent.district %>" placeholder="District">
-            <input class="form-control mb-2" name="state" value="<%= parent.state %>" placeholder="State">
-            <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>" placeholder="Pincode">
+            <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>">
+            <input class="form-control mb-2" name="street" value="<%= parent.street %>">
+
+            <!--  Dropdowns for State & District -->
+            <select class="form-control mb-2" id="stateSelect" name="state">
+              <option value="">Select State</option>
+            </select>
+
+            <select class="form-control mb-2" id="districtSelect" name="district">
+              <option value="">Select District</option>
+            </select>
+
+            <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>">
           </div>
         </div>
       </div>
+
+      <!-- WIFE -->
       <div class="col-md-6">
-        <!-- Wife Details -->
         <% if (wife) { %>
         <div class="card mb-4">
           <div class="card-header"><h5>Wife Details</h5></div>
           <div class="card-body">
-            <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>" placeholder="Wife Name">
-            <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>" placeholder="Mobile">
-            <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>" placeholder="Occupation">
-            <div class="mb-3">
-              <label>Wife Photo</label>
-              <input type="file" class="form-control" name="wife_photo" accept="image/*" id="wife_photo_input">
-              <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('wife_photo_input')">Capture Photo</button>
-              <% if (wife.photo) { %>
-                <img src="/uploads/parents/<%= wife.photo %>" class="img-thumbnail mt-2" style="max-width:100px;">
-              <% } %>
+            <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>">
+            <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>">
+            <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>">
+
+            <div class="mb-3 text-center">
+              <label>Wife Photo</label><br>
+              <input type="file" class="d-none" name="wife_photo" id="wife_photo_input" accept="image/*" onchange="uploadImage(this)">
+              <div class="border p-3 bg-light mt-2" onclick="showPhotoOptions('wife_photo_input')" style="cursor:pointer">Click to upload photo</div>
+              <div id="size_wife_photo_input" class="size-info"></div>
             </div>
-            <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>" placeholder="Door No">
-            <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>" placeholder="Street">
-            <input class="form-control mb-2" name="wife_district" value="<%= wife.district %>" placeholder="District">
-            <input class="form-control mb-2" name="wife_state" value="<%= wife.state %>" placeholder="State">
-            <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>" placeholder="Pincode">
+
+            <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>">
+            <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>">
+
+            <!-- Dropdowns for State & District -->
+            <select class="form-control mb-2" id="wifeStateSelect" name="wife_state">
+              <option value="">Select State</option>
+            </select>
+
+            <select class="form-control mb-2" id="wifeDistrictSelect" name="wife_district">
+              <option value="">Select District</option>
+            </select>
+
+            <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>">
           </div>
         </div>
         <% } %>
       </div>
     </div>
 
-    <!-- Children -->
-    <div class="card mb-4">
-      <div class="card-header"><h5>Children</h5></div>
-      <div class="card-body" id="children">
-        <% if (children && children.length > 0) { %>
-        <% children.forEach((c, i) => { %>
-            <div class="border p-3 mb-3 child">
-              <input type="hidden" name="children[<%= i %>][id]" value="<%= c.child_id %>">
-              <input class="form-control mb-1" name="children[<%= i %>][name]" value="<%= c.child_name %>" placeholder="Child Name">
-              <select class="form-control mb-1" name="children[<%= i %>][gender]">
-                <option value="">Select Gender</option>
-                <option value="Male" <%= c.gender === 'Male' ? 'selected' : '' %>>Male</option>
-                <option value="Female" <%= c.gender === 'Female' ? 'selected' : '' %>>Female</option>
-                <option value="Other" <%= c.gender === 'Other' ? 'selected' : '' %>>Other</option>
-              </select>
-              <input class="form-control mb-1" name="children[<%= i %>][occupation]" value="<%= c.occupation %>" placeholder="Occupation">
-              <input type="date" class="form-control mb-1" name="children[<%= i %>][dob]" value="<%= c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : '' %>">
-              <div class="mb-1">
-                <label>Photo</label>
-                <input type="file" class="form-control" name="children[<%= i %>][photo]" accept="image/*" id="child_photo_<%= i %>">
-                <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('child_photo_<%= i %>')">Capture Photo</button>
-                <% if (c.photo) { %>
-                  <img src="/uploads/children/<%= c.photo %>" class="img-thumbnail mt-1" style="max-width:100px;">
-                <% } %>
-              </div>
-              <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
-            </div>
-          <% }) %>
-        <% } else { %>
-          <p>No children added yet.</p>
-        <% } %>
-      </div>
-      <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-    </div>
+   <!-- CHILDREN -->
+<div class="card mb-4">
+  <div class="card-header"><h5>Children</h5></div>
+  <div class="card-body" id="children">
+    <% if (children && children.length > 0) { %>
+      <% children.forEach((c,i)=>{ %>
+        <div class="border p-3 mb-3 child">
+          <input type="hidden" name="children[<%=i%>][id]" value="<%=c.child_id%>">
+          <input class="form-control mb-1" name="children[<%=i%>][name]" value="<%=c.child_name%>">
+          <select class="form-control mb-1" name="children[<%=i%>][gender]">
+            <option>Select Gender</option>
+            <option value="Male" <%=c.gender==='Male'?'selected':''%>>Male</option>
+            <option value="Female" <%=c.gender==='Female'?'selected':''%>>Female</option>
+            <option value="Other" <%=c.gender==='Other'?'selected':''%>>Other</option>
+          </select>
+          <input class="form-control mb-1" name="children[<%=i%>][occupation]" value="<%=c.occupation%>">
+          <input type="date" class="form-control mb-1" name="children[<%=i%>][dob]" value="<%=c.date_of_birth? new Date(c.date_of_birth).toISOString().split('T')[0]:''%>">
+
+          <label>Photo</label>
+          <input type="file" class="d-none" id="child_photo_<%=i%>" name="children[<%=i%>][photo]" accept="image/*" onchange="uploadImage(this)">
+          <div class="border p-2 text-center bg-light" onclick="showPhotoOptions('child_photo_<%=i%>')" style="cursor:pointer">Upload Photo</div>
+          <div id="size_child_photo_<%=i%>" class="size-info"></div>
+
+          <h6 class="mt-2">Address</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input same-address" type="checkbox" id="sameAddress_<%=i%>">
+            <label class="form-check-label" for="sameAddress_<%=i%>">Same as parents's address</label>
+          </div>
+
+          <input class="form-control mb-2 child-door" name="children[<%=i%>][door_no]" value="<%=c.door_no%>">
+          <input class="form-control mb-2 child-street" name="children[<%=i%>][street]" value="<%=c.street%>">
+
+          <!--  Child Dropdowns Added -->
+          <select class="form-control mb-2 child-state" name="children[<%=i%>][state]" id="childState_<%=i%>">
+            <option value="">Select State</option>
+          </select>
+
+          <select class="form-control mb-2 child-district" name="children[<%=i%>][district]" id="childDistrict_<%=i%>">
+            <option value="">Select District</option>
+          </select>
+
+          <input class="form-control mb-2 child-pincode" name="children[<%=i%>][pincode]" value="<%=c.pincode%>">
+          <button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <p>No children added yet.</p>
+    <% } %>
+  </div>
+  <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
+</div>
+
 
     <div class="mt-3">
-      <button type="submit" class="btn btn-primary">Update Family</button>
+      <button class="btn btn-primary">Update Family</button>
       <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
     </div>
   </form>
 </div>
 <% } %>
 
-<!-- Add Child Modal -->
-<div class="modal fade" id="addChildModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add Child</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form method="POST" action="/admin/add-child" enctype="multipart/form-data">
-          <input type="hidden" name="family_id" value="<%= familyId %>">
-          <div class="row">
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Name</label>
-              <input class="form-control" name="name" required>
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Gender</label>
-              <select class="form-control" name="gender" required>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Date of Birth</label>
-              <input type="date" class="form-control" name="dob" required>
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Occupation</label>
-              <input class="form-control" name="occupation">
-            </div>
-            <div class="col-md-6 mb-2">
-              <label class="form-label">Photo</label>
-              <input type="file" class="form-control" name="photo" accept="image/*">
-            </div>
-          </div>
-          <button class="btn btn-success">Add Child</button>
-        </form>
+<!-- State–District Script -->
+<script>
+// Load all states and districts from JSON
+let stateDistricts = {};
+
+fetch("/data/india-states-districts.json")
+  .then(res => res.json())
+  .then(data => {
+    stateDistricts = data;
+    populateAllDropdowns();
+  });
+
+//  Populate for Husband, Wife, and Children
+function populateAllDropdowns() {
+  const husbandState = document.getElementById("stateSelect");
+  const husbandDistrict = document.getElementById("districtSelect");
+  const wifeState = document.getElementById("wifeStateSelect");
+  const wifeDistrict = document.getElementById("wifeDistrictSelect");
+
+  const selectedHState = "<%= parent.state || '' %>";
+  const selectedHDistrict = "<%= parent.district || '' %>";
+  const selectedWState = "<%= wife ? wife.state : '' %>";
+  const selectedWDistrict = "<%= wife ? wife.district : '' %>";
+
+  // 🔹 Populate Husband and Wife dropdowns
+  for (let state in stateDistricts) {
+    husbandState.add(new Option(state, state, false, state === selectedHState));
+    wifeState.add(new Option(state, state, false, state === selectedWState));
+  }
+
+  populateDistricts(selectedHState, husbandDistrict, selectedHDistrict);
+  populateDistricts(selectedWState, wifeDistrict, selectedWDistrict);
+
+  husbandState.addEventListener("change", () => populateDistricts(husbandState.value, husbandDistrict));
+  wifeState.addEventListener("change", () => populateDistricts(wifeState.value, wifeDistrict));
+
+  // 🔹 Populate for every child
+  // Pre-render children data server-side to avoid "index is not defined" error
+  const childrenData = <%- JSON.stringify(children || []) %>;
+  
+  document.querySelectorAll("[id^='childState_']").forEach((stateSel, index) => {
+    const districtSel = document.getElementById("childDistrict_" + index);
+    const cState = childrenData[index]?.state || "";
+    const cDistrict = childrenData[index]?.district || "";
+
+    // Fill state options
+    for (let state in stateDistricts) {
+      stateSel.add(new Option(state, state, false, state === cState));
+    }
+
+    populateDistricts(cState, districtSel, cDistrict);
+
+    // When state changes → update districts
+    stateSel.addEventListener("change", () => {
+      populateDistricts(stateSel.value, districtSel);
+    });
+  });
+}
+
+// Helper to fill districts based on selected state
+function populateDistricts(state, districtDropdown, selectedDistrict = "") {
+  districtDropdown.innerHTML = '<option value="">Select District</option>';
+  if (state && stateDistricts[state]) {
+    stateDistricts[state].forEach(d => {
+      districtDropdown.add(new Option(d, d, false, d === selectedDistrict));
+    });
+  }
+}
+</script>
+
+
+<!-- PHOTO OPTION MODAL -->
+<div class="modal fade" id="photoOptionModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4">
+      <h5 class="mb-4">Select Option</h5>
+      <div class="d-flex gap-3">
+        <button class="btn flex-fill option-btn" id="browseBtn">Browse</button>
+        <button class="btn flex-fill option-btn" id="cameraBtn">Take Picture</button>
+        <button class="btn flex-fill cancel-btn" data-bs-dismiss="modal">Cancel</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  let index =  (children && children.length) ? children.length : 0;
+let currentInput = null;
+let childIndex = <%= children ? children.length : 0 %>;
 
-  $("#addChild").click(() => {
-    $("#children").append(`
-      <div class="border p-2 mb-2 child">
-        <input class="form-control mb-1" name="children[${index}][name]" placeholder="Child Name">
-        <select class="form-control mb-1" name="children[${index}][gender]">
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
-        <input class="form-control mb-1" name="children[${index}][occupation]" placeholder="Occupation">
-        <input type="date" class="form-control mb-1" name="children[${index}][dob]" placeholder="Date of Birth">
-        <div class="mb-1">
-          <label>Photo</label>
-          <input type="file" class="form-control" name="children[${index}][photo]" accept="image/*" id="child_photo_${index}">
-          <button type="button" class="btn btn-secondary mt-2" onclick="capturePhoto('child_photo_${index}')">Capture Photo</button>
-        </div>
-        <button type="button" class="btn btn-sm btn-danger removeChild">Remove</button>
-      </div>
-    `);
-    index++;
-  });
+function showPhotoOptions(id){
+  currentInput = id;
+  new bootstrap.Modal(document.getElementById("photoOptionModal")).show();
+}
 
-  $(document).on("click", ".removeChild", function () {
-    $(this).closest(".child").remove();
-  });
+document.getElementById("browseBtn").onclick=()=>{
+  if (!currentInput) return;
+  document.getElementById(currentInput).click();
+};
 
-  function capturePhoto(inputId) {
-    const input = document.getElementById(inputId);
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.play();
+document.getElementById("cameraBtn").onclick=()=>{
+  if (!currentInput) return;
+  capturePhoto(currentInput);
+};
 
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
+function capturePhoto(inputId){
+  const input=document.getElementById(inputId);
+  navigator.mediaDevices.getUserMedia({video:true})
+  .then(stream=>{
+    const video=document.createElement("video");
+    video.srcObject=stream;
+    video.play();
+    const canvas=document.createElement("canvas");
+    const ctx=canvas.getContext("2d");
+    const modal=document.createElement("div");
+    modal.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:20px";
+    modal.appendChild(video);
+    const controls=document.createElement("div");
+    controls.style.cssText="margin-top:10px;display:flex;gap:10px";
+    const cap=document.createElement("button");
+    cap.innerText="Capture";
+    cap.className="btn btn-primary";
+    cap.onclick=()=>{
+      canvas.width=video.videoWidth;
+      canvas.height=video.videoHeight;
+      ctx.drawImage(video,0,0);
+      canvas.toBlob(blob=>{
+        const file=new File([blob], `capture_${Date.now()}.jpg`, {type:"image/jpeg"});
+        const dt=new DataTransfer();
+        dt.items.add(file);
+        input.files=dt.files;
+        uploadImage(input);
+        stream.getTracks().forEach(t=>t.stop());
+        modal.remove();
+      }, 'image/jpeg', 0.9);
+    };
+    const cancel=document.createElement("button");
+    cancel.innerText="Cancel";
+    cancel.className="btn btn-secondary";
+    cancel.onclick=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      modal.remove();
+    };
+    controls.appendChild(cap);
+    controls.appendChild(cancel);
+    modal.appendChild(controls);
+    document.body.appendChild(modal);
+  })
+  .catch(()=>alert("Camera not available"));
+}
 
-          // Create a modal or overlay to show the camera
-          const modal = document.createElement('div');
-          modal.style.position = 'fixed';
-          modal.style.top = '0';
-          modal.style.left = '0';
-          modal.style.width = '100%';
-          modal.style.height = '100%';
-          modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-          modal.style.display = 'flex';
-          modal.style.flexDirection = 'column';
-          modal.style.alignItems = 'center';
-          modal.style.justifyContent = 'center';
-          modal.style.zIndex = '1000';
+// UPDATED — only show size, no preview image
+function uploadImage(input){
+  const file = input.files[0];
+  if(!file) return;
 
-          const videoContainer = document.createElement('div');
-          videoContainer.appendChild(video);
-          modal.appendChild(videoContainer);
+  const fileSizeKB = (file.size / 1024).toFixed(2);
+  const sizeElementId = "size_" + input.id;
 
-          const captureButton = document.createElement('button');
-          captureButton.textContent = 'Capture';
-          captureButton.className = 'btn btn-primary mt-3';
-          captureButton.onclick = function() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0);
-            canvas.toBlob(function(blob) {
-              const file = new File([blob], 'captured_photo.jpg', { type: 'image/jpeg' });
-              const dataTransfer = new DataTransfer();
-              dataTransfer.items.add(file);
-              input.files = dataTransfer.files;
-              document.body.removeChild(modal);
-              stream.getTracks().forEach(track => track.stop());
-            });
-          };
-          modal.appendChild(captureButton);
+  // Remove previous size info
+  const existing = document.getElementById(sizeElementId);
+  if (existing) existing.remove();
 
-          const cancelButton = document.createElement('button');
-          cancelButton.textContent = 'Cancel';
-          cancelButton.className = 'btn btn-secondary mt-2';
-          cancelButton.onclick = function() {
-            document.body.removeChild(modal);
-            stream.getTracks().forEach(track => track.stop());
-          };
-          modal.appendChild(cancelButton);
+  const sizeElement = document.createElement("div");
+  sizeElement.id = sizeElementId;
+  sizeElement.className = "size-info";
+  sizeElement.textContent = file.size < 1024*1024
+    ? `File size: ${fileSizeKB} KB`
+    : `File size: ${(file.size / (1024*1024)).toFixed(2)} MB`;
 
-          document.body.appendChild(modal);
-        })
-        .catch(function(err) {
-          console.error('Error accessing camera: ', err);
-          alert('Camera access denied or not available.');
-        });
-    } else {
-      alert('Camera not supported on this device.');
-    }
+  input.parentElement.appendChild(sizeElement);
+}
+
+// =============================
+// COPY FATHER ADDRESS TO CHILD
+// =============================
+$(document).on("change", ".same-address", function() {
+  const isChecked = $(this).is(":checked");
+  const parentCard = $(this).closest(".child");
+
+  if (isChecked) {
+    const fatherDoor = $("input[name='door_no']").val() || "";
+    const fatherStreet = $("input[name='street']").val() || "";
+    const fatherDistrict = $("#districtSelect").val() || "";
+    const fatherState = $("#stateSelect").val() || "";
+    const fatherPincode = $("input[name='pincode']").val() || "";
+
+    parentCard.find(".child-door").val(fatherDoor);
+    parentCard.find(".child-street").val(fatherStreet);
+    parentCard.find(".child-district").val(fatherDistrict);
+    parentCard.find(".child-state").val(fatherState);
+    parentCard.find(".child-pincode").val(fatherPincode);
+
+    parentCard.find(".child-door, .child-street, .child-district, .child-state, .child-pincode")
+      .attr("readonly", true)
+      .css("background-color", "#f8f9fa");
+  } else {
+    parentCard.find(".child-door, .child-street, .child-district, .child-state, .child-pincode")
+      .val("")
+      .removeAttr("readonly")
+      .css("background-color", "white");
   }
+});
+
+// =============================
+// ADD CHILD SECTION DYNAMICALLY
+// =============================
+$("#addChild").click(function(){
+  const newChild = `
+  <div class="border p-3 mb-3 child">
+    <input class="form-control mb-1" name="children[${childIndex}][name]" placeholder="Child Name">
+    <select class="form-control mb-1" name="children[${childIndex}][gender]">
+      <option>Select Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+    <input class="form-control mb-1" name="children[${childIndex}][occupation]" placeholder="Occupation">
+    <input type="date" class="form-control mb-1" name="children[${childIndex}][dob]">
+
+    <label>Photo</label>
+    <input type="file" class="d-none" id="child_photo_${childIndex}" name="children[${childIndex}][photo]" accept="image/*" onchange="uploadImage(this)">
+    <div class="border p-2 text-center bg-light" onclick="showPhotoOptions('child_photo_${childIndex}')" style="cursor:pointer">Upload Photo</div>
+    <div id="size_child_photo_${childIndex}" class="size-info"></div>
+
+    <h6 class="mt-2">Address</h6>
+    <div class="form-check mb-2">
+      <input class="form-check-input same-address" type="checkbox" id="sameAddress_${childIndex}">
+      <label class="form-check-label" for="sameAddress_${childIndex}">Same as Father’s Address</label>
+    </div>
+
+    <input class="form-control mb-2 child-door" name="children[${childIndex}][door_no]" placeholder="Door No">
+    <input class="form-control mb-2 child-street" name="children[${childIndex}][street]" placeholder="Street">
+    <input class="form-control mb-2 child-district" name="children[${childIndex}][district]" placeholder="District">
+    <input class="form-control mb-2 child-state" name="children[${childIndex}][state]" placeholder="State">
+    <input class="form-control mb-2 child-pincode" name="children[${childIndex}][pincode]" placeholder="Pincode">
+
+    <button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
+  </div>
+  `;
+  $("#children").append(newChild);
+  childIndex++;
+});
+
+// =============================
+// REMOVE CHILD SECTION
+// =============================
+$(document).on("click", ".removeChild", function() {
+  $(this).closest(".child").remove();
+});
 </script>
 
 </body>
-</html>
+</html>     

@@ -1,49 +1,33 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self';
-             script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com;
-             style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
-             img-src 'self' data: blob:;
-             connect-src 'self' http://localhost:3000 https://cdn.jsdelivr.net;">
+<html lang="en">
+<%- include('partials/head') %>
+<body class="d-flex flex-column min-vh-100">
 
-  <title>Add Family</title>
+<%- include('partials/navbar') %>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="container-fluid px-3 px-md-4 py-4" style="flex: 1; background-color: var(--gray-50);">
+  
+  <!-- Page Header -->
+  <div class="mb-4">
+    <h1 class="h3 fw-bold mb-0"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Add Family</h1>
+  </div>
 
   <style>
-    :root {
-      --brown-main: #6f4e37;
-      --brown-light: #f5efe9;
-      --brown-border: #d6c2b3;
-    }
-
-    body {
-      background-color: var(--brown-light);
-      margin: 0;
-      padding: 0;
-    }
-
-    /* ---- FULL PAGE FORM ---- */
-    .full-page-container {
-      width: 100vw;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
     .card {
-      border: 1px solid var(--brown-border);
+      border: 1px solid var(--border-color);
       border-radius: 10px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
 
     .btn-primary {
-      background-color: var(--brown-main);
-      border-color: var(--brown-main);
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
     }
 
     .img-thumbnail {
@@ -53,19 +37,15 @@
       margin-top: 8px;
     }
   </style>
-</head>
 
-<body>
+  <form id="familyForm" enctype="multipart/form-data">
 
-<div class="full-page-container">
+    <div class="row g-2">
+      <div class="col-12">
+        <div class="card p-4">
 
-<form id="familyForm" enctype="multipart/form-data">
-
-<div class="row g-2">
-  <div class="col-12">
-    <div class="card p-4">
-
-      <!-- ===== PARENT DETAILS ===== -->
+          <!-- ===== PARENT DETAILS ===== -->
+          <div id="parentSection">
       <div class="row g-2">
         <div class="col-12 col-md-6">
           <h5 class="mb-3 small">Husband Details</h5>
@@ -134,6 +114,7 @@
       </div>
 
       <input class="form-control mb-3 small" name="parent[pincode]" placeholder="Pincode" type="text">
+      </div>
 
       <!-- ===== CHILDREN SECTION ===== -->
       <h5 class="mt-4 mb-3 small">Children</h5>
@@ -144,9 +125,9 @@
       </button>
 
       <!-- ===== SAVE BUTTON ===== -->
-      <div class="mt-4">
-        <button type="submit" class="btn btn-primary w-100">
-          Save Family
+      <div class="mt-4 text-center">
+        <button type="submit" class="btn btn-primary px-5">
+          <i class="bi bi-check-lg me-2"></i>Save Family
         </button>
       </div>
 
@@ -155,13 +136,48 @@
 </div>
 
 </form>
+
 </div>
 
+<%- include('partials/footer') %>
 
+<!-- SweetAlert2 - Required by family.js -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-
-
+<%- include('partials/scripts') %>
 <script src="/js/family.js"></script>
+
+<script>
+// Check if in add child mode
+const urlParams = new URLSearchParams(window.location.search);
+const mode = urlParams.get('mode');
+
+if (mode === 'addChild') {
+  // Hide parent section
+  const parentSection = document.getElementById('parentSection');
+  if (parentSection) {
+    parentSection.style.display = 'none';
+  }
+  
+  // Change page title
+  const pageTitle = document.querySelector('h1');
+  if (pageTitle) {
+    pageTitle.innerHTML = '<i class="bi bi-person-plus-fill text-success me-2"></i>Add Child';
+  }
+  
+  // Change submit button text
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Child';
+  }
+  
+  // Auto-add one child form
+  if (typeof addChild === 'function') {
+    setTimeout(() => addChild(), 100);
+  }
+}
+</script>
 
 </body>
 </html>
