@@ -223,30 +223,35 @@ exports.saveFamily = async (req, res) => {
         pincode
       } = m;
 
+      const normalizedMemberType = (member_type || "").toString().trim().toLowerCase();
+      const normalizedRelationship = (relationship || "").toString().trim().toLowerCase();
+      const finalMemberType = normalizedMemberType || "child";
+      const finalRelationship = normalizedRelationship || (finalMemberType === "child" ? "other" : null);
+
       // Default gender for husband
       let finalGender = gender;
-      if (relationship === 'husband' && !gender) {
+      if (finalRelationship === "husband" && !gender) {
         finalGender = 'Male';
       }
 
-      if (!name || !relationship) continue;
+      if (!name || !finalRelationship) continue;
 
       // Handle file uploads
       let photoPath = null;
       if (req.files) {
-        if (member_type === 'parent') {
-          if (relationship === 'husband') {
+        if (finalMemberType === 'parent') {
+          if (finalRelationship === 'husband') {
             const husbandFiles = req.files['parent[husband_photo]'];
             if (husbandFiles && husbandFiles[0]) {
               photoPath = `parent/${husbandFiles[0].filename}`;
             }
-          } else if (relationship === 'wife') {
+          } else if (finalRelationship === 'wife') {
             const wifeFiles = req.files['parent[wife_photo]'];
             if (wifeFiles && wifeFiles[0]) {
               photoPath = `parent/${wifeFiles[0].filename}`;
             }
           }
-        } else if (member_type === 'child') {
+        } else if (finalMemberType === 'child') {
           const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
           if (childFiles && childFiles[0]) {
             photoPath = `children/${childFiles[0].filename}`;
@@ -261,13 +266,13 @@ exports.saveFamily = async (req, res) => {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           familyId,
-          member_type || "child",
+          finalMemberType,
           name,
-          relationship,
+          finalRelationship,
           mobile || null,
           occupation || null,
           dob || null,
-          gender || null,
+          finalGender || null,
           door_no || null,
           street || null,
           district || null,

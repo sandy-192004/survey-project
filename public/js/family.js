@@ -874,7 +874,7 @@ document.addEventListener("DOMContentLoaded", () => {
           members.push({
             member_type: "child",
             name: childName,
-            relationship: formData.get(`children[${index}][relationship]`) || null,
+            relationship: formData.get(`children[${index}][relationship]`) || "other",
             dob: formData.get(`children[${index}][dob]`) || null,
             gender: formData.get(`children[${index}][gender]`) || null,
             occupation: formData.get(`children[${index}][occupation]`) || null,
