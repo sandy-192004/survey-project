@@ -382,8 +382,21 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small fw-semibold">Photo</label>
-                  <input type="file" class="form-control" id="editPhoto" name="photo" accept="image/*">
+                  <input type="file" class="d-none" id="editPhoto_file" name="photo" accept="image/*" onchange="handlePhotoSelect(this, 'editPhoto')">
+                  <!-- Styled clickable area -->
+                  <div id="editPhoto_placeholder" class="border rounded p-3 bg-light text-center" onclick="showPhotoOptions('editPhoto')" style="cursor: pointer;">
+                    <i class="bi bi-camera-fill text-muted" style="font-size: 1.5rem;"></i>
+                    <p class="small text-muted mb-0">Click to upload photo</p>
+                  </div>
+                  <!-- Current photo display -->
                   <img id="currentPhoto" src="" alt="" class="img-thumbnail mt-2" style="max-height: 100px; display: none;">
+                  <!-- Photo info display -->
+                  <div id="editPhotoInfo" class="mt-2" style="display: none;">
+                    <span id="editPhotoName" class="small text-success"></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="deleteEditPhoto()">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -445,6 +458,7 @@
 <%- include('partials/footer') %>
 <%- include('partials/scripts') %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/family.js"></script>
 
 <script>
 // Check if no family exists and show modal
@@ -621,6 +635,179 @@ document.getElementById('editMemberForm').addEventListener('submit', function(e)
     });
   });
 });
+
+// ========== EDIT PHOTO FUNCTIONS ==========
+let editCameraStream = null;
+
+// Show photo options for edit modal
+function showEditPhotoOptions() {
+  Swal.fire({
+    title: 'Choose Photo Option',
+    html: `
+      <div class="d-flex flex-column gap-2">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('editPhoto_file').click(); Swal.close();">
+          <i class="bi bi-folder-fill me-2"></i>Choose File
+        </button>
+        <button type="button" class="btn btn-success" onclick="Swal.close(); openEditCamera();">
+          <i class="bi bi-camera-fill me-2"></i>Take Photo
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="Swal.close();">
+          <i class="bi bi-x-circle-fill me-2"></i>Cancel
+        </button>
+      </div>
+    `,
+    showConfirmButton: false,
+    showCancelButton: false
+  });
+}
+
+// Handle file selection for edit modal
+function handleEditPhotoSelect(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processEditPhotoFile(file);
+  }
+}
+
+// Open camera for edit modal
+function openEditCamera() {
+  Swal.fire({
+    title: 'Capture Photo',
+    html: '<video id="editCameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>',
+    showCancelButton: true,
+    confirmButtonText: 'Capture',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#4F46E5',
+    didOpen: () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          editCameraStream = stream;
+          const video = document.getElementById('editCameraVideo');
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          console.error('Error accessing camera:', err);
+          Swal.fire('Error', 'Unable to access camera', 'error');
+        });
+    },
+    preConfirm: () => {
+      return new Promise((resolve) => {
+        const video = document.getElementById('editCameraVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(resolve, 'image/jpeg', 0.9);
+      });
+    }
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      if (editCameraStream) {
+        editCameraStream.getTracks().forEach(track => track.stop());
+        editCameraStream = null;
+      }
+      processEditPhotoFile(result.value);
+    } else {
+      if (editCameraStream) {
+        editCameraStream.getTracks().forEach(track => track.stop());
+        editCameraStream = null;
+      }
+    }
+
+
+
+    
+    
+  });
+}
+
+// Process photo file for edit modal (50KB limit)
+function processEditPhotoFile(file) {
+  const maxSizeKB = 50;
+  const maxSizeBytes = maxSizeKB * 1024;
+
+  if (file.size <= maxSizeBytes) {
+    updateEditPhotoInfo(file.name, file.size, file);
+  } else {
+    compressEditPhoto(file, maxSizeBytes);
+  }
+}
+
+// Compress image for edit modal
+function compressEditPhoto(file, maxSizeBytes) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+
+  img.onload = function() {
+    let quality = 0.8;
+
+    const compress = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob.size <= maxSizeBytes) {
+          const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+          updateEditPhotoInfo(compressedFile.name, compressedFile.size, compressedFile);
+          const input = document.getElementById('editPhoto_file');
+          const dt = new DataTransfer();
+          dt.items.add(compressedFile);
+          input.files = dt.files;
+        } else if (quality > 0.1) {
+          quality -= 0.1;
+          compress();
+        } else {
+          const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+          updateEditPhotoInfo(compressedFile.name, compressedFile.size, compressedFile);
+          const input = document.getElementById('editPhoto_file');
+          const dt = new DataTransfer();
+          dt.items.add(compressedFile);
+          input.files = dt.files;
+          Swal.fire({
+            icon: 'warning',
+            title: 'Large Photo',
+            text: 'Photo is larger than 50KB even after compression. It will still be uploaded.',
+            confirmButtonColor: '#4F46E5'
+          });
+        }
+      }, 'image/jpeg', quality);
+    };
+
+    compress();
+  };
+
+  img.src = URL.createObjectURL(file);
+}
+
+// Update photo info display with preview
+function updateEditPhotoInfo(name, size, file) {
+  const sizeKB = (size / 1024).toFixed(2);
+  document.getElementById('editPhotoName').textContent = `Selected: ${name} (${sizeKB} KB)`;
+  document.getElementById('editPhotoInfo').style.display = 'block';
+  document.getElementById('editPhoto_placeholder').style.display = 'none';
+  
+  // Show preview of the captured photo
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('currentPhoto').src = e.target.result;
+      document.getElementById('currentPhoto').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Delete selected photo
+function deleteEditPhoto() {
+  const input = document.getElementById('editPhoto_file');
+  input.value = '';
+  document.getElementById('editPhotoInfo').style.display = 'none';
+  document.getElementById('editPhotoName').textContent = '';
+  document.getElementById('editPhoto_placeholder').style.display = 'flex';
+}
 </script>
 
 </body>
