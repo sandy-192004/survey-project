@@ -33,6 +33,9 @@ router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
 
 
 // ================== FAMILY MANAGEMENT ==================
+router.get("/family-edit-full/:familyId", isLoggedIn, controller.editFamilyFull);
+router.post("/update-family-full/:familyId", isLoggedIn, processUpload, controller.updateFamilyFull);
+
 router.get("/family/:familyId", isLoggedIn, controller.viewFamily);
 router.get("/my-family", isLoggedIn, controller.myFamily);
 router.get("/my-family-json", controller.getMyFamilyJson);
@@ -65,5 +68,9 @@ router.post("/test-save-family", upload.any(), (req, res) => {
   console.log("TEST ENDPOINT - req.body:", req.body);
   res.json({ success: true, message: "Test endpoint working" });
 });
+
+// ================== FAMILY TREE APIs ==================
+router.get("/api/family-tree/:userId", controller.getFamilyTree);
+router.get("/api/family-tree-simple/:userId", controller.getSimpleFamilyTree);
 
 module.exports = router;

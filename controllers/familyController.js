@@ -55,7 +55,6 @@ exports.register = async (req, res) => {
     // Check if user already exists
     const [existingUser] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existingUser.length > 0) {
-      // User already exists - redirect to register page with error
       return res.redirect("/login?error=exists");
     }
 
@@ -134,10 +133,8 @@ exports.familyCheck = async (req, res) => {
     );
 
     if (families.length > 0) {
-      // Family exists → redirect to my-family
       return res.redirect("/my-family");
     } else {
-      // Family does not exist → redirect to add form
       return res.redirect("/family-form");
     }
   } catch (err) {
@@ -157,7 +154,7 @@ exports.showFamilyForm = (req, res) => {
   res.render("family-form", { addChildMode: false });
 };
 
-// Save family data
+// Save family data with Tree Structure Logic
 exports.saveFamily = async (req, res) => {
   const connection = await db.getConnection();
 
@@ -167,7 +164,7 @@ exports.saveFamily = async (req, res) => {
     console.log("📥 Received Body:", req.body);
     console.log("📎 Received Files:", req.files);
 
-    let { husband_name, members } = req.body;
+    let { husband_name, wife_name, has_siblings, members } = req.body;
 
     if (typeof members === "string") {
       try {
@@ -196,20 +193,87 @@ exports.saveFamily = async (req, res) => {
       });
     }
 
-    // Step 2: Create family
+    // Step 2: Find or create husband's father's family (for parent_family_id)
+    let husbandFatherFamilyId = null;
+    const husbandFather = members.find(m => m.relation_type === 'father' && m.sibling_side !== 'wife');
+
+    if (husbandFather && husbandFather.name) {
+      // Search for existing family by father name
+      const [fatherFamily] = await connection.query(
+        `SELECT f.id FROM families f 
+         JOIN family_members fm ON f.id = fm.family_id 
+         WHERE fm.name = ? AND fm.relationship = 'father' 
+         LIMIT 1`,
+        [husbandFather.name]
+      );
+
+      if (fatherFamily.length > 0) {
+        husbandFatherFamilyId = fatherFamily[0].id;
+      } else {
+        // Create dummy family for husband's father
+        const [fatherFamilyResult] = await connection.query(
+          "INSERT INTO families (user_id, family_code, created_by_admin) VALUES (NULL, ?, 1)",
+          [`FAM-DUMMY-HF-${Date.now()}`
+          ]);
+        husbandFatherFamilyId = fatherFamilyResult.insertId;
+
+        // Add father to his own family
+        await connection.query(
+          `INSERT INTO family_members 
+           (family_id, member_type, name, relationship, gender, occupation, relation_type) 
+           VALUES (?, 'parent', ?, 'father', 'Male', ?, 'father')`,
+          [husbandFatherFamilyId, husbandFather.name, husbandFather.occupation || null]
+        );
+      }
+    }
+
+    // Step 3: Find or create wife's father's family (for spouse_family_id)
+    let wifeFatherFamilyId = null;
+    const wifeFather = members.find(m => m.relation_type === 'father' && m.sibling_side === 'wife');
+
+    if (wifeFather && wifeFather.name) {
+      const [wfFamily] = await connection.query(
+        `SELECT f.id FROM families f 
+         JOIN family_members fm ON f.id = fm.family_id 
+         WHERE fm.name = ? AND fm.relationship = 'father' 
+         LIMIT 1`,
+        [wifeFather.name]
+      );
+
+      if (wfFamily.length > 0) {
+        wifeFatherFamilyId = wfFamily[0].id;
+      } else {
+        // Create dummy family for wife's father
+        const [wfFamilyResult] = await connection.query(
+          "INSERT INTO families (user_id, family_code, created_by_admin) VALUES (NULL, ?, 1)",
+          [`FAM-DUMMY-WF-${Date.now()}`
+          ]);
+        wifeFatherFamilyId = wfFamilyResult.insertId;
+
+        await connection.query(
+          `INSERT INTO family_members 
+           (family_id, member_type, name, relationship, gender, occupation, relation_type) 
+           VALUES (?, 'parent', ?, 'father', 'Male', ?, 'father')`,
+          [wifeFatherFamilyId, wifeFather.name, wifeFather.occupation || null]
+        );
+      }
+    }
+
+    // Step 4: Create current user's family with parent and spouse references
     const familyCode = `FAM-${Date.now()}`;
     const [familyResult] = await connection.query(
-      "INSERT INTO families (user_id, family_code) VALUES (?, ?)",
-      [userId, familyCode]
+      `INSERT INTO families (user_id, family_code, parent_family_id, spouse_family_id, created_by_admin) 
+       VALUES (?, ?, ?, ?, 0)`,
+      [userId, familyCode, husbandFatherFamilyId, wifeFatherFamilyId]
     );
 
     const familyId = familyResult.insertId;
 
-    // Step 3: Insert family members
-    for (let i = 0; i < members.length; i++) {
-      const m = members[i];
+    // Step 5: Insert all family members with relation_type
+    for (const m of members) {
       const {
         member_type,
+        relation_type,
         name,
         relationship,
         mobile,
@@ -220,59 +284,40 @@ exports.saveFamily = async (req, res) => {
         street,
         district,
         state,
-        pincode
+        pincode,
+        photo_field
       } = m;
 
-      const normalizedMemberType = (member_type || "").toString().trim().toLowerCase();
-      const normalizedRelationship = (relationship || "").toString().trim().toLowerCase();
-      const finalMemberType = normalizedMemberType || "child";
-      const finalRelationship = normalizedRelationship || (finalMemberType === "child" ? "other" : null);
+      if (!name || !relationship) continue;
 
-      // Default gender for husband
-      let finalGender = gender;
-      if (finalRelationship === "husband" && !gender) {
-        finalGender = 'Male';
-      }
-
-      if (!name || !finalRelationship) continue;
-
-      // Handle file uploads
+      // Get photo path from files
       let photoPath = null;
-      if (req.files) {
-        if (finalMemberType === 'parent') {
-          if (finalRelationship === 'husband') {
-            const husbandFiles = req.files['parent[husband_photo]'];
-            if (husbandFiles && husbandFiles[0]) {
-              photoPath = `parent/${husbandFiles[0].filename}`;
-            }
-          } else if (finalRelationship === 'wife') {
-            const wifeFiles = req.files['parent[wife_photo]'];
-            if (wifeFiles && wifeFiles[0]) {
-              photoPath = `parent/${wifeFiles[0].filename}`;
-            }
-          }
-        } else if (finalMemberType === 'child') {
-          const childFiles = req.files[`children[${i - 2}][photo]`]; // Adjust index since parents come first
-          if (childFiles && childFiles[0]) {
-            photoPath = `children/${childFiles[0].filename}`;
-          }
+      if (photo_field && req.files) {
+        const fileData = req.files[photo_field];
+        if (fileData && fileData[0]) {
+          // Determine folder based on member type
+          let folder = 'parent';
+          if (member_type === 'child') folder = 'children';
+          else if (member_type === 'sibling') folder = 'siblings';
+          photoPath = `${folder}/${fileData[0].filename}`;
         }
       }
 
       await connection.query(
         `INSERT INTO family_members
-         (family_id, member_type, name, relationship, mobile, occupation,
+         (family_id, member_type, relation_type, name, relationship, mobile, occupation,
           dob, gender, door_no, street, district, state, pincode, photo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           familyId,
-          finalMemberType,
+          member_type || 'parent',
+          relation_type || relationship,
           name,
-          finalRelationship,
+          relationship,
           mobile || null,
           occupation || null,
           dob || null,
-          finalGender || null,
+          gender || null,
           door_no || null,
           street || null,
           district || null,
@@ -281,6 +326,62 @@ exports.saveFamily = async (req, res) => {
           photoPath
         ]
       );
+    }
+
+    // Step 6: Handle siblings - create separate family records if needed
+    if (has_siblings === 'true' || has_siblings === true) {
+      const husbandSiblings = members.filter(m => m.member_type === 'sibling' && m.sibling_side === 'husband');
+      const wifeSiblings = members.filter(m => m.member_type === 'sibling' && m.sibling_side === 'wife');
+
+      // Create sibling families for husband's side
+      for (const sibling of husbandSiblings) {
+        const siblingFamilyCode = `FAM-SIB-HF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const [siblingFamilyResult] = await connection.query(
+          `INSERT INTO families (user_id, family_code, parent_family_id, spouse_family_id, created_by_admin) 
+           VALUES (NULL, ?, ?, NULL, 1)`,
+          [siblingFamilyCode, husbandFatherFamilyId]
+        );
+        const siblingFamilyId = siblingFamilyResult.insertId;
+
+        await connection.query(
+          `INSERT INTO family_members
+           (family_id, member_type, relation_type, name, relationship, gender, occupation, photo)
+           VALUES (?, 'sibling', ?, ?, ?, ?, ?, NULL)`,
+          [
+            siblingFamilyId,
+            sibling.relation_type || sibling.relationship,
+            sibling.name,
+            sibling.relationship,
+            sibling.gender,
+            sibling.occupation || null
+          ]
+        );
+      }
+
+      // Create sibling families for wife's side
+      for (const sibling of wifeSiblings) {
+        const siblingFamilyCode = `FAM-SIB-WF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const [siblingFamilyResult] = await connection.query(
+          `INSERT INTO families (user_id, family_code, parent_family_id, spouse_family_id, created_by_admin) 
+           VALUES (NULL, ?, ?, NULL, 1)`,
+          [siblingFamilyCode, wifeFatherFamilyId]
+        );
+        const siblingFamilyId = siblingFamilyResult.insertId;
+
+        await connection.query(
+          `INSERT INTO family_members
+           (family_id, member_type, relation_type, name, relationship, gender, occupation, photo)
+           VALUES (?, 'sibling', ?, ?, ?, ?, ?, NULL)`,
+          [
+            siblingFamilyId,
+            sibling.relation_type || sibling.relationship,
+            sibling.name,
+            sibling.relationship,
+            sibling.gender,
+            sibling.occupation || null
+          ]
+        );
+      }
     }
 
     await connection.commit();
@@ -310,48 +411,84 @@ exports.saveFamily = async (req, res) => {
   }
 };
 
+// Helper to get full family data including siblings and parents
+exports.getFullFamilyData = async function (familyId) {
+  const [families] = await db.query("SELECT * FROM families WHERE id = ?", [familyId]);
+  if (families.length === 0) return { family: null, members: [] };
+  const family = families[0];
+
+  let allMembers = [];
+
+  // 1. Get user's immediate family
+  const [immediateMembers] = await db.query("SELECT * FROM family_members WHERE family_id = ?", [family.id]);
+  allMembers = allMembers.concat(immediateMembers);
+
+  // 2. Get Husband's Parents (parent_family_id)
+  if (family.parent_family_id) {
+    const [hParents] = await db.query("SELECT * FROM family_members WHERE family_id = ? AND member_type = 'parent'", [family.parent_family_id]);
+    hParents.forEach(m => { m.original_member_type = m.member_type; m.member_type = 'husband_parent'; });
+    allMembers = allMembers.concat(hParents);
+
+    // Get Husband's Siblings (families with same parent_family_id)
+    const [hSiblingFamilies] = await db.query("SELECT id FROM families WHERE parent_family_id = ? AND id != ?", [family.parent_family_id, family.id]);
+    for (let sFam of hSiblingFamilies) {
+      const [sMembers] = await db.query("SELECT * FROM family_members WHERE family_id = ?", [sFam.id]);
+      sMembers.forEach(m => {
+        if (m.member_type === 'sibling' || m.member_type === 'parent') {
+          m.original_member_type = m.member_type; m.member_type = 'husband_sibling';
+        } else if (m.member_type === 'child') {
+          m.original_member_type = m.member_type; m.member_type = 'husband_sibling_child';
+        }
+      });
+      allMembers = allMembers.concat(sMembers);
+    }
+  }
+
+  // 3. Get Wife's Parents (spouse_family_id)
+  if (family.spouse_family_id) {
+    const [wParents] = await db.query("SELECT * FROM family_members WHERE family_id = ? AND member_type = 'parent'", [family.spouse_family_id]);
+    wParents.forEach(m => { m.original_member_type = m.member_type; m.member_type = 'wife_parent'; });
+    allMembers = allMembers.concat(wParents);
+
+    // Get Wife's Siblings
+    const [wSiblingFamilies] = await db.query("SELECT id FROM families WHERE parent_family_id = ? AND id != ?", [family.spouse_family_id, family.id]);
+    for (let sFam of wSiblingFamilies) {
+      const [sMembers] = await db.query("SELECT * FROM family_members WHERE family_id = ?", [sFam.id]);
+      sMembers.forEach(m => {
+        if (m.member_type === 'sibling' || m.member_type === 'parent') {
+          m.original_member_type = m.member_type; m.member_type = 'wife_sibling';
+        } else if (m.member_type === 'child') {
+          m.original_member_type = m.member_type; m.member_type = 'wife_sibling_child';
+        }
+      });
+      allMembers = allMembers.concat(sMembers);
+    }
+  }
+
+  return { family, members: allMembers };
+}
+
 // My Family page (EJS render)
 exports.myFamily = async (req, res) => {
   console.log("myFamily controller HIT");
-
   try {
     const userId = req.session.user.id;
+    const [families] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
 
-    let family = null;
-    let members = []; 
-    const [families] = await db.query(
-      "SELECT * FROM families WHERE user_id = ? LIMIT 1",
-      [userId]
-    );
-
-    if (families.length > 0) {
-      family = families[0];
-
-      const [rows] = await db.query(
-        "SELECT * FROM family_members WHERE family_id = ?",
-        [family.id]
-      );
-
-      members = rows || [];
+    if (families.length === 0) {
+      return res.redirect('/family-form');
     }
 
-    // If no family members, redirect to form
+    const { family, members } = await exports.getFullFamilyData(families[0].id);
+
     if (!members || members.length === 0) {
       return res.redirect('/family-form');
     }
 
-    return res.render("my-family", {
-      family,
-      members
-    });
-
+    return res.render("my-family", { family, members });
   } catch (err) {
     console.error("myFamily ERROR:", err);
-
-    return res.render("my-family", {
-      family: null,
-      members: []
-    });
+    return res.render("my-family", { family: null, members: [] });
   }
 };
 
@@ -359,11 +496,8 @@ exports.myFamily = async (req, res) => {
 exports.viewFamily = async (req, res) => {
   try {
     const { familyId } = req.params;
-    const [members] = await db.query(
-      "SELECT * FROM family_members WHERE family_id = ?",
-      [familyId]
-    );
-    res.render("my-family", { members });
+    const { family, members } = await exports.getFullFamilyData(familyId);
+    res.render("my-family", { family, members });
   } catch (err) {
     console.error("Error loading specific family:", err);
     res.status(500).send("Server error loading family details");
@@ -869,14 +1003,422 @@ exports.getMember = async (req, res) => {
   try {
     const memberId = req.params.id;
     const [rows] = await db.query('SELECT * FROM family_members WHERE id = ?', [memberId]);
-    
+
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Member not found' });
     }
-    
+
     res.json({ success: true, member: rows[0] });
   } catch (err) {
     console.error('Get member error:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch member' });
+  }
+};
+
+/* ================= FAMILY TREE FETCH (For Admin) ================= */
+
+// Recursive function to fetch full family tree
+async function fetchFamilyTree(familyId, visited = new Set()) {
+  // Prevent infinite recursion
+  if (visited.has(familyId)) {
+    return null;
+  }
+  visited.add(familyId);
+
+  try {
+    // Get family details
+    const [families] = await db.query(
+      "SELECT * FROM families WHERE id = ?",
+      [familyId]
+    );
+
+    if (families.length === 0) {
+      return null;
+    }
+
+    const family = families[0];
+
+    // Get all members of this family
+    const [members] = await db.query(
+      "SELECT * FROM family_members WHERE family_id = ?",
+      [familyId]
+    );
+
+    // Build the tree node
+    const treeNode = {
+      id: family.id,
+      family_code: family.family_code,
+      parent_family_id: family.parent_family_id,
+      spouse_family_id: family.spouse_family_id,
+      members: members,
+      children: [],
+      siblings: []
+    };
+
+    // Recursively fetch parent family (blood relation)
+    if (family.parent_family_id) {
+      treeNode.parent = await fetchFamilyTree(family.parent_family_id, visited);
+    }
+
+    // Recursively fetch spouse family (marriage relation)
+    if (family.spouse_family_id) {
+      treeNode.spouse = await fetchFamilyTree(family.spouse_family_id, visited);
+    }
+
+    // Find children families (families that have this family as parent)
+    const [childFamilies] = await db.query(
+      "SELECT id FROM families WHERE parent_family_id = ?",
+      [familyId]
+    );
+
+    for (const childFamily of childFamilies) {
+      const childTree = await fetchFamilyTree(childFamily.id, visited);
+      if (childTree) {
+        treeNode.children.push(childTree);
+      }
+    }
+
+    // Find sibling families (families with same parent)
+    if (family.parent_family_id) {
+      const [siblingFamilies] = await db.query(
+        "SELECT id FROM families WHERE parent_family_id = ? AND id != ?",
+        [family.parent_family_id, familyId]
+      );
+
+      for (const sibFamily of siblingFamilies) {
+        const sibTree = await fetchFamilyTree(sibFamily.id, visited);
+        if (sibTree) {
+          treeNode.siblings.push(sibTree);
+        }
+      }
+    }
+
+    return treeNode;
+  } catch (err) {
+    console.error("Error fetching family tree:", err);
+    return null;
+  }
+}
+
+// Get family tree for a specific user
+exports.getFamilyTree = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Get the user's family
+    const [families] = await db.query(
+      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
+
+    if (families.length === 0) {
+      return res.json({ success: false, message: "Family not found" });
+    }
+
+    const familyId = families[0].id;
+    const tree = await fetchFamilyTree(familyId);
+
+    res.json({ success: true, tree });
+  } catch (err) {
+    console.error("Error getting family tree:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch family tree" });
+  }
+};
+
+// Get simple family tree (flattened for simpler rendering)
+exports.getSimpleFamilyTree = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Get the user's family
+    const [families] = await db.query(
+      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
+
+    if (families.length === 0) {
+      return res.json({ success: false, message: "Family not found" });
+    }
+
+    const familyId = families[0].id;
+    const tree = await fetchFamilyTree(familyId);
+
+    // Convert to simple structure for UI
+    const simpleTree = convertToSimpleTree(tree);
+
+    res.json({ success: true, tree: simpleTree });
+  } catch (err) {
+    console.error("Error getting simple family tree:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch family tree" });
+  }
+};
+
+// Helper function to convert tree to simple structure
+function convertToSimpleTree(node, visited = new Set()) {
+  if (!node || visited.has(node.id)) {
+    return null;
+  }
+  visited.add(node.id);
+
+  const simple = {
+    id: node.id,
+    family_code: node.family_code,
+    members: node.members.map(m => ({
+      id: m.id,
+      name: m.name,
+      relationship: m.relationship,
+      relation_type: m.relation_type,
+      gender: m.gender,
+      occupation: m.occupation,
+      photo: m.photo,
+      mobile: m.mobile
+    }))
+  };
+
+  if (node.parent) {
+    simple.parents = convertToSimpleTree(node.parent, visited);
+  }
+
+  if (node.spouse) {
+    simple.spouse = convertToSimpleTree(node.spouse, visited);
+  }
+
+  if (node.children && node.children.length > 0) {
+    simple.children = node.children
+      .map(c => convertToSimpleTree(c, visited))
+      .filter(c => c !== null);
+  }
+
+  if (node.siblings && node.siblings.length > 0) {
+    simple.siblings = node.siblings
+      .map(s => convertToSimpleTree(s, visited))
+      .filter(s => s !== null);
+  }
+
+  return simple;
+}
+
+// ===================== EDIT/UPDATE FAMILY (FULL FORM) =====================
+exports.editFamilyFull = async (req, res) => {
+  try {
+    const { familyId } = req.params;
+    let targetFamilyId = familyId;
+
+    if (!targetFamilyId) {
+      if (!req.session.user) return res.redirect('/login');
+      const [families] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [req.session.user.id]);
+      if (families.length === 0) return res.redirect('/dashboard');
+      targetFamilyId = families[0].id;
+    }
+
+    const { family, members } = await exports.getFullFamilyData(targetFamilyId);
+    if (!family) return res.redirect('/dashboard');
+
+    res.render("family-edit-full", { family, members });
+  } catch (err) {
+    console.error("Error loading family for edit:", err);
+    res.status(500).send("Server error loading family edit page");
+  }
+};
+
+exports.updateFamilyFull = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    const userId = req.session.user.id;
+    let { husband_name, wife_name, has_siblings, members } = req.body;
+
+    if (typeof members === "string") {
+      try { members = JSON.parse(members); } catch (e) { members = []; }
+    }
+    if (!Array.isArray(members)) members = [];
+
+    await connection.beginTransaction();
+
+    const familyId = req.params.familyId;
+    const [familyRes] = await connection.query("SELECT * FROM families WHERE id = ?", [familyId]);
+    if (familyRes.length === 0) throw new Error("Family not found");
+    const family = familyRes[0];
+
+    // Collect all existing photos for this family to preserve them
+    const [existingMembers] = await connection.query("SELECT id, member_type, relation_type, relationship, name, photo FROM family_members WHERE family_id = ?", [family.id]);
+
+    // Also fetch photos from dummy parent families if any
+    let existingParents = [];
+    if (family.parent_family_id) {
+      const [hParents] = await connection.query("SELECT member_type, relation_type, relationship, name, photo FROM family_members WHERE family_id = ?", [family.parent_family_id]);
+      existingParents.push(...hParents);
+    }
+    if (family.spouse_family_id) {
+      const [wParents] = await connection.query("SELECT member_type, relation_type, relationship, name, photo FROM family_members WHERE family_id = ?", [family.spouse_family_id]);
+      existingParents.push(...wParents);
+    }
+
+    // Also fetch photos from sibling families
+    let existingSiblings = [];
+    if (family.parent_family_id) {
+      const [hSibs] = await connection.query("SELECT m.member_type, m.relation_type, m.relationship, m.name, m.photo FROM family_members m JOIN families f ON m.family_id = f.id WHERE f.parent_family_id = ? AND f.family_code LIKE '%FAM-SIB-%'", [family.parent_family_id]);
+      existingSiblings.push(...hSibs);
+    }
+    if (family.spouse_family_id) {
+      const [wSibs] = await connection.query("SELECT m.member_type, m.relation_type, m.relationship, m.name, m.photo FROM family_members m JOIN families f ON m.family_id = f.id WHERE f.parent_family_id = ? AND f.family_code LIKE '%FAM-SIB-%'", [family.spouse_family_id]);
+      existingSiblings.push(...wSibs);
+    }
+
+    // Step 1: Find or create husband's father's family
+    let husbandFatherFamilyId = family.parent_family_id;
+    const husbandFather = members.find(m => m.relation_type === 'father' && m.sibling_side !== 'wife');
+
+    if (husbandFather && husbandFather.name) {
+      if (!husbandFatherFamilyId) {
+        const [fatherFamilyResult] = await connection.query("INSERT INTO families (user_id, family_code, created_by_admin) VALUES (NULL, ?, 1)", [`FAM-D-HF-${Date.now()}`]);
+        husbandFatherFamilyId = fatherFamilyResult.insertId;
+      }
+      // Update or replace father member
+      await connection.query("DELETE FROM family_members WHERE family_id = ? AND member_type = 'parent' AND relationship = 'father'", [husbandFatherFamilyId]);
+
+      let pPhoto = null;
+      if (husbandFather.photo_field && req.files && req.files[husbandFather.photo_field]) {
+        pPhoto = `parent/${req.files[husbandFather.photo_field][0].filename}`;
+      } else {
+        const op = existingParents.find(p => p.relationship === 'father' && p.name === husbandFather.name);
+        if (op) pPhoto = op.photo;
+      }
+      await connection.query(
+        "INSERT INTO family_members (family_id, member_type, name, relationship, gender, occupation, relation_type, photo) VALUES (?, 'parent', ?, 'father', 'Male', ?, 'father', ?)",
+        [husbandFatherFamilyId, husbandFather.name, husbandFather.occupation || null, pPhoto]
+      );
+    }
+
+    // Step 2: Find or create wife's father's family
+    let wifeFatherFamilyId = family.spouse_family_id;
+    const wifeFather = members.find(m => m.relation_type === 'father' && m.sibling_side === 'wife');
+
+    if (wifeFather && wifeFather.name) {
+      if (!wifeFatherFamilyId) {
+        const [wfFamilyResult] = await connection.query("INSERT INTO families (user_id, family_code, created_by_admin) VALUES (NULL, ?, 1)", [`FAM-D-WF-${Date.now()}`]);
+        wifeFatherFamilyId = wfFamilyResult.insertId;
+      }
+      await connection.query("DELETE FROM family_members WHERE family_id = ? AND member_type = 'parent' AND relationship = 'father'", [wifeFatherFamilyId]);
+
+      let pPhoto = null;
+      if (wifeFather.photo_field && req.files && req.files[wifeFather.photo_field]) {
+        pPhoto = `parent/${req.files[wifeFather.photo_field][0].filename}`;
+      } else {
+        const op = existingParents.find(p => p.relationship === 'father' && p.name === wifeFather.name);
+        if (op) pPhoto = op.photo;
+      }
+      await connection.query(
+        "INSERT INTO family_members (family_id, member_type, name, relationship, gender, occupation, relation_type, photo) VALUES (?, 'parent', ?, 'father', 'Male', ?, 'father', ?)",
+        [wifeFatherFamilyId, wifeFather.name, wifeFather.occupation || null, pPhoto]
+      );
+    }
+
+    // Update family pointers
+    await connection.query("UPDATE families SET parent_family_id = ?, spouse_family_id = ? WHERE id = ?", [husbandFatherFamilyId, wifeFatherFamilyId, family.id]);
+
+    // Step 3: Replace immediate family members (husband, wife, children)
+    await connection.query("DELETE FROM family_members WHERE family_id = ?", [family.id]);
+
+    // Filter out parents/siblings that belong in dummy families
+    const immediateMembers = members.filter(m => {
+      if (m.member_type === 'parent') return false;
+      if (m.relation_type === 'father' || m.relation_type === 'mother') return false; // mother should be caught here
+      if (m.member_type === 'sibling') return false;
+      return true;
+    });
+
+    for (const m of immediateMembers) {
+      const { member_type, relation_type, name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photo_field } = m;
+      if (!name || !relationship) continue;
+
+      let photoPath = null;
+      if (photo_field && req.files && req.files[photo_field]) {
+        let folder = member_type === 'child' ? 'children' : 'parent';
+        photoPath = `${folder}/${req.files[photo_field][0].filename}`;
+      } else {
+        const oldMember = existingMembers.find(em => em.relationship === relationship && em.name === name) || existingMembers.find(em => em.relationship === relationship);
+        if (oldMember) photoPath = oldMember.photo;
+      }
+
+      await connection.query(
+        `INSERT INTO family_members (family_id, member_type, relation_type, name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode, photo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [family.id, member_type || 'parent', relation_type || relationship, name, relationship, mobile || null, occupation || null, dob || null, gender || null, door_no || null, street || null, district || null, state || null, pincode || null, photoPath]
+      );
+    }
+
+    // Step 4: Add Mothers to dummy families if any
+    const husbandMother = members.find(m => m.relation_type === 'mother' && m.sibling_side !== 'wife');
+    if (husbandMother && husbandMother.name && husbandFatherFamilyId) {
+      await connection.query("DELETE FROM family_members WHERE family_id = ? AND relationship = 'mother'", [husbandFatherFamilyId]);
+      let mPhoto = null;
+      if (husbandMother.photo_field && req.files && req.files[husbandMother.photo_field]) mPhoto = `parent/${req.files[husbandMother.photo_field][0].filename}`;
+      else { const op = existingParents.find(p => p.relationship === 'mother' && p.name === husbandMother.name); if (op) mPhoto = op.photo; }
+
+      await connection.query("INSERT INTO family_members (family_id, member_type, name, relationship, gender, occupation, relation_type, photo) VALUES (?, 'parent', ?, 'mother', 'Female', ?, 'mother', ?)", [husbandFatherFamilyId, husbandMother.name, husbandMother.occupation || null, mPhoto]);
+    }
+
+    const wifeMother = members.find(m => m.relation_type === 'mother' && m.sibling_side === 'wife');
+    if (wifeMother && wifeMother.name && wifeFatherFamilyId) {
+      await connection.query("DELETE FROM family_members WHERE family_id = ? AND relationship = 'mother'", [wifeFatherFamilyId]);
+      let mPhoto = null;
+      if (wifeMother.photo_field && req.files && req.files[wifeMother.photo_field]) mPhoto = `parent/${req.files[wifeMother.photo_field][0].filename}`;
+      else { const op = existingParents.find(p => p.relationship === 'mother' && p.name === wifeMother.name); if (op) mPhoto = op.photo; }
+
+      await connection.query("INSERT INTO family_members (family_id, member_type, name, relationship, gender, occupation, relation_type, photo) VALUES (?, 'parent', ?, 'mother', 'Female', ?, 'mother', ?)", [wifeFatherFamilyId, wifeMother.name, wifeMother.occupation || null, mPhoto]);
+    }
+
+    // Step 5: Handle siblings
+    // First, delete old sibling families (FAM-SIB-...) for these parents
+    if (husbandFatherFamilyId) {
+      const [oldSibsH] = await connection.query("SELECT id FROM families WHERE parent_family_id = ? AND family_code LIKE '%FAM-SIB-%'", [husbandFatherFamilyId]);
+      for (let sFam of oldSibsH) {
+        await connection.query("DELETE FROM family_members WHERE family_id = ?", [sFam.id]);
+        await connection.query("DELETE FROM families WHERE id = ?", [sFam.id]);
+      }
+    }
+    if (wifeFatherFamilyId) {
+      const [oldSibsW] = await connection.query("SELECT id FROM families WHERE parent_family_id = ? AND family_code LIKE '%FAM-SIB-%'", [wifeFatherFamilyId]);
+      for (let sFam of oldSibsW) {
+        await connection.query("DELETE FROM family_members WHERE family_id = ?", [sFam.id]);
+        await connection.query("DELETE FROM families WHERE id = ?", [sFam.id]);
+      }
+    }
+
+    if (has_siblings === 'true' || has_siblings === true || has_siblings === 'on') {
+      const husbandSiblings = members.filter(m => m.member_type === 'sibling' && m.sibling_side === 'husband');
+      const wifeSiblings = members.filter(m => m.member_type === 'sibling' && m.sibling_side === 'wife');
+
+      for (const sibling of husbandSiblings) {
+        if (!husbandFatherFamilyId || !sibling.name) continue;
+        const [sibFam] = await connection.query("INSERT INTO families (user_id, family_code, parent_family_id, created_by_admin) VALUES (NULL, ?, ?, 1)", [`FAM-SIB-HF-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, husbandFatherFamilyId]);
+
+        let sPhoto = null;
+        if (sibling.photo_field && req.files && req.files[sibling.photo_field]) sPhoto = `siblings/${req.files[sibling.photo_field][0].filename}`;
+        else { const op = existingSiblings.find(s => s.name === sibling.name); if (op) sPhoto = op.photo; }
+
+        await connection.query("INSERT INTO family_members (family_id, member_type, relation_type, name, relationship, gender, occupation, photo) VALUES (?, 'sibling', ?, ?, ?, ?, ?, ?)", [sibFam.insertId, sibling.relation_type || sibling.relationship, sibling.name, sibling.relationship, sibling.gender, sibling.occupation || null, sPhoto]);
+      }
+
+      for (const sibling of wifeSiblings) {
+        if (!wifeFatherFamilyId || !sibling.name) continue;
+        const [sibFam] = await connection.query("INSERT INTO families (user_id, family_code, parent_family_id, created_by_admin) VALUES (NULL, ?, ?, 1)", [`FAM-SIB-WF-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, wifeFatherFamilyId]);
+
+        let sPhoto = null;
+        if (sibling.photo_field && req.files && req.files[sibling.photo_field]) sPhoto = `siblings/${req.files[sibling.photo_field][0].filename}`;
+        else { const op = existingSiblings.find(s => s.name === sibling.name); if (op) sPhoto = op.photo; }
+
+        await connection.query("INSERT INTO family_members (family_id, member_type, relation_type, name, relationship, gender, occupation, photo) VALUES (?, 'sibling', ?, ?, ?, ?, ?, ?)", [sibFam.insertId, sibling.relation_type || sibling.relationship, sibling.name, sibling.relationship, sibling.gender, sibling.occupation || null, sPhoto]);
+      }
+    }
+
+    await connection.commit();
+    res.json({ success: true, message: "Family updated successfully" });
+  } catch (err) {
+    if (connection) await connection.rollback();
+    console.error("Update Family Full Error:", err);
+    res.status(500).json({ success: false, message: "Failed to update family", error: err.message });
+  } finally {
+    if (connection) connection.release();
   }
 };

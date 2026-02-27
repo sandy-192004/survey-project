@@ -9,8 +9,9 @@
       <div class="container-fluid px-3 px-md-4 py-4" style="flex: 1; background-color: var(--gray-50);">
 
         <!-- Page Header -->
-        <div class="mb-4">
-          <h1 class="h3 fw-bold mb-0"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Add Family</h1>
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+          <h1 class="h3 fw-bold mb-0"><i class="bi bi-pencil-fill text-primary me-2"></i>Edit Family</h1>
+          <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
         </div>
 
         <style>
@@ -59,7 +60,7 @@
           }
         </style>
 
-        <form id="familyForm" enctype="multipart/form-data">
+        <form id="familyForm" action="/update-family-full/<%= family.id %>" enctype="multipart/form-data">
 
           <div class="row g-2">
             <div class="col-12">
@@ -291,7 +292,153 @@
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
         <%- include('partials/scripts') %>
-          <script src="/js/family-tree.js"></script>
+          <script src="/js/family-tree-edit.js"></script>
+
+          <!-- Script to Auto-Fill Data on Edit -->
+          <script id="members-data" type="application/json"><%- JSON.stringify(members || []) %></script>
+          <script>
+            // Data passed from controller
+            const membersData = JSON.parse(document.getElementById('members-data').textContent);
+
+            function getValueSafely(memberType, relationship, field) {
+              const member = membersData.find(m => m.member_type === memberType && (m.relationship === relationship || m.relation_type === relationship));
+              return member ? member[field] || '' : '';
+            }
+
+            // A helper to populate an input element securely
+            function setInputSafely(name, value) {
+              const el = document.querySelector(`input[name="${name}"], select[name="${name}"]`);
+              if (el && value) el.value = value;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+              // Husband
+              const husband = membersData.find(m => m.relationship === 'husband');
+              if (husband) {
+                setInputSafely('husband_name', husband.name);
+                setInputSafely('husband[gender]', husband.gender || 'Male');
+                setInputSafely('husband[mobile]', husband.mobile);
+                setInputSafely('husband[occupation]', husband.occupation);
+                // Also load address
+                setInputSafely('address[door_no]', husband.door_no);
+                setInputSafely('address[street]', husband.street);
+                setInputSafely('address[pincode]', husband.pincode);
+                setTimeout(() => {
+                  setInputSafely('address[state]', husband.state);
+                  // Fire change so districts load? Wait, districts load on change.
+                  const stateDropdown = document.getElementById('state');
+                  if (stateDropdown) {
+                    stateDropdown.dispatchEvent(new Event('change'));
+                    setTimeout(() => setInputSafely('address[district]', husband.district), 500);
+                  }
+                }, 500);
+
+                // Show existing photos
+                if (husband.photo) {
+                  const pEl = document.getElementById('husband_placeholder');
+                  pEl.innerHTML = `<img src="/${husband.photo.replace('uploads/', '')}" style="max-height: 100px;">`;
+                }
+              }
+
+              // Husband Father
+              const hFather = membersData.find(m => m.member_type === 'husband_parent' && m.relationship === 'father');
+              if (hFather) {
+                setInputSafely('husband[father_name]', hFather.name);
+                setInputSafely('husband[father_occupation]', hFather.occupation);
+                if (hFather.photo) {
+                  document.getElementById('husband_father_placeholder').innerHTML = `<img src="/${hFather.photo.replace('uploads/', '')}" style="max-height: 100px;">`;
+                }
+              }
+
+              // Husband Mother
+              const hMother = membersData.find(m => m.member_type === 'husband_parent' && m.relationship === 'mother');
+              if (hMother) {
+                setInputSafely('husband[mother_name]', hMother.name);
+                setInputSafely('husband[mother_occupation]', hMother.occupation);
+                if (hMother.photo) {
+                  document.getElementById('husband_mother_placeholder').innerHTML = `<img src="/${hMother.photo.replace('uploads/', '')}" style="max-height: 100px;">`;
+                }
+              }
+
+              // Wife
+              const wife = membersData.find(m => m.relationship === 'wife');
+              if (wife) {
+                setInputSafely('wife[name]', wife.name);
+                setInputSafely('wife[gender]', wife.gender || 'Female');
+                setInputSafely('wife[mobile]', wife.mobile);
+                setInputSafely('wife[occupation]', wife.occupation);
+                if (wife.photo) {
+                  document.getElementById('wife_placeholder').innerHTML = `<img src="/${wife.photo.replace('uploads/', '')}" style="max-height: 100px;">`;
+                }
+              }
+
+              // Wife Father
+              const wFather = membersData.find(m => m.member_type === 'wife_parent' && m.relationship === 'father');
+              if (wFather) {
+                setInputSafely('wife[father_name]', wFather.name);
+                setInputSafely('wife[father_occupation]', wFather.occupation);
+                if (wFather.photo) {
+                  document.getElementById('wife_father_placeholder').innerHTML = `<img src="/${wFather.photo.replace('uploads/', '')}" style="max-height: 100px;">`;
+                }
+              }
+
+              // Wife Mother
+              const wMother = membersData.find(m => m.member_type === 'wife_parent' && m.relationship === 'mother');
+              if (wMother) {
+                setInputSafely('wife[mother_name]', wMother.name);
+                setInputSafely('wife[mother_occupation]', wMother.occupation);
+                if (wMother.photo) {
+                  document.getElementById('wife_mother_placeholder').innerHTML = `<img src="/${wMother.photo.replace('uploads/', '')}" style="max-height: 100px;">`;
+                }
+              }
+
+              // Load Children & Siblings by extending window variables
+              const sHusband = membersData.filter(m => m.member_type === 'husband_sibling');
+              const sWife = membersData.filter(m => m.member_type === 'wife_sibling');
+              if (sHusband.length > 0 || sWife.length > 0) {
+                document.getElementById('hasSiblings').checked = true;
+                toggleSiblingsSection();
+                sHusband.forEach(sh => {
+                  const idx = siblingIndex.husband;
+                  addSibling('husband');
+                  setTimeout(() => {
+                    setInputSafely(`siblings[husband][${idx}][name]`, sh.name);
+                    setInputSafely(`siblings[husband][${idx}][gender]`, sh.gender);
+                    setInputSafely(`siblings[husband][${idx}][relationship]`, sh.relationship);
+                    setInputSafely(`siblings[husband][${idx}][occupation]`, sh.occupation);
+                  }, 50);
+                });
+                sWife.forEach(sw => {
+                  const idx = siblingIndex.wife;
+                  addSibling('wife');
+                  setTimeout(() => {
+                    setInputSafely(`siblings[wife][${idx}][name]`, sw.name);
+                    setInputSafely(`siblings[wife][${idx}][gender]`, sw.gender);
+                    setInputSafely(`siblings[wife][${idx}][relationship]`, sw.relationship);
+                    setInputSafely(`siblings[wife][${idx}][occupation]`, sw.occupation);
+                  }, 50);
+                });
+              }
+
+              const childrenData = membersData.filter(m => m.member_type === 'child');
+              childrenData.forEach(c => {
+                const idx = childIndex;
+                addChild();
+                setTimeout(() => {
+                  setInputSafely(`children[${idx}][name]`, c.name);
+                  setInputSafely(`children[${idx}][dob]`, c.dob ? new Date(c.dob).toISOString().split('T')[0] : '');
+                  setInputSafely(`children[${idx}][gender]`, c.gender);
+                  setInputSafely(`children[${idx}][occupation]`, c.occupation);
+                }, 50);
+              });
+
+              // Also change button text
+              const submitBtn = document.querySelector('button[type="submit"]');
+              if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Update Family';
+              }
+            });
+          </script>
 
           <script>
             let siblingIndex = { husband: 0, wife: 0 };

@@ -58,6 +58,7 @@ exports.dashboard = async (req, res) => {
     let sql = `
       SELECT
         fm.family_id AS id,
+        f.user_id,
         fm.name,
         fm.district,
         fm.state,
@@ -68,6 +69,7 @@ exports.dashboard = async (req, res) => {
           WHERE c.family_id = fm.family_id AND c.member_type = 'child'
         ) AS children_count
       FROM family_members fm
+      JOIN families f ON fm.family_id = f.id
       WHERE fm.member_type = 'parent'
       AND fm.id = (
         SELECT MIN(id)
@@ -146,34 +148,15 @@ exports.dashboard = async (req, res) => {
 exports.viewMember = async (req, res) => {
   try {
     const familyId = req.params.id;
-    const FamilyMember = require("../models/FamilyMember");
-    const members = await FamilyMember.getByFamilyId(familyId);
+    const familyController = require("./familyController");
+    const { family, members } = await familyController.getFullFamilyData(familyId);
 
-    const parents = members.filter(m => m.member_type === "parent");
-    const children = members.filter(m => m.member_type === "child");
-
-    const husband = parents.find(p => p.relationship === "husband") || parents[0];
-    const wife = parents.find(p => p.relationship === "wife") || parents[1];
-
-    const member = {
-      family_id: familyId,
-      husband_name: husband?.name || "",
-      wife_name: wife?.name || "",
-      mobile: husband?.mobile || "",
-      occupation: husband?.occupation || "",
-      door_no: husband?.door_no || "",
-      street: husband?.street || "",
-      district: husband?.district || "",
-      state: husband?.state || "",
-      pincode: husband?.pincode || "",
-      husband_photo: husband?.photo || "",
-      wife_photo: wife?.photo || ""
-    };
-
-    res.render("admin/view", { member, children, updated: req.query.updated === "true" });
+    // Render my-family.ejs using the existing full structure
+    // Tell it we are admin so it can hide edit/add buttons if necessary, or change layouts
+    res.render("my-family", { family, members, isAdmin: true, updated: req.query.updated === "true" });
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
+    console.error("Admin View Member Error:", err);
+    res.status(500).send("Server Error loading family full data");
   }
 };
 
@@ -318,7 +301,7 @@ exports.updateMember = async (req, res) => {
         if (child.name) {
           const childPhotoKey = `children[${key}][photo]`;
           const childPhoto = uploadedFiles[childPhotoKey] || null;
-          
+
           // Validate gender - only accept 'Male' or 'Female'
           const validGender = (child.gender === 'Male' || child.gender === 'Female') ? child.gender : null;
 
@@ -431,7 +414,7 @@ exports.search = async (req, res) => {
   try {
     const { q, state, district } = req.query;
     const { states, districts } = loadDropdownOptions();
-    
+
     let sql = `
       SELECT DISTINCT fm.family_id AS id, fm.name, fm.district, fm.state, fm.occupation
       FROM family_members fm

@@ -1,147 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <%- include('partials/head') %>
-<body class="d-flex flex-column min-vh-100">
 
-<!-- Success Toast -->
-<div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
-  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" style="display: none;">
-    <div class="d-flex">
-      <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>Family saved successfully!</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  </div>
-</div>
+  <body class="d-flex flex-column min-vh-100">
 
-<!-- Login Success Modal -->
-<div class="modal fade" id="loginSuccessModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-success text-white border-0 py-2">
-        <h6 class="modal-title mb-0"><i class="bi bi-check-circle-fill me-2"></i>Login Successful</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body text-center py-3">
-        <div class="mb-2">
-          <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+    <!-- Success Toast -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+      <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+        style="display: none;">
+        <div class="d-flex">
+          <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>Family saved successfully!</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
-        <h5 class="fw-bold mb-2">Welcome Back!</h5>
-        <p class="text-muted small mb-0">Welcome to Family Portal</p>
       </div>
     </div>
-  </div>
-</div> -->
 
-<%- include('partials/navbar') %>
-
-<!-- Main Content -->
-<div class="flex-grow-1 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); min-height: 70vh;">
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-12 col-lg-10 col-xl-8">
-        <!-- Welcome Header -->
-        <div class="text-center mb-5">
-          <h1 class="display-4 fw-bold text-dark mb-3">Welcome to Family Portal</h1>
-          <p class="lead text-muted">Manage your family details and stay connected</p>
-        </div>
-
-        <!-- Quote Card -->
-        <div class="card border-0 shadow-lg mb-4">
-          <div class="card-body p-4 p-md-5 text-center">
-            <div class="mb-3">
-              <i class="bi bi-quote text-primary" style="font-size: 3rem; opacity: 0.3;"></i>
+    <!-- Login Success Modal -->
+    <div class="modal fade" id="loginSuccessModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-success text-white border-0 py-2">
+            <h6 class="modal-title mb-0"><i class="bi bi-check-circle-fill me-2"></i>Login Successful</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center py-3">
+            <div class="mb-2">
+              <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
             </div>
-            <blockquote class="mb-0">
-              <p class="fs-5 fst-italic text-dark mb-3">May god bless you with wisdom, peace, and divine strength. May your family always be protected and guided on the righteous path.</p>
-            </blockquote>
+            <h5 class="fw-bold mb-2">Welcome Back!</h5>
+            <p class="text-muted small mb-0">Welcome to Family Portal</p>
           </div>
         </div>
+      </div>
+    </div> -->
 
-        <!-- Updates Coming Soon -->
-        <div class="card border-0 shadow-sm">
-          <div class="card-body text-center py-5">
-            <div class="mb-3">
-              <i class="bi bi-clock-history text-primary" style="font-size: 4rem;"></i>
+    <%- include('partials/navbar') %>
+
+      <!-- Main Content -->
+      <div class="flex-grow-1 d-flex align-items-center justify-content-center"
+        style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); min-height: 70vh;">
+        <div class="container py-5">
+          <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+              <!-- Welcome Header -->
+              <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-dark mb-3">Welcome to Family Portal</h1>
+                <p class="lead text-muted">Manage your family details and stay connected</p>
+              </div>
+
+              <!-- Quote Card -->
+              <div class="card border-0 shadow-lg mb-4">
+                <div class="card-body p-4 p-md-5 text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-quote text-primary" style="font-size: 3rem; opacity: 0.3;"></i>
+                  </div>
+                  <blockquote class="mb-0">
+                    <p class="fs-5 fst-italic text-dark mb-3">May god bless you with wisdom, peace, and divine strength.
+                      May your family always be protected and guided on the righteous path.</p>
+                  </blockquote>
+                </div>
+              </div>
+
+              <!-- Updates Coming Soon -->
+              <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                  <div class="mb-3">
+                    <i class="bi bi-clock-history text-primary" style="font-size: 4rem;"></i>
+                  </div>
+                  <h3 class="fw-bold mb-3">Updates Coming Soon</h3>
+                  <p class="text-muted mb-0">We're working on exciting new features. Stay tuned!</p>
+                </div>
+              </div>
             </div>
-            <h3 class="fw-bold mb-3">Updates Coming Soon</h3>
-            <p class="text-muted mb-0">We're working on exciting new features. Stay tuned!</p>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- Family Check Modal -->
-<div class="modal fade" id="familyCheckModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header border-0 py-2">
-        <h6 class="modal-title fw-bold mb-0">Family Details</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-3" id="familyContent">
-        <div class="text-center py-2">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+      <!-- Family Check Modal -->
+      <div class="modal fade" id="familyCheckModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 py-2">
+              <h6 class="modal-title fw-bold mb-0">Family Details</h6>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3" id="familyContent">
+              <div class="text-center py-2">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- Coming Soon Modal -->
-<div class="modal fade" id="comingSoonModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-warning bg-opacity-10 border-0 py-2">
-        <h6 class="modal-title fw-bold mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Coming Soon</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <!-- Coming Soon Modal -->
+      <div class="modal fade" id="comingSoonModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning bg-opacity-10 border-0 py-2">
+              <h6 class="modal-title fw-bold mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Coming Soon</h6>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-3">
+              <i class="bi bi-hourglass-split text-warning mb-2" style="font-size: 2.5rem;"></i>
+              <h6 class="fw-bold mb-1">Feature Under Development</h6>
+              <p class="text-muted small mb-0">This feature is coming soon!</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-body text-center py-3">
-        <i class="bi bi-hourglass-split text-warning mb-2" style="font-size: 2.5rem;"></i>
-        <h6 class="fw-bold mb-1">Feature Under Development</h6>
-        <p class="text-muted small mb-0">This feature is coming soon!</p>
-      </div>
-    </div>
-  </div>
-</div>
 
-<%- include('partials/footer') %>
-<%- include('partials/scripts') %>
-<script>
-  // Show success toast
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('success') === 'true') {
-    const toastElement = document.getElementById('successToast');
-    toastElement.style.display = 'flex';
-    new bootstrap.Toast(toastElement).show();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
+      <%- include('partials/footer') %>
+        <%- include('partials/scripts') %>
+          <script>
+            // Auto-reload once if updated=true
+            if (window.location.search.includes('updated=true')) {
+              if (!sessionStorage.getItem('reloaded_dashboard')) {
+                sessionStorage.setItem('reloaded_dashboard', 'true');
+                window.location.reload();
+              } else {
+                sessionStorage.removeItem('reloaded_dashboard');
+              }
+            }
 
-  // Show login modal
-  if (urlParams.get('login') === 'success') {
-    new bootstrap.Modal(document.getElementById('loginSuccessModal')).show();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
+            // Show success toast
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true' || urlParams.get('updated') === 'true') {
+              const toastElement = document.getElementById('successToast');
+              toastElement.style.display = 'flex';
+              new bootstrap.Toast(toastElement).show();
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
-  function showComingSoonModal() {
-    new bootstrap.Modal(document.getElementById('comingSoonModal')).show();
-  }
+            // Show login modal
+            if (urlParams.get('login') === 'success') {
+              new bootstrap.Modal(document.getElementById('loginSuccessModal')).show();
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
-  function handleFamilyClick() {
-    // Fetch family data first
-    fetch('/my-family-json')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.members && data.members.length > 0) {
-          // Family exists - redirect to my-family page
-          window.location.href = '/my-family';
-        } else {
-          // No family - show modal with add button
-          const familyContent = document.getElementById('familyContent');
-          familyContent.innerHTML = `
+            function showComingSoonModal() {
+              new bootstrap.Modal(document.getElementById('comingSoonModal')).show();
+            }
+
+            function handleFamilyClick() {
+              // Fetch family data first
+              fetch('/my-family-json')
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success && data.members && data.members.length > 0) {
+                    // Family exists - redirect to my-family page
+                    window.location.href = '/my-family';
+                  } else {
+                    // No family - show modal with add button
+                    const familyContent = document.getElementById('familyContent');
+                    familyContent.innerHTML = `
             <div class="text-center py-3">
               <i class="bi bi-exclamation-circle text-warning mb-3" style="font-size: 3rem;"></i>
               <h6 class="fw-bold mb-2">No Family Details Found</h6>
@@ -151,35 +165,36 @@
               </button>
             </div>
           `;
-          new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        const familyContent = document.getElementById('familyContent');
-        familyContent.innerHTML = `
+                    new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
+                  }
+                })
+                .catch(err => {
+                  console.error(err);
+                  const familyContent = document.getElementById('familyContent');
+                  familyContent.innerHTML = `
           <div class="text-center py-3">
             <i class="bi bi-x-circle text-danger mb-3" style="font-size: 3rem;"></i>
             <h6 class="fw-bold mb-2">Error Loading Family Details</h6>
             <p class="text-muted small">Please try again later.</p>
           </div>
         `;
-        new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
-      });
-  }
+                  new bootstrap.Modal(document.getElementById('familyCheckModal')).show();
+                });
+            }
 
-  // Card hover effects
-  document.querySelectorAll('.card[style*="cursor: pointer"]').forEach(card => {
-    card.addEventListener('mouseenter', function() {
-      this.style.transform = 'translateY(-4px)';
-      this.style.boxShadow = 'var(--shadow-lg)';
-    });
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = 'translateY(0)';
-      this.style.boxShadow = 'var(--shadow-sm)';
-    });
-  });
-</script>
+            // Card hover effects
+            document.querySelectorAll('.card[style*="cursor: pointer"]').forEach(card => {
+              card.addEventListener('mouseenter', function () {
+                this.style.transform = 'translateY(-4px)';
+                this.style.boxShadow = 'var(--shadow-lg)';
+              });
+              card.addEventListener('mouseleave', function () {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'var(--shadow-sm)';
+              });
+            });
+          </script>
 
-</body>
+  </body>
+
 </html>
