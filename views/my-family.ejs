@@ -448,7 +448,7 @@
 
 <script>
 // Check if no family exists and show modal
-<% if (!members || !members.length) { %>
+ if (!members || !members.length) { 
   document.addEventListener('DOMContentLoaded', function() {
     // Only show modal if not redirecting to form
     const urlParams = new URLSearchParams(window.location.search);
@@ -456,7 +456,7 @@
       window.location.href = '/family-form';
     }
   });
-<% } %>
+} 
 
 function toggleChildAddress() {
   const checkbox = document.getElementById('sameAsParentCheckbox');
