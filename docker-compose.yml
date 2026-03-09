@@ -8,10 +8,12 @@ services:
     environment:
       - DB_HOST=mysql
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - .:/app
       - /app/node_modules
+
   mysql:
     image: mysql:8.0
     restart: always
@@ -22,5 +24,11 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   mysql-data:
