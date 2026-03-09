@@ -775,15 +775,6 @@ exports.updateHusband = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
-    let photoPath = null;
-    if (req.file) {
-      photoPath = `parent/${req.file.filename}`;
-      const oldPath = path.join('uploads', req.file.filename);
-      const newPath = path.join('uploads', photoPath);
-      fs.renameSync(oldPath, newPath);
-      const stats = fs.statSync(newPath);
-      photoPath = `${photoPath}(${stats.size})`;
-    }
 
     const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
     if (familyRows.length === 0) {
@@ -791,6 +782,29 @@ exports.updateHusband = async (req, res) => {
     }
 
     const familyId = familyRows[0].id;
+
+    // Get current husband photo to delete if new photo uploaded
+    const [husbandRows] = await db.query("SELECT photo FROM family_members WHERE family_id = ? AND relationship = 'husband'", [familyId]);
+    let photoPath = null;
+    if (req.file) {
+      // Delete old photo file if exists
+      if (husbandRows.length > 0 && husbandRows[0].photo) {
+        const fullOldPath = path.join(__dirname, '../uploads', husbandRows[0].photo);
+        if (fs.existsSync(fullOldPath)) {
+          fs.unlinkSync(fullOldPath);
+        }
+      }
+
+      // Generate new filename without file size
+      photoPath = `parent/${req.file.filename}`;
+      const oldPath = req.file.path;
+      const newPath = path.join(__dirname, '../uploads', photoPath);
+
+      // Rename/move the file to the desired path
+      if (oldPath !== newPath) {
+        fs.renameSync(oldPath, newPath);
+      }
+    }
 
     let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, pincode=?, state=?, district=?`;
     let params = [name, mobile || null, occupation || null, door_no || null, street || null, pincode || null, state || null, district || null];
