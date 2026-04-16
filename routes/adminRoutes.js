@@ -111,16 +111,29 @@ router.get("/dashboard", controller.dashboard);
 router.get("/search", controller.search);
 
 // =======================
+// ADMIN SIDE FAMILY AUTH
+// =======================
+router.get("/family-login", controller.showFamilyLogin);
+router.post("/family-login", controller.familyLogin);
+router.post("/family-register", controller.familyRegister);
+
+// =======================
 // ADD FAMILY (reuse user form)
 // =======================
 router.get("/add-family", (req, res) => {
-  res.redirect("/family-form");
+  req.session.adminNextAfterAuth = "/admin/create-family";
+  res.redirect("/admin/family-login?flow=create-family");
 });
 
 // =======================
 // CREATE FAMILY
 // =======================
 router.get("/create-family", (req, res) => {
+  if (!req.session.user || req.session.user.role !== "user") {
+    req.session.adminNextAfterAuth = "/admin/create-family";
+    return res.redirect("/admin/family-login?flow=create-family");
+  }
+
   res.render("admin/create-family");
 });
 router.post("/create-family", processUpload, controller.createFamily);

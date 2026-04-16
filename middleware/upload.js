@@ -19,7 +19,11 @@ const storage = multer.diskStorage({
     if (
       file.fieldname.includes("parent") ||
       file.fieldname.includes("husband") ||
-      file.fieldname.includes("wife")
+      file.fieldname.includes("wife") ||
+      file.fieldname.includes("father") ||
+      file.fieldname.includes("mother") ||
+      file.fieldname.includes("spouse") ||
+      file.fieldname.includes("my_image")
     ) {
       cb(null, parentDir);
     } else {
@@ -112,23 +116,26 @@ const compressImageToSize = async (filePath, maxSizeKB = 50) => {
 
 
 const processUpload = (req, res, next) => {
-  upload.fields([
+  const fields = [
     { name: "parent[husband_photo]", maxCount: 1 },
     { name: "parent[wife_photo]", maxCount: 1 },
-    { name: "children[0][photo]", maxCount: 1 },
-    { name: "children[1][photo]", maxCount: 1 },
-    { name: "children[2][photo]", maxCount: 1 },
-    { name: "children[3][photo]", maxCount: 1 },
-    { name: "children[4][photo]", maxCount: 1 },
-    { name: "children[5][photo]", maxCount: 1 },
-    { name: "children[6][photo]", maxCount: 1 },
-    { name: "children[7][photo]", maxCount: 1 },
-    { name: "children[8][photo]", maxCount: 1 },
-    { name: "children[9][photo]", maxCount: 1 },
     { name: "photo", maxCount: 1 },
     { name: "husband_photo", maxCount: 1 },
     { name: "wife_photo", maxCount: 1 },
-  ])(req, res, async (err) => {
+    { name: "father_image", maxCount: 1 },
+    { name: "mother_image", maxCount: 1 },
+    { name: "my_image", maxCount: 1 },
+    { name: "spouse_image", maxCount: 1 },
+  ];
+
+  for (let index = 0; index < 50; index += 1) {
+    fields.push({ name: `children[${index}][photo]`, maxCount: 1 });
+    fields.push({ name: `children[${index}][image]`, maxCount: 1 });
+    fields.push({ name: `siblings[${index}][photo]`, maxCount: 1 });
+    fields.push({ name: `siblings[${index}][image]`, maxCount: 1 });
+  }
+
+  upload.fields(fields)(req, res, async (err) => {
     if (err) {
       console.error("Multer error:", err);
       return next(err);

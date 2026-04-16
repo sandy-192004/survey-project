@@ -7,10 +7,12 @@ const path = require("path");
 
 // Show login page
 exports.showLogin = (req, res) => {
+  const adminCreateFamilyFlow = req.query.flow === "create-family" || req.session.nextAfterAuth === "/admin/create-family";
   res.render("family-login", {
     error: req.query.error,
     registered: req.query.registered,
-    logout: req.query.logout
+    logout: req.query.logout,
+    flow: adminCreateFamilyFlow ? "create-family" : null
   });
 };
 
@@ -36,7 +38,16 @@ exports.login = async (req, res) => {
     }
 
     req.session.user = { id: user.id, email: user.email, role: user.role };
-    const redirectUrl = user.role === 'admin' ? '/admin/dashboard' : '/dashboard?login=success';
+    const redirectUrl = req.session.nextAfterAuth && user.role === 'user'
+      ? req.session.nextAfterAuth
+      : user.role === 'admin'
+        ? '/admin/dashboard'
+        : '/dashboard?login=success';
+
+    if (req.session.nextAfterAuth && user.role === 'user') {
+      delete req.session.nextAfterAuth;
+    }
+
     res.redirect(redirectUrl);
   } catch (err) {
     console.error("Login error:", err);
@@ -49,21 +60,32 @@ exports.register = async (req, res) => {
   try {
     const { email, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
-      return res.redirect("/login?error=password");
+      const flowQuery = req.session.nextAfterAuth === "/admin/create-family" ? "&flow=create-family" : "";
+      return res.redirect(`/login?error=password${flowQuery}`);
     }
 
     // Check if user already exists
     const [existingUser] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existingUser.length > 0) {
       // User already exists - redirect to register page with error
-      return res.redirect("/login?error=exists");
+      const flowQuery = req.session.nextAfterAuth === "/admin/create-family" ? "&flow=create-family" : "";
+      return res.redirect(`/login?error=exists${flowQuery}`);
     }
 
     const hash = await bcrypt.hash(password, 10);
-    await db.query("INSERT INTO users (email, password) VALUES (?, ?)", [
+    const [result] = await db.query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", [
       email,
       hash,
+      "user"
     ]);
+
+    req.session.user = { id: result.insertId, email, role: "user" };
+
+    if (req.session.nextAfterAuth === "/admin/create-family") {
+      delete req.session.nextAfterAuth;
+      return res.redirect("/admin/create-family");
+    }
+
     res.redirect("/login?registered=true");
   } catch (err) {
     console.error("Registration error:", err);

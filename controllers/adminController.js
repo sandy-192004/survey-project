@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
+const bcrypt = require("bcryptjs");
 const Admin = require("../models/admin");
 const Child = require("../models/Child");
 
@@ -23,6 +24,182 @@ function loadDropdownOptions() {
     return { states: [], districts: [] };
   }
 }
+
+function normalizeValue(value) {
+  if (typeof value !== "string") {
+    return value ?? null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
+function isValidMobile(value) {
+  if (!value) {
+    return true;
+  }
+
+  return /^\d{10}$/.test(String(value).trim());
+}
+
+function getUploadedFileName(files, fieldName) {
+  return files?.[fieldName]?.[0]?.filename || null;
+}
+
+function parseCollection(body, collectionName) {
+  const nestedCollection = body?.[collectionName];
+
+  if (Array.isArray(nestedCollection)) {
+    return nestedCollection
+      .filter(entry => entry && typeof entry === "object")
+      .map((entry, index) => ({ index, ...entry }));
+  }
+
+  if (nestedCollection && typeof nestedCollection === "object") {
+    return Object.entries(nestedCollection)
+      .filter(([, entry]) => entry && typeof entry === "object")
+      .sort((left, right) => Number(left[0]) - Number(right[0]))
+      .map(([index, entry]) => ({ index: Number(index), ...entry }));
+  }
+
+  const grouped = new Map();
+  const matcher = new RegExp(`^${collectionName}\\[(\\d+)\\]\\[(.+)\\]$`);
+
+  Object.entries(body || {}).forEach(([key, value]) => {
+    const match = key.match(matcher);
+    if (!match) {
+      return;
+    }
+
+    const index = Number(match[1]);
+    const field = match[2];
+
+    if (!grouped.has(index)) {
+      grouped.set(index, {});
+    }
+
+    grouped.get(index)[field] = value;
+  });
+
+  return Array.from(grouped.entries())
+    .sort((left, right) => left[0] - right[0])
+    .map(([index, entry]) => ({ index, ...entry }));
+}
+
+async function insertPerson(connection, userId, person) {
+  const [result] = await connection.query(
+    `INSERT INTO persons
+     (user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      userId,
+      person.name,
+      person.gender || null,
+      person.dob || null,
+      person.mobile || null,
+      person.occupation || null,
+      person.image || null,
+      person.door_no || null,
+      person.street || null,
+      person.district || null,
+      person.state || null,
+      person.pincode || null
+    ]
+  );
+
+  return result.insertId;
+}
+
+async function insertRelationship(connection, userId, personId, relatedPersonId, relation) {
+  await connection.query(
+    `INSERT INTO relationships (user_id, person_id, related_person_id, relation)
+     VALUES (?, ?, ?, ?)`,
+    [userId, personId, relatedPersonId, relation]
+  );
+}
+
+exports.showFamilyLogin = (req, res) => {
+  res.render("admin/family-login", {
+    error: req.query.error || null,
+    registered: req.query.registered || null,
+    flow: req.query.flow || null
+  });
+};
+
+exports.familyLogin = async (req, res) => {
+  try {
+    const email = normalizeValue(req.body.email);
+    const password = normalizeValue(req.body.password);
+
+    if (!email || !password) {
+      return res.redirect("/admin/family-login?error=invalid&flow=create-family");
+    }
+
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (rows.length === 0) {
+      return res.redirect("/admin/family-login?error=invalid&flow=create-family");
+    }
+
+    const user = rows[0];
+    if (user.role !== "user") {
+      return res.redirect("/admin/family-login?error=invalidRole&flow=create-family");
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.redirect("/admin/family-login?error=invalid&flow=create-family");
+    }
+
+    req.session.user = { id: user.id, email: user.email, role: user.role };
+    const redirectUrl = req.session.adminNextAfterAuth || "/admin/create-family";
+    delete req.session.adminNextAfterAuth;
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error("Admin-side family login error:", err);
+    return res.redirect("/admin/family-login?error=server&flow=create-family");
+  }
+};
+
+exports.familyRegister = async (req, res) => {
+  try {
+    const email = normalizeValue(req.body.email);
+    const password = normalizeValue(req.body.password);
+    const confirmPassword = normalizeValue(req.body.confirmPassword);
+
+    if (!email || !password || !confirmPassword) {
+      return res.redirect("/admin/family-login?error=invalid&flow=create-family");
+    }
+
+    if (password !== confirmPassword) {
+      return res.redirect("/admin/family-login?error=password&flow=create-family");
+    }
+
+    if (password.length < 6) {
+      return res.redirect("/admin/family-login?error=passwordLength&flow=create-family");
+    }
+
+    const [existingUser] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+    if (existingUser.length > 0) {
+      return res.redirect("/admin/family-login?error=exists&flow=create-family");
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const [result] = await db.query(
+      "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+      [email, hash, "user"]
+    );
+
+    req.session.user = { id: result.insertId, email, role: "user" };
+    const redirectUrl = req.session.adminNextAfterAuth || "/admin/create-family";
+    delete req.session.adminNextAfterAuth;
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error("Admin-side family register error:", err);
+    return res.redirect("/admin/family-login?error=server&flow=create-family");
+  }
+};
 
 // =======================
 // ADMIN DASHBOARD
@@ -55,13 +232,38 @@ exports.dashboard = async (req, res) => {
       recentFamilies: statsResult[0].recentFamilies
     };
 
+    const [columns] = await db.query(
+      `
+        SELECT COLUMN_NAME
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'family_members'
+      `
+    );
+    const availableColumns = new Set(columns.map(col => col.COLUMN_NAME));
+
+    const hasName = availableColumns.has("name");
+    const hasMemberName = availableColumns.has("member_name");
+    const hasMobile = availableColumns.has("mobile");
+    const hasOccupation = availableColumns.has("occupation");
+    const hasState = availableColumns.has("state");
+    const hasDistrict = availableColumns.has("district");
+
+    const nameExpression = hasName
+      ? "fm.name"
+      : hasMemberName
+        ? "fm.member_name"
+        : "''";
+    const districtExpression = hasDistrict ? "fm.district" : "''";
+    const stateExpression = hasState ? "fm.state" : "''";
+    const occupationExpression = hasOccupation ? "fm.occupation" : "''";
+
     let sql = `
       SELECT
         fm.family_id AS id,
-        fm.name,
-        fm.district,
-        fm.state,
-        fm.occupation,
+        ${nameExpression} AS name,
+        ${districtExpression} AS district,
+        ${stateExpression} AS state,
+        ${occupationExpression} AS occupation,
         (
           SELECT COUNT(*)
           FROM family_members c
@@ -77,21 +279,30 @@ exports.dashboard = async (req, res) => {
     `;
     const params = [];
     const countParams = [];
+    const searchColumns = [];
 
-    if (q) {
-      sql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
+    if (hasName) searchColumns.push("fm.name");
+    else if (hasMemberName) searchColumns.push("fm.member_name");
+    if (hasMobile) searchColumns.push("fm.mobile");
+    if (hasOccupation) searchColumns.push("fm.occupation");
+
+    if (q && searchColumns.length > 0) {
+      const qCondition = searchColumns.map(col => `${col} LIKE ?`).join(" OR ");
+      sql += ` AND (${qCondition})`;
       const like = `%${q}%`;
-      params.push(like, like, like);
-      countParams.push(like, like, like);
+      for (let i = 0; i < searchColumns.length; i += 1) {
+        params.push(like);
+        countParams.push(like);
+      }
     }
 
-    if (state) {
+    if (state && hasState) {
       sql += " AND fm.state = ?";
       params.push(state);
       countParams.push(state);
     }
 
-    if (district) {
+    if (district && hasDistrict) {
       sql += " AND fm.district = ?";
       params.push(district);
       countParams.push(district);
@@ -108,9 +319,12 @@ exports.dashboard = async (req, res) => {
       )
     `;
 
-    if (q) countSql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
-    if (state) countSql += " AND fm.state = ?";
-    if (district) countSql += " AND fm.district = ?";
+    if (q && searchColumns.length > 0) {
+      const qCondition = searchColumns.map(col => `${col} LIKE ?`).join(" OR ");
+      countSql += ` AND (${qCondition})`;
+    }
+    if (state && hasState) countSql += " AND fm.state = ?";
+    if (district && hasDistrict) countSql += " AND fm.district = ?";
 
     sql += " ORDER BY fm.family_id LIMIT ? OFFSET ?";
     params.push(limit, offset);
@@ -484,54 +698,211 @@ exports.search = async (req, res) => {
 // CREATE FAMILY (ADMIN)
 // =======================
 exports.createFamily = async (req, res) => {
+  const connection = await db.getConnection();
+
   try {
-    const FamilyMember = require("../models/FamilyMember");
-    const { husband_name, husband_mobile, husband_occupation, husband_door_no, husband_street, husband_district, husband_state, husband_pincode, wife_name, wife_mobile, wife_occupation, wife_door_no, wife_street, wife_district, wife_state, wife_pincode } = req.body;
-
-    // Get next family_id
-    const [maxFamily] = await db.query("SELECT MAX(family_id) as maxId FROM family_members");
-    const newFamilyId = (maxFamily[0].maxId || 0) + 1;
-
-    // Create husband
-    if (husband_name) {
-      await FamilyMember.create({
-        family_id: newFamilyId,
-        member_type: "parent",
-        name: husband_name,
-        relationship: "husband",
-        mobile: husband_mobile || "",
-        occupation: husband_occupation || "",
-        door_no: husband_door_no || "",
-        street: husband_street || "",
-        district: husband_district || "",
-        state: husband_state || "",
-        pincode: husband_pincode || "",
-        photo: req.files?.find(f => f.fieldname === "husband_photo") ? `parent/${req.files.find(f => f.fieldname === "husband_photo").filename}` : null
+    if (!req.session.user || req.session.user.role !== "user") {
+      return res.status(401).json({
+        success: false,
+        message: "Please login with a user account to continue."
       });
     }
 
-    // Create wife
-    if (wife_name) {
-      await FamilyMember.create({
-        family_id: newFamilyId,
-        member_type: "parent",
-        name: wife_name,
-        relationship: "wife",
-        mobile: wife_mobile || "",
-        occupation: wife_occupation || "",
-        door_no: wife_door_no || "",
-        street: wife_street || "",
-        district: wife_district || "",
-        state: wife_state || "",
-        pincode: wife_pincode || "",
-        photo: req.files?.find(f => f.fieldname === "wife_photo") ? `parent/${req.files.find(f => f.fieldname === "wife_photo").filename}` : null
-      });
+    const userId = req.session.user.id;
+    const files = req.files || {};
+    const body = req.body || {};
+    const myName = normalizeValue(body.my_name);
+    const myGender = normalizeValue(body.my_gender);
+    const myDob = normalizeValue(body.my_dob);
+    const myMobile = normalizeValue(body.my_mobile);
+    const myOccupation = normalizeValue(body.my_occupation);
+    const fatherName = normalizeValue(body.father_name);
+    const motherName = normalizeValue(body.mother_name);
+    const spouseName = normalizeValue(body.spouse_name);
+    const spouseGender = normalizeValue(body.spouse_gender);
+    const spouseMobile = normalizeValue(body.spouse_mobile);
+    const spouseOccupation = normalizeValue(body.spouse_occupation);
+    const doorNo = normalizeValue(body.door_no);
+    const street = normalizeValue(body.street);
+    const district = normalizeValue(body.district);
+    const state = normalizeValue(body.state);
+    const pincode = normalizeValue(body.pincode);
+
+    const children = parseCollection(body, "children");
+    const siblings = parseCollection(body, "siblings");
+
+    if (!myName) {
+      return res.status(400).json({ success: false, message: "Main person name is required." });
     }
 
-    res.redirect("/admin/dashboard?message=Family created successfully");
+    if (!myMobile || !isValidMobile(myMobile)) {
+      return res.status(400).json({ success: false, message: "Main mobile must be a 10-digit number." });
+    }
+
+    if (spouseMobile && !isValidMobile(spouseMobile)) {
+      return res.status(400).json({ success: false, message: "Spouse mobile must be a 10-digit number." });
+    }
+
+    const parentMobiles = [body.father_mobile, body.mother_mobile].map(normalizeValue).filter(Boolean);
+    if (parentMobiles.some(mobile => !isValidMobile(mobile))) {
+      return res.status(400).json({ success: false, message: "Parent mobile numbers must be 10 digits." });
+    }
+
+    for (const child of children) {
+      const childName = normalizeValue(child.name);
+      const childMobile = normalizeValue(child.mobile);
+
+      if ((childName || childMobile || child.dob || child.gender || child.occupation || child.image) && !childName) {
+        return res.status(400).json({ success: false, message: "Each child entry needs a name." });
+      }
+
+      if (childMobile && !isValidMobile(childMobile)) {
+        return res.status(400).json({ success: false, message: "Child mobile numbers must be 10 digits." });
+      }
+    }
+
+    for (const sibling of siblings) {
+      const siblingName = normalizeValue(sibling.name);
+      const siblingMobile = normalizeValue(sibling.mobile);
+
+      if ((siblingName || siblingMobile || sibling.gender || sibling.relation || sibling.image) && !siblingName) {
+        return res.status(400).json({ success: false, message: "Each sibling entry needs a name." });
+      }
+
+      if (siblingMobile && !isValidMobile(siblingMobile)) {
+        return res.status(400).json({ success: false, message: "Sibling mobile numbers must be 10 digits." });
+      }
+    }
+
+    await connection.beginTransaction();
+
+    const sharedAddress = {
+      door_no: doorNo,
+      street,
+      district,
+      state,
+      pincode
+    };
+
+    const headPersonId = await insertPerson(connection, userId, {
+      name: myName,
+      gender: myGender,
+      dob: myDob,
+      mobile: myMobile,
+      occupation: myOccupation,
+      image: getUploadedFileName(files, "my_image") ? `parent/${getUploadedFileName(files, "my_image")}` : null,
+      ...sharedAddress
+    });
+
+    const fatherNameValue = fatherName;
+    if (fatherNameValue) {
+      const fatherPersonId = await insertPerson(connection, userId, {
+        name: fatherNameValue,
+        gender: "Male",
+        occupation: normalizeValue(body.father_occupation),
+        image: getUploadedFileName(files, "father_image") ? `parent/${getUploadedFileName(files, "father_image")}` : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, fatherPersonId, "father");
+    }
+
+    const motherNameValue = motherName;
+    if (motherNameValue) {
+      const motherPersonId = await insertPerson(connection, userId, {
+        name: motherNameValue,
+        gender: "Female",
+        occupation: normalizeValue(body.mother_occupation),
+        image: getUploadedFileName(files, "mother_image") ? `parent/${getUploadedFileName(files, "mother_image")}` : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, motherPersonId, "mother");
+    }
+
+    if (spouseName) {
+      const spousePersonId = await insertPerson(connection, userId, {
+        name: spouseName,
+        gender: spouseGender,
+        mobile: spouseMobile,
+        occupation: spouseOccupation,
+        image: getUploadedFileName(files, "spouse_image") ? `parent/${getUploadedFileName(files, "spouse_image")}` : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, spousePersonId, "spouse");
+    }
+
+    for (const child of children) {
+      const childName = normalizeValue(child.name);
+      if (!childName) {
+        continue;
+      }
+
+      const childImageField = `children[${child.index}][image]`;
+      const childPhotoField = `children[${child.index}][photo]`;
+
+      const childPersonId = await insertPerson(connection, userId, {
+        name: childName,
+        gender: normalizeValue(child.gender),
+        dob: normalizeValue(child.dob),
+        mobile: normalizeValue(child.mobile),
+        occupation: normalizeValue(child.occupation),
+        image: getUploadedFileName(files, childImageField)
+          ? `children/${getUploadedFileName(files, childImageField)}`
+          : getUploadedFileName(files, childPhotoField)
+            ? `children/${getUploadedFileName(files, childPhotoField)}`
+            : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, childPersonId, "child");
+    }
+
+    for (const sibling of siblings) {
+      const siblingName = normalizeValue(sibling.name);
+      if (!siblingName) {
+        continue;
+      }
+
+      const siblingImageField = `siblings[${sibling.index}][image]`;
+      const siblingPhotoField = `siblings[${sibling.index}][photo]`;
+
+      const siblingRelation = normalizeValue(sibling.relation)?.toLowerCase() === "sister"
+        ? "sister"
+        : "brother";
+
+      const siblingPersonId = await insertPerson(connection, userId, {
+        name: siblingName,
+        gender: normalizeValue(sibling.gender) || (siblingRelation === "sister" ? "Female" : "Male"),
+        dob: normalizeValue(sibling.dob),
+        mobile: normalizeValue(sibling.mobile),
+        occupation: normalizeValue(sibling.occupation),
+        image: getUploadedFileName(files, siblingImageField)
+          ? `children/${getUploadedFileName(files, siblingImageField)}`
+          : getUploadedFileName(files, siblingPhotoField)
+            ? `children/${getUploadedFileName(files, siblingPhotoField)}`
+            : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, siblingPersonId, "sibling");
+    }
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Family created successfully.",
+      userId,
+      headPersonId,
+      redirectUrl: "/admin/dashboard?message=Family created successfully"
+    });
   } catch (err) {
+    await connection.rollback();
     console.error(err);
-    res.status(500).send("Server Error");
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message
+    });
+  } finally {
+    connection.release();
   }
 };
 

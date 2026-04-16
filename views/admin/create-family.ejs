@@ -4,570 +4,811 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Create Family</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --ink: #1b1f24;
+      --muted: #6b7280;
+      --panel: rgba(255, 255, 255, 0.88);
+      --border: rgba(15, 23, 42, 0.10);
+      --accent: #0f766e;
+      --accent-2: #7c3aed;
+      --surface: #f6f7fb;
+    }
+
     body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-      margin: 0;
-      padding: 20px;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(124, 58, 237, 0.14), transparent 32%),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.18), transparent 28%),
+        linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
     }
-    .container {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 30px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      border: 1px solid #dee2e6;
+
+    .page-shell {
+      max-width: 1320px;
     }
-    .form-section {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border: 1px solid #dee2e6;
+
+    .hero-bar {
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.96), rgba(17, 24, 39, 0.95));
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.20);
     }
-    .btn-primary {
-      background-color: #495057;
-      border-color: #495057;
+
+    .hero-kicker {
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.72);
     }
-    .btn-primary:hover {
-      background-color: #343a40;
-      border-color: #343a40;
+
+    .surface-card,
+    .member-card,
+    .summary-card,
+    .success-card {
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
     }
-    .text-primary {
-      color: #495057 !important;
+
+    .section-badge {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(124, 58, 237, 0.12));
+      color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .form-label {
+      font-weight: 700;
+      color: #263244;
+    }
+
+    .form-control,
+    .form-select {
+      border-color: rgba(15, 23, 42, 0.14);
+      box-shadow: none;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: rgba(15, 118, 110, 0.55);
+      box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.10);
+    }
+
+    .soft-divider {
+      border-top: 1px dashed rgba(15, 23, 42, 0.16);
+    }
+
+    .member-card {
+      border-radius: 1rem;
+    }
+
+    .member-card .card-header {
+      background: transparent;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .upload-box {
+      border: 1px dashed rgba(15, 23, 42, 0.22);
+      border-radius: 1rem;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .upload-box small {
+      color: var(--muted);
+    }
+
+    .member-actions .btn {
+      min-width: 8.5rem;
+    }
+
+    .sticky-actions {
+      position: sticky;
+      bottom: 1rem;
+      z-index: 5;
+    }
+
+    .note-pill {
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.10);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .form-hint {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .upload-box {
+      border: 1px dashed rgba(15, 23, 42, 0.22);
+      border-radius: 1rem;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upload-box:hover {
+      border-color: var(--accent);
+      background: rgba(15, 118, 110, 0.05);
+    }
+
+    .upload-box small {
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .upload-box.photo-selected {
+      background: rgba(15, 118, 110, 0.08);
+      border-color: var(--accent);
+    }
+
+    .upload-box.photo-selected small {
+      color: var(--accent);
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
+  <div class="container-fluid page-shell py-4 py-lg-5">
+    <div class="hero-bar rounded-4 p-4 p-lg-5 mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+        <div>
+          <div class="hero-kicker mb-2">Admin workflow</div>
+          <h1 class="display-6 fw-bold mb-2">Create Family Record</h1>
+          <p class="mb-0 text-white-50">Complete the household family record for the logged-in user account.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="/admin/dashboard" class="btn btn-light btn-lg">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
 
-<div class="container">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-primary">Create New Family (Admin)</h2>
-    <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+    <div id="formAlert" class="alert alert-danger d-none" role="alert"></div>
+
+    <form id="createFamilyForm" method="POST" action="/admin/create-family" enctype="multipart/form-data">
+      <div class="row g-4">
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start gap-3 mb-4">
+              <div class="section-badge"><i class="bi bi-people-fill fs-5"></i></div>
+              <div>
+                <h2 class="h5 fw-bold mb-1">My Parents</h2>
+                <p class="mb-0 form-hint">Optional fields for the head of family context.</p>
+              </div>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="member-card h-100 rounded-4">
+                  <div class="card-header p-3 border-0">
+                    <h3 class="h6 fw-bold mb-0"><i class="bi bi-person-hearts me-2 text-primary"></i>Father</h3>
+                  </div>
+                  <div class="card-body p-3 p-lg-4">
+                    <div class="mb-3">
+                      <label class="form-label">Father Name</label>
+                      <input type="text" class="form-control" name="father_name" placeholder="Enter father name">
+                    </div>
+                    <div>
+                      <label class="form-label">Father Image</label>
+                      <input type="file" id="father_image_file" class="form-control d-none" name="father_image" accept="image/*" onchange="handlePhotoSelect(this, 'father_image')">
+                      <div class="upload-box" onclick="showPhotoOptions('father_image')">
+                        <small>Click to upload or capture photo</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="member-card h-100 rounded-4">
+                  <div class="card-header p-3 border-0">
+                    <h3 class="h6 fw-bold mb-0"><i class="bi bi-person-heart me-2 text-danger"></i>Mother</h3>
+                  </div>
+                  <div class="card-body p-3 p-lg-4">
+                    <div class="mb-3">
+                      <label class="form-label">Mother Name</label>
+                      <input type="text" class="form-control" name="mother_name" placeholder="Enter mother name">
+                    </div>
+                    <div>
+                      <label class="form-label">Mother Image</label>
+                      <input type="file" id="mother_image_file" class="form-control d-none" name="mother_image" accept="image/*" onchange="handlePhotoSelect(this, 'mother_image')">
+                      <div class="upload-box" onclick="showPhotoOptions('mother_image')">
+                        <small>Click to upload or capture photo</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start gap-3 mb-4">
+              <div class="section-badge"><i class="bi bi-heart fs-5"></i></div>
+              <div>
+                <h2 class="h5 fw-bold mb-1">My Spouse</h2>
+                <p class="mb-0 form-hint">Add spouse details if applicable.</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" name="spouse_name" placeholder="Enter spouse name">
+              </div>
+              <div class="col-lg-3">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="spouse_gender">
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-lg-3">
+                <label class="form-label">Mobile</label>
+                <input type="tel" class="form-control" name="spouse_mobile" placeholder="10 digit mobile" maxlength="10">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">Occupation</label>
+                <input type="text" class="form-control" name="spouse_occupation" placeholder="Enter occupation">
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">Image</label>
+                <input type="file" id="spouse_image_file" class="form-control d-none" name="spouse_image" accept="image/*" onchange="handlePhotoSelect(this, 'spouse_image')">
+                <div class="upload-box" onclick="showPhotoOptions('spouse_image')">
+                  <small>Click to upload or capture photo</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start gap-3 mb-4">
+              <div class="section-badge"><i class="bi bi-person-badge fs-5"></i></div>
+              <div>
+                <h2 class="h5 fw-bold mb-1">My Details</h2>
+                <p class="mb-0 form-hint">The head of family record saved with the new user account.</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" name="my_name" placeholder="Enter full name" required>
+              </div>
+              <div class="col-lg-3">
+                <label class="form-label">Gender</label>
+                <select class="form-select" name="my_gender" required>
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-lg-3">
+                <label class="form-label">DOB</label>
+                <input type="date" class="form-control" name="my_dob">
+              </div>
+              <div class="col-lg-4">
+                <label class="form-label">Mobile</label>
+                <input type="tel" class="form-control" name="my_mobile" placeholder="10 digit mobile" pattern="[0-9]{10}" maxlength="10" required>
+              </div>
+              <div class="col-lg-4">
+                <label class="form-label">Occupation</label>
+                <input type="text" class="form-control" name="my_occupation" placeholder="Enter occupation">
+              </div>
+              <div class="col-lg-4">
+                <label class="form-label">Image</label>
+                <input type="file" id="my_image_file" class="form-control d-none" name="my_image" accept="image/*" onchange="handlePhotoSelect(this, 'my_image')">
+                <div class="upload-box" onclick="showPhotoOptions('my_image')">
+                  <small>Click to upload or capture photo</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start gap-3 mb-4">
+              <div class="section-badge"><i class="bi bi-house-door fs-5"></i></div>
+              <div>
+                <h2 class="h5 fw-bold mb-1">Address</h2>
+                <p class="mb-0 form-hint">This address is used for the family head and related family rows.</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Door No</label>
+                <input type="text" class="form-control" name="door_no" placeholder="Door no">
+              </div>
+              <div class="col-md-5">
+                <label class="form-label">Street</label>
+                <input type="text" class="form-control" name="street" placeholder="Street name">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Pincode</label>
+                <input type="text" class="form-control" name="pincode" placeholder="Pincode" maxlength="6">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">State</label>
+                <select class="form-select" name="state" id="stateSelect">
+                  <option value="">Select state</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">District</label>
+                <select class="form-select" name="district" id="districtSelect">
+                  <option value="">Select district</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start justify-content-between gap-3 mb-4 flex-wrap">
+              <div class="d-flex align-items-start gap-3">
+                <div class="section-badge"><i class="bi bi-person-plus fs-5"></i></div>
+                <div>
+                  <h2 class="h5 fw-bold mb-1">Children</h2>
+                  <p class="mb-0 form-hint">Add one or more children. Leave the section empty if there are none.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-primary" id="addChildBtn">
+                <i class="bi bi-plus-circle me-2"></i>Add Child
+              </button>
+            </div>
+
+            <div id="childrenContainer" class="d-grid gap-3"></div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start justify-content-between gap-3 mb-4 flex-wrap">
+              <div class="d-flex align-items-start gap-3">
+                <div class="section-badge"><i class="bi bi-people fs-5"></i></div>
+                <div>
+                  <h2 class="h5 fw-bold mb-1">Siblings</h2>
+                  <p class="mb-0 form-hint">Forward relationship is saved from the main person to each sibling.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-secondary" id="addSiblingBtn">
+                <i class="bi bi-plus-circle me-2"></i>Add Sibling
+              </button>
+            </div>
+
+            <div id="siblingsContainer" class="d-grid gap-3"></div>
+          </div>
+        </div>
+
+        <div class="col-12 sticky-actions">
+          <div class="surface-card rounded-4 p-3 p-lg-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <div class="note-pill mb-2"><i class="bi bi-info-circle"></i>Validation</div>
+              <div class="form-hint">Name and a 10-digit mobile are required for the main person record.</div>
+            </div>
+            <div class="d-flex gap-2 member-actions">
+              <a href="/admin/dashboard" class="btn btn-outline-secondary btn-lg">Cancel</a>
+              <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-check2-circle me-2"></i>Save Family
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
   </div>
 
-  <form id="createFamilyForm" enctype="multipart/form-data">
-
-    <!-- Husband Details -->
-    <div class="form-section">
-      <h5>Husband Details</h5>
-      <div class="row">
-        <div class="col-md-6">
-          <label class="form-label">Name *</label>
-          <input type="text" class="form-control" name="husband_name" required>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Gender</label>
-          <select class="form-control" name="husband_gender">
-            <option value="Male" selected>Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <label class="form-label">Mobile</label>
-          <input type="tel" class="form-control" name="mobile">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Occupation</label>
-          <input type="text" class="form-control" name="occupation">
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-md-12">
-          <label class="form-label">Photo</label>
-          <input type="file" id="husband_photo_file" class="form-control d-none" name="husband_photo" accept="image/*" onchange="handlePhotoSelect(this, 'husband')">
-          <div id="husband_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('husband')">
-            <span class="text-muted">Click to upload or capture photo</span>
+  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content success-card rounded-4">
+        <div class="modal-body text-center p-4 p-lg-5">
+          <div class="mx-auto mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 4rem; height: 4rem; background: rgba(15, 118, 110, 0.12); color: var(--accent);">
+            <i class="bi bi-check2 fs-1"></i>
           </div>
+          <h3 class="h4 fw-bold mb-2">Family saved successfully</h3>
+          <p class="text-muted mb-4">The user account, head of family, and related people have been saved.</p>
+          <a id="successLink" href="/admin/dashboard" class="btn btn-success btn-lg">Return to Dashboard</a>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Wife Details -->
-    <div class="form-section">
-      <h5>Wife Details</h5>
-      <div class="row">
-        <div class="col-md-6">
-          <label class="form-label">Name</label>
-          <input type="text" class="form-control" name="wife_name">
+  <script>
+    const childrenContainer = document.getElementById('childrenContainer');
+    const siblingsContainer = document.getElementById('siblingsContainer');
+    const addChildBtn = document.getElementById('addChildBtn');
+    const addSiblingBtn = document.getElementById('addSiblingBtn');
+    const formAlert = document.getElementById('formAlert');
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    const successLink = document.getElementById('successLink');
+
+    let childIndex = 0;
+    let siblingIndex = 0;
+    let stateDistrictData = {};
+
+    function showAlert(message) {
+      formAlert.textContent = message;
+      formAlert.classList.remove('d-none');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearAlert() {
+      formAlert.textContent = '';
+      formAlert.classList.add('d-none');
+    }
+
+    function buildFileFieldMarkup(label, name) {
+      return `
+        <div>
+          <label class="form-label">${label}</label>
+          <input type="file" class="form-control" name="${name}" accept="image/*">
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Gender</label>
-          <select class="form-control" name="wife_gender">
-            <option value="Female" selected>Female</option>
-            <option value="Male">Male</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <label class="form-label">Mobile</label>
-          <input type="tel" class="form-control" name="wife_mobile">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Occupation</label>
-          <input type="text" class="form-control" name="wife_occupation">
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-md-12">
-          <label class="form-label">Photo</label>
-          <input type="file" id="wife_photo_file" class="form-control d-none" name="wife_photo" accept="image/*" onchange="handlePhotoSelect(this, 'wife')">
-          <div id="wife_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('wife')">
-            <span class="text-muted">Click to upload or capture photo</span>
+      `;
+    }
+
+    function addChildCard() {
+      const currentIndex = childIndex++;
+      const card = document.createElement('div');
+      card.className = 'member-card rounded-4';
+      card.innerHTML = `
+        <div class="card-header p-3 p-lg-4 d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <div class="fw-bold">Child ${currentIndex + 1}</div>
+            <div class="form-hint">Add basic details and an optional photo.</div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Address (PARENTS) -->
-    <div class="form-section">
-      <h5>Address</h5>
-      <div class="row">
-        <div class="col-md-6">
-          <label class="form-label">Door No</label>
-          <input type="text" class="form-control" name="door_no" id="parent_door_no">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Street</label>
-          <input type="text" class="form-control" name="street" id="parent_street">
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-md-4">
-          <label class="form-label">State</label>
-          <select class="form-control" name="state" id="state">
-            <option value="">Select State</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">District</label>
-          <select class="form-control" name="district" id="district">
-            <option value="">Select District</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Pincode</label>
-          <input type="text" class="form-control" name="pincode" id="parent_pincode">
-        </div>
-      </div>
-    </div>
-
-    <!-- Children -->
-    <div class="form-section">
-      <h5>Children</h5>
-      <div id="children-container"></div>
-      <button type="button" class="btn btn-outline-primary mt-3" onclick="addChild()">+ Add Child</button>
-    </div>
-
-    <!-- Submit -->
-    <div class="text-center mt-4">
-      <button type="submit" class="btn btn-primary btn-lg">Create Family</button>
-    </div>
-
-  </form>
-
-  <!-- Success Modal -->
-  <div class="modal fade" id="successModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content text-center">
-        <div class="modal-body">
-          <h4 class="text-success">✔ Saved Successfully</h4>
-          <p>Family and all members stored in database.</p>
-          <button class="btn btn-primary" onclick="window.location='/admin/dashboard'">
-            OK
+          <button type="button" class="btn btn-outline-danger btn-sm remove-member-btn">
+            <i class="bi bi-trash me-1"></i>Remove
           </button>
         </div>
-      </div>
-    </div>
-  </div>
+        <div class="card-body p-3 p-lg-4">
+          <div class="row g-3">
+            <div class="col-lg-5">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" name="children[${currentIndex}][name]" placeholder="Child name">
+            </div>
+            <div class="col-lg-3">
+              <label class="form-label">Gender</label>
+              <select class="form-select" name="children[${currentIndex}][gender]">
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="col-lg-4">
+              <label class="form-label">DOB</label>
+              <input type="date" class="form-control" name="children[${currentIndex}][dob]">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Image</label>
+              <input type="file" id="child_${currentIndex}_image_file" class="form-control d-none" name="children[${currentIndex}][image]" accept="image/*" onchange="handlePhotoSelect(this, 'child_${currentIndex}_image')">
+              <div class="upload-box" onclick="showPhotoOptions('child_${currentIndex}_image')">
+                <small>Click to upload or capture photo</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
 
-</div>
+      childrenContainer.appendChild(card);
+    }
 
-<script>
-let childIndex = 0;
+    function addSiblingCard() {
+      const currentIndex = siblingIndex++;
+      const card = document.createElement('div');
+      card.className = 'member-card rounded-4';
+      card.innerHTML = `
+        <div class="card-header p-3 p-lg-4 d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <div class="fw-bold">Sibling ${currentIndex + 1}</div>
+            <div class="form-hint">Store the relationship as a forward link from the main person.</div>
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-sm remove-member-btn">
+            <i class="bi bi-trash me-1"></i>Remove
+          </button>
+        </div>
+        <div class="card-body p-3 p-lg-4">
+          <div class="row g-3">
+            <div class="col-lg-4">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" name="siblings[${currentIndex}][name]" placeholder="Sibling name">
+            </div>
+            <div class="col-lg-3">
+              <label class="form-label">Gender</label>
+              <select class="form-select" name="siblings[${currentIndex}][gender]">
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="col-lg-3">
+              <label class="form-label">Relation</label>
+              <select class="form-select" name="siblings[${currentIndex}][relation]">
+                <option value="brother">Brother</option>
+                <option value="sister">Sister</option>
+              </select>
+            </div>
+            <div class="col-lg-2">
+              <label class="form-label">DOB</label>
+              <input type="date" class="form-control" name="siblings[${currentIndex}][dob]">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Image</label>
+              <input type="file" id="sibling_${currentIndex}_image_file" class="form-control d-none" name="siblings[${currentIndex}][image]" accept="image/*" onchange="handlePhotoSelect(this, 'sibling_${currentIndex}_image')">
+              <div class="upload-box" onclick="showPhotoOptions('sibling_${currentIndex}_image')">
+                <small>Click to upload or capture photo</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
 
-// Load states and districts (UNCHANGED)
-fetch('/data/india-states-districts.json')
-  .then(response => response.json())
-  .then(data => {
-    const states = Object.keys(data);
-    const stateSelect = document.getElementById('state');
-    const districtSelect = document.getElementById('district');
+      siblingsContainer.appendChild(card);
+    }
 
-    states.forEach(state => {
-      const option = document.createElement('option');
-      option.value = state;
-      option.textContent = state;
-      stateSelect.appendChild(option);
-    });
+    function loadDistrictOptions(stateValue) {
+      const districtSelect = document.getElementById('districtSelect');
+      districtSelect.innerHTML = '<option value="">Select district</option>';
 
-    stateSelect.addEventListener('change', function() {
-      districtSelect.innerHTML = '<option value="">Select District</option>';
-      if (this.value && data[this.value]) {
-        data[this.value].forEach(district => {
+      if (!stateValue || !stateDistrictData[stateValue]) {
+        return;
+      }
+
+      stateDistrictData[stateValue].forEach((district) => {
+        const option = document.createElement('option');
+        option.value = district;
+        option.textContent = district;
+        districtSelect.appendChild(option);
+      });
+    }
+
+    async function loadStateDistrictData() {
+      try {
+        const response = await fetch('/data/india-states-districts.json');
+        stateDistrictData = await response.json();
+
+        const stateSelect = document.getElementById('stateSelect');
+        Object.keys(stateDistrictData).forEach((state) => {
           const option = document.createElement('option');
-          option.value = district;
-          option.textContent = district;
-          districtSelect.appendChild(option);
+          option.value = state;
+          option.textContent = state;
+          stateSelect.appendChild(option);
         });
+      } catch (error) {
+        console.error('Failed to load state and district data:', error);
+      }
+    }
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.remove-member-btn')) {
+        event.target.closest('.member-card').remove();
       }
     });
-  });
 
-// ✅ UPDATED: ADD CHILD WITH ADDRESS + CHECKBOX
-function addChild() {
-  const container = document.getElementById('children-container');
+    addChildBtn.addEventListener('click', addChildCard);
+    addSiblingBtn.addEventListener('click', addSiblingCard);
 
-  const childDiv = document.createElement('div');
-  childDiv.className = 'child-entry border p-3 mb-3 rounded';
+    document.getElementById('stateSelect').addEventListener('change', (event) => {
+      loadDistrictOptions(event.target.value);
+    });
 
-  childDiv.innerHTML = `
-    <h6>Child ${childIndex + 1}</h6>
+    document.getElementById('createFamilyForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearAlert();
 
-    <div class="row">
-      <div class="col-md-6">
-        <label class="form-label">Name *</label>
-        <input type="text" class="form-control" name="children[${childIndex}][name]" required>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Relationship</label>
-        <select class="form-control" name="children[${childIndex}][relationship]">
-          <option value="son">Son</option>
-          <option value="daughter">Daughter</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-    </div>
+      const form = event.currentTarget;
+      const formData = new FormData(form);
 
-    <div class="row mt-3">
-      <div class="col-md-4">
-        <label class="form-label">Date of Birth</label>
-        <input type="date" class="form-control" name="children[${childIndex}][dob]">
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Gender</label>
-        <select class="form-control" name="children[${childIndex}][gender]">
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Occupation</label>
-        <input type="text" class="form-control" name="children[${childIndex}][occupation]">
-      </div>
-    </div>
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData
+        });
 
-    <div class="row mt-3">
-      <div class="col-md-12">
-        <label class="form-label">Photo</label>
-        <input type="file" id="child_${childIndex}_photo_file" class="form-control d-none" name="children[${childIndex}][photo]" accept="image/*" onchange="handlePhotoSelect(this, 'child_${childIndex}')">
-        <div id="child_${childIndex}_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('child_${childIndex}')">
-          <span class="text-muted">Click to upload or capture photo</span>
-        </div>
-      </div>
-    </div>
+        const result = await response.json();
 
-    <hr>
-    <h6>Child Address</h6>
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Unable to save family data.');
+        }
 
-    <label>
-      <input type="checkbox" class="same-address-checkbox">
-      Same as Parents
-    </label>
+        successLink.href = result.redirectUrl || '/admin/dashboard';
+        successModal.show();
+      } catch (error) {
+        showAlert(error.message || 'An unexpected error occurred.');
+      }
+    });
 
-    <div class="row mt-2">
-      <div class="col-md-6">
-        <label>Door No</label>
-        <input type="text" class="form-control child-door" name="children[${childIndex}][door_no]">
-      </div>
-      <div class="col-md-6">
-        <label>Street</label>
-        <input type="text" class="form-control child-street" name="children[${childIndex}][street]">
-      </div>
-    </div>
+    loadStateDistrictData();
 
-    <div class="row mt-2">
-      <div class="col-md-4">
-        <label>State</label>
-        <select class="form-control child-state" name="children[${childIndex}][state]">
-          <option value="">Select State</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <label>District</label>
-        <select class="form-control child-district" name="children[${childIndex}][district]">
-          <option value="">Select District</option>
-        </select>
-      </div>
-      <div class="col-md-4">
-        <label>Pincode</label>
-        <input type="text" class="form-control child-pincode" name="children[${childIndex}][pincode]">
-      </div>
-    </div>
+    // Photo options handling
+    let currentPhotoTarget = null;
+    let cameraStream = null;
 
-    <div class="row mt-2">
-      <div class="col-md-12">
-        <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn">
-          Remove Child
-        </button>
-      </div>
-    </div>
-  `;
+    function showPhotoOptions(target) {
+      currentPhotoTarget = target;
+      Swal.fire({
+        title: 'Choose Photo Option',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Upload Photo',
+        denyButtonText: 'Take Photo',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#0f766e',
+        denyButtonColor: '#0f766e'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Upload Photo
+          const fileInput = document.getElementById(`${target}_file`);
+          if (fileInput) fileInput.click();
+        } else if (result.isDenied) {
+          // Take Photo
+          openCamera(target);
+        }
+      });
+    }
 
-  container.appendChild(childDiv);
-
-  // Copy state options to child dropdown
-  const parentState = document.getElementById("state");
-  const childState = childDiv.querySelector(".child-state");
-
-  parentState.querySelectorAll("option").forEach(opt=>{
-    const newOpt = opt.cloneNode(true);
-    childState.appendChild(newOpt);
-  });
-
-  // When child state changes → load districts
-  childState.addEventListener("change", function(){
-    const childDistrict = childDiv.querySelector(".child-district");
-    childDistrict.innerHTML = '<option value="">Select District</option>';
-
-    fetch('/data/india-states-districts.json')
-      .then(res=>res.json())
-      .then(data=>{
-        if(data[this.value]){
-          data[this.value].forEach(d=>{
-            const opt=document.createElement("option");
-            opt.value=d;
-            opt.textContent=d;
-            childDistrict.appendChild(opt);
+    function openCamera(target) {
+      Swal.fire({
+        title: 'Capture Photo',
+        html: '<video id="cameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>',
+        showCancelButton: true,
+        confirmButtonText: 'Capture',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#0f766e',
+        didOpen: () => {
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+              cameraStream = stream;
+              const video = document.getElementById('cameraVideo');
+              video.srcObject = stream;
+            })
+            .catch(err => {
+              console.error('Error accessing camera:', err);
+              Swal.fire('Error', 'Unable to access camera', 'error');
+            });
+        },
+        preConfirm: () => {
+          return new Promise((resolve) => {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            canvas.toBlob(resolve, 'image/jpeg', 0.9);
           });
         }
-      });
-  });
-
-  // ✅ SAME AS PARENTS CHECKBOX LOGIC
-  childDiv.querySelector(".same-address-checkbox").addEventListener("change", function(){
-    if(this.checked){
-      childDiv.querySelector(".child-door").value = document.getElementById("parent_door_no").value;
-      childDiv.querySelector(".child-street").value = document.getElementById("parent_street").value;
-      childDiv.querySelector(".child-pincode").value = document.getElementById("parent_pincode").value;
-      childDiv.querySelector(".child-state").value = document.getElementById("state").value;
-    }
-  });
-
-  childIndex++;
-}
-
-// Remove child (UNCHANGED)
-document.addEventListener("click", function (e) {
-  if (e.target.classList.contains("remove-child-btn")) {
-    e.target.closest(".child-entry").remove();
-  }
-});
-
-// FORM SUBMIT (UNCHANGED)
-document.getElementById('createFamilyForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  const formData = new FormData(this);
-
-  fetch('/admin/create-family', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(result => {
-    if (result.success) {
-      showSuccessPopup();
-    } else {
-      showErrorPopup(result.message);
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showErrorPopup('An error occurred. Please try again.');
-  });
-});
-
-function showSuccessPopup() {
-  const modal = new bootstrap.Modal(document.getElementById('successModal'));
-  modal.show();
-}
-
-// Global variables for photo handling
-let currentPhotoTarget = null;
-let cameraStream = null;
-
-// Show photo options modal
-function showPhotoOptions(target) {
-  currentPhotoTarget = target;
-  Swal.fire({
-    title: 'Choose Photo Option',
-    showCancelButton: true,
-    showDenyButton: true,
-    confirmButtonText: 'Upload Photo',
-    denyButtonText: 'Take Photo',
-    cancelButtonText: 'Cancel',
-    confirmButtonColor: '#8B4513',
-    denyButtonColor: '#8B4513'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      // Upload Photo
-      const fileInput = document.getElementById(`${target}_photo_file`);
-      fileInput.click();
-    } else if (result.isDenied) {
-      // Take Photo
-      openCamera(target);
-    }
-  });
-}
-
-// Open camera for photo capture
-function openCamera(target) {
-  Swal.fire({
-    title: 'Capture Photo',
-    html: '<video id="cameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>',
-    showCancelButton: true,
-    confirmButtonText: 'Capture',
-    cancelButtonText: 'Cancel',
-    confirmButtonColor: '#8B4513',
-    didOpen: () => {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          cameraStream = stream;
-          const video = document.getElementById('cameraVideo');
-          video.srcObject = stream;
-        })
-        .catch(err => {
-          console.error('Error accessing camera:', err);
-          Swal.fire('Error', 'Unable to access camera', 'error');
-        });
-    },
-    preConfirm: () => {
-      return new Promise((resolve) => {
-        const video = document.getElementById('cameraVideo');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        canvas.toBlob(resolve, 'image/jpeg', 0.9);
-      });
-    }
-  }).then((result) => {
-    if (result.isConfirmed && result.value) {
-      // Stop camera stream
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
-      // Process captured image
-      processPhotoFile(result.value, target);
-    } else {
-      // Stop camera stream if cancelled
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
-    }
-  });
-}
-
-// Process photo file (compress if needed)
-function processPhotoFile(file, target) {
-  const maxSizeKB = 250;
-  const maxSizeBytes = maxSizeKB * 1024;
-
-  if (file.size <= maxSizeBytes) {
-    // File is already small enough
-    updatePhotoPlaceholder(target, file.size);
-    assignFileToInput(file, target);
-  } else {
-    // Compress the image
-    compressImage(file, maxSizeBytes, target);
-  }
-}
-
-// Compress image to fit within size limit
-function compressImage(file, maxSizeBytes, target) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-
-  img.onload = function() {
-    let quality = 0.8;
-    let compressedFile;
-
-    const compress = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      canvas.toBlob((blob) => {
-        if (blob.size <= maxSizeBytes) {
-          compressedFile = blob;
-          updatePhotoPlaceholder(target, blob.size);
-          assignFileToInput(blob, target);
-        } else if (quality > 0.1) {
-          quality -= 0.1;
-          compress();
+      }).then((result) => {
+        if (result.isConfirmed && result.value) {
+          if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+          }
+          processPhotoFile(result.value, target);
         } else {
-          // Even at lowest quality, still too big - use as is
-          updatePhotoPlaceholder(target, blob.size);
-          assignFileToInput(blob, target);
+          if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+          }
         }
-      }, 'image/jpeg', quality);
-    };
+      });
+    }
 
-    compress();
-  };
+    function processPhotoFile(file, target) {
+      const maxSizeKB = 250;
+      const maxSizeBytes = maxSizeKB * 1024;
 
-  img.src = URL.createObjectURL(file);
-}
+      if (file.size <= maxSizeBytes) {
+        updatePhotoPlaceholder(target, file.size);
+        assignFileToInput(file, target);
+      } else {
+        compressImage(file, maxSizeBytes, target);
+      }
+    }
 
-// Update placeholder with selected photo info
-function updatePhotoPlaceholder(target, sizeBytes) {
-  const placeholder = document.getElementById(`${target}_photo_placeholder`);
-  const sizeKB = (sizeBytes / 1024).toFixed(2);
-  placeholder.innerHTML = `<span class="text-success">Photo Selected - Size: ${sizeKB} KB</span>`;
-}
+    function compressImage(file, maxSizeBytes, target) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
 
-// Assign compressed file to input field
-function assignFileToInput(file, target) {
-  const input = document.getElementById(`${target}_photo_file`);
-  const dt = new DataTransfer();
-  dt.items.add(new File([file], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' }));
-  input.files = dt.files;
-}
+      img.onload = function() {
+        let quality = 0.8;
+        let compressedFile;
 
-// Handle photo selection (upload)
-function handlePhotoSelect(input, target) {
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    processPhotoFile(file, target);
-  }
-}
+        const compress = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
 
-function showErrorPopup(message) {
-  Swal.fire({
-    icon: 'error',
-    title: 'Error',
-    text: message,
-    confirmButtonText: 'OK'
-  });
-}
-</script>
+          canvas.toBlob((blob) => {
+            if (blob.size <= maxSizeBytes) {
+              compressedFile = blob;
+              updatePhotoPlaceholder(target, blob.size);
+              assignFileToInput(blob, target);
+            } else if (quality > 0.1) {
+              quality -= 0.1;
+              compress();
+            } else {
+              updatePhotoPlaceholder(target, blob.size);
+              assignFileToInput(blob, target);
+            }
+          }, 'image/jpeg', quality);
+        };
 
+        compress();
+      };
+
+      img.src = URL.createObjectURL(file);
+    }
+
+    function updatePhotoPlaceholder(target, sizeBytes) {
+      const uploadBox = document.querySelector(`[onclick="showPhotoOptions('${target}')"]`);
+      if (uploadBox) {
+        const sizeKB = (sizeBytes / 1024).toFixed(2);
+        uploadBox.classList.add('photo-selected');
+        uploadBox.innerHTML = `<small>Photo selected - ${sizeKB} KB</small>`;
+      }
+    }
+
+    function assignFileToInput(file, target) {
+      const input = document.getElementById(`${target}_file`);
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(new File([file], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+        input.files = dt.files;
+      }
+    }
+
+    function handlePhotoSelect(input, target) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        processPhotoFile(file, target);
+      }
+    }
+  </script>
 </body>
 </html>
