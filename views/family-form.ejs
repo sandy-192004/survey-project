@@ -221,7 +221,7 @@
 
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
                 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-                <script src="/india-state-district.js"></script>
+                <script src="/js/india-states-districts.js"></script>
                 <%- include('partials/scripts') %>
 
                     <style>
@@ -271,6 +271,7 @@
                         let siblingIndex = 0;
                         let currentInput = "";
                         let statesMap = {};
+                        let liveCameraStream = null;
 
                         function addChild(data = null) {
                             const name = data && data.name ? data.name : '';
@@ -357,10 +358,78 @@
                             closeModal();
                         }
 
-                        function chooseCamera() {
-                            const cameraInput = document.getElementById(currentInput + '_camera');
-                            if (cameraInput) cameraInput.click();
+                        function stopLiveCamera() {
+                            if (liveCameraStream) {
+                                liveCameraStream.getTracks().forEach(track => track.stop());
+                                liveCameraStream = null;
+                            }
+                        }
+
+                        async function chooseCamera() {
                             closeModal();
+
+                            const uploadInput = document.getElementById(currentInput);
+                            if (!uploadInput) return;
+
+                            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                                const cameraInput = document.getElementById(currentInput + '_camera');
+                                if (cameraInput) cameraInput.click();
+                                return;
+                            }
+
+                            await Swal.fire({
+                                title: 'Take Photo',
+                                html: '<video id="liveCameraPreview" autoplay playsinline style="width:100%;border-radius:8px;background:#000;"></video>',
+                                showCancelButton: true,
+                                confirmButtonText: 'Capture',
+                                cancelButtonText: 'Cancel',
+                                didOpen: async () => {
+                                    try {
+                                        liveCameraStream = await navigator.mediaDevices.getUserMedia({
+                                            video: { facingMode: 'environment' },
+                                            audio: false
+                                        });
+                                        const video = document.getElementById('liveCameraPreview');
+                                        if (video) {
+                                            video.srcObject = liveCameraStream;
+                                        }
+                                    } catch (error) {
+                                        console.error('Unable to access camera', error);
+                                        Swal.showValidationMessage('Unable to access camera. Please allow permission and try again.');
+                                    }
+                                },
+                                preConfirm: () => {
+                                    const video = document.getElementById('liveCameraPreview');
+                                    if (!video || !video.videoWidth || !video.videoHeight) {
+                                        Swal.showValidationMessage('Camera is not ready yet. Please wait a moment.');
+                                        return false;
+                                    }
+
+                                    return new Promise((resolve) => {
+                                        const canvas = document.createElement('canvas');
+                                        canvas.width = video.videoWidth;
+                                        canvas.height = video.videoHeight;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
+                                    });
+                                },
+                                willClose: () => {
+                                    stopLiveCamera();
+                                }
+                            }).then((result) => {
+                                if (!result.isConfirmed || !result.value) return;
+
+                                const capturedBlob = result.value;
+                                const capturedFile = new File([capturedBlob], `${currentInput}_${Date.now()}.jpg`, {
+                                    type: 'image/jpeg'
+                                });
+
+                                const dt = new DataTransfer();
+                                dt.items.add(capturedFile);
+                                uploadInput.files = dt.files;
+                                showFileSize(currentInput);
+                            });
                         }
 
                         function showFileSize(baseId) {
@@ -398,9 +467,23 @@
                             }
                         }
 
-                        function loadStates() {
+                        async function loadStates() {
                             const stateDropdown = document.getElementById('state');
                             if (!stateDropdown) return;
+
+                            if (!Object.keys(statesMap).length && window.states) {
+                                statesMap = window.states;
+                            }
+
+                            if (!Object.keys(statesMap).length) {
+                                try {
+                                    const response = await fetch('/data/india-states-districts.json');
+                                    statesMap = await response.json();
+                                } catch (error) {
+                                    console.error('States data not loaded', error);
+                                    return;
+                                }
+                            }
 
                             stateDropdown.innerHTML = '<option value="">Select State</option>';
                             Object.keys(statesMap).forEach(state => {
@@ -427,14 +510,7 @@
                         };
 
                         window.onload = function () {
-                            setTimeout(() => {
-                                if (window.states) {
-                                    statesMap = window.states;
-                                    loadStates();
-                                } else {
-                                    console.error("States data not loaded");
-                                }
-                            }, 200);
+                            loadStates();
 
                             // Setup image file size display for all inputs
                             setupImageInputPair('father_image');
