@@ -353,32 +353,201 @@ exports.dashboard = async (req, res) => {
 // =======================
 exports.viewMember = async (req, res) => {
   try {
-    const familyId = req.params.id;
-    const FamilyMember = require("../models/FamilyMember");
-    const members = await FamilyMember.getByFamilyId(familyId);
+    const userId = Number(req.params.id);
 
-    const parents = members.filter(m => m.member_type === "parent");
-    const children = members.filter(m => m.member_type === "child");
+    if (!Number.isFinite(userId)) {
+      return res.status(400).send("Invalid family id");
+    }
 
-    const husband = parents.find(p => p.relationship === "husband") || parents[0];
-    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+    const [persons] = await db.query(
+      `SELECT id, user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode
+       FROM persons
+       WHERE user_id = ?
+       ORDER BY id ASC`,
+      [userId]
+    );
 
-    const member = {
-      family_id: familyId,
-      husband_name: husband?.name || "",
-      wife_name: wife?.name || "",
-      mobile: husband?.mobile || "",
-      occupation: husband?.occupation || "",
-      door_no: husband?.door_no || "",
-      street: husband?.street || "",
-      district: husband?.district || "",
-      state: husband?.state || "",
-      pincode: husband?.pincode || "",
-      husband_photo: husband?.photo || "",
-      wife_photo: wife?.photo || ""
+    if (!persons || persons.length === 0) {
+      return res.render("admin/view", {
+        family: {
+          father: null,
+          mother: null,
+          self: null,
+          spouse: null,
+          siblings: [],
+          children: []
+        }
+      });
+    }
+
+    const personById = new Map(persons.map(person => [Number(person.id), person]));
+
+    const [allRelations] = await db.query(
+      `SELECT person_id, related_person_id, relation
+       FROM relationships
+       WHERE user_id = ?`,
+      [userId]
+    );
+
+    // Resolve the actual family head from relationship graph instead of assuming MIN(person.id)
+    const relationKinds = new Set(["father", "mother", "spouse", "child", "sibling", "brother", "sister", "son", "daughter"]);
+    const outgoingCount = new Map();
+
+    allRelations.forEach((rel) => {
+      const kind = String(rel.relation || "").trim().toLowerCase();
+      if (!relationKinds.has(kind)) {
+        return;
+      }
+      const sourceId = Number(rel.person_id);
+      outgoingCount.set(sourceId, (outgoingCount.get(sourceId) || 0) + 1);
+    });
+
+    let headPerson = persons[0];
+    if (outgoingCount.size > 0) {
+      const sortedCandidates = Array.from(outgoingCount.entries())
+        .sort((a, b) => {
+          if (b[1] !== a[1]) return b[1] - a[1];
+          return a[0] - b[0];
+        });
+      const headCandidate = personById.get(sortedCandidates[0][0]);
+      if (headCandidate) {
+        headPerson = headCandidate;
+      }
+    }
+
+    const headId = Number(headPerson.id);
+    const relations = allRelations.filter(
+      (rel) => Number(rel.person_id) === headId || Number(rel.related_person_id) === headId
+    );
+
+    const grouped = {
+      father: null,
+      mother: null,
+      self: { ...headPerson, relationship: "Self" },
+      spouse: null,
+      siblings: [],
+      children: []
     };
 
-    res.render("admin/view", { member, children, updated: req.query.updated === "true" });
+    relations.forEach((rel) => {
+      const personId = Number(rel.person_id);
+      const relatedPersonId = Number(rel.related_person_id);
+      const isForward = personId === headId;
+      const relatedId = isForward ? relatedPersonId : personId;
+      const related = personById.get(relatedId);
+      if (!related) {
+        return;
+      }
+
+      const relation = String(rel.relation || "").trim().toLowerCase();
+
+      if (relation === "father") {
+        grouped.father = { ...related, relationship: "Father" };
+      } else if (relation === "mother") {
+        grouped.mother = { ...related, relationship: "Mother" };
+      } else if (relation === "spouse") {
+        grouped.spouse = { ...related, relationship: "Spouse" };
+      } else if (relation === "child" || relation === "son" || relation === "daughter") {
+        grouped.children.push({ ...related, relationship: "Child" });
+      } else if (relation === "sibling" || relation === "brother" || relation === "sister") {
+        grouped.siblings.push({
+          ...related,
+          relationship: relation === "brother" ? "Brother" : relation === "sister" ? "Sister" : "Sibling"
+        });
+      }
+    });
+
+    const uniqueById = (items) => {
+      const seen = new Set();
+      return items.filter((item) => {
+        if (!item || seen.has(item.id)) {
+          return false;
+        }
+        seen.add(item.id);
+        return true;
+      });
+    };
+
+    grouped.children = uniqueById(grouped.children);
+    grouped.siblings = uniqueById(grouped.siblings);
+
+    // Fallback: fetch direct child/sibling rows for head if previous mapping found none.
+    if (grouped.children.length === 0 || grouped.siblings.length === 0) {
+      const [directLinks] = await db.query(
+        `SELECT person_id, related_person_id, relation
+         FROM relationships
+         WHERE user_id = ?
+           AND person_id = ?
+           AND relation IN ('child', 'son', 'daughter', 'sibling', 'brother', 'sister')`,
+        [userId, headId]
+      );
+
+      directLinks.forEach((rel) => {
+        const relation = String(rel.relation || "").trim().toLowerCase();
+        const related = personById.get(Number(rel.related_person_id));
+        if (!related) {
+          return;
+        }
+
+        if (relation === "child" || relation === "son" || relation === "daughter") {
+          grouped.children.push({ ...related, relationship: "Child" });
+        }
+
+        if (relation === "sibling" || relation === "brother" || relation === "sister") {
+          grouped.siblings.push({
+            ...related,
+            relationship: relation === "brother" ? "Brother" : relation === "sister" ? "Sister" : "Sibling"
+          });
+        }
+      });
+
+      grouped.children = uniqueById(grouped.children);
+      grouped.siblings = uniqueById(grouped.siblings);
+    }
+
+    // Secondary fallback: if still empty, derive from all relationships for this user.
+    if (grouped.children.length === 0 || grouped.siblings.length === 0) {
+      const relationToBucket = (value) => {
+        const r = String(value || "").trim().toLowerCase();
+        if (r === "child" || r === "son" || r === "daughter") return "child";
+        if (r === "sibling" || r === "brother" || r === "sister") return "sibling";
+        return null;
+      };
+
+      allRelations.forEach((rel) => {
+        const bucket = relationToBucket(rel.relation);
+        if (!bucket) {
+          return;
+        }
+
+        const personId = Number(rel.person_id);
+        const relatedId = Number(rel.related_person_id);
+
+        const candidates = [personById.get(personId), personById.get(relatedId)].filter(Boolean);
+        candidates.forEach((candidate) => {
+          if (Number(candidate.id) === headId) {
+            return;
+          }
+
+          if (bucket === "child") {
+            grouped.children.push({ ...candidate, relationship: "Child" });
+          }
+
+          if (bucket === "sibling") {
+            const relText = String(rel.relation || "").trim().toLowerCase();
+            grouped.siblings.push({
+              ...candidate,
+              relationship: relText === "brother" ? "Brother" : relText === "sister" ? "Sister" : "Sibling"
+            });
+          }
+        });
+      });
+
+      grouped.children = uniqueById(grouped.children);
+      grouped.siblings = uniqueById(grouped.siblings);
+    }
+
+    res.render("admin/view", { family: grouped });
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
@@ -639,34 +808,43 @@ exports.search = async (req, res) => {
   try {
     const { q, state, district } = req.query;
     const { states, districts } = loadDropdownOptions();
-    
+
     let sql = `
-      SELECT DISTINCT fm.family_id AS id, fm.name, fm.district, fm.state, fm.occupation
-      FROM family_members fm
-      WHERE fm.member_type = 'parent'
-      AND fm.id = (
-        SELECT MIN(id)
-        FROM family_members
-        WHERE family_id = fm.family_id AND member_type = 'parent'
+      SELECT
+        p.user_id AS id,
+        p.name,
+        p.district,
+        p.state,
+        p.occupation,
+        (
+          SELECT COUNT(*)
+          FROM relationships r
+          WHERE r.user_id = p.user_id AND r.person_id = p.id AND r.relation = 'child'
+        ) AS children_count
+      FROM persons p
+      WHERE p.id = (
+        SELECT MIN(p2.id)
+        FROM persons p2
+        WHERE p2.user_id = p.user_id
       )
     `;
     const params = [];
 
     if (q) {
-      sql += " AND (fm.name LIKE ? OR fm.mobile LIKE ? OR fm.occupation LIKE ?)";
+      sql += " AND (p.name LIKE ? OR p.mobile LIKE ? OR p.occupation LIKE ?)";
       const like = `%${q}%`;
       params.push(like, like, like);
     }
     if (state) {
-      sql += " AND fm.state = ?";
+      sql += " AND p.state = ?";
       params.push(state);
     }
     if (district) {
-      sql += " AND fm.district = ?";
+      sql += " AND p.district = ?";
       params.push(district);
     }
 
-    sql += " ORDER BY fm.family_id";
+    sql += " ORDER BY p.user_id DESC";
 
     const [rows] = await db.query(sql, params);
 
