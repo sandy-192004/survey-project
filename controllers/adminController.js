@@ -215,14 +215,27 @@ exports.dashboard = async (req, res) => {
 
     const { states, districts } = loadDropdownOptions();
 
-    // Stats
+    const [personColumns] = await db.query(
+      `
+        SELECT COLUMN_NAME
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'persons'
+      `
+    );
+    const personColumnSet = new Set(personColumns.map(col => col.COLUMN_NAME));
+    const hasPersonCreatedAt = personColumnSet.has("created_at");
+
+    // Stats from persons/relationships schema
     const [statsResult] = await db.query(`
       SELECT
-        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent') AS totalFamilies,
-        (SELECT COUNT(*) FROM family_members) AS totalMembers,
-        (SELECT COUNT(*) FROM family_members WHERE member_type = 'child') AS totalChildren,
-        (SELECT COUNT(DISTINCT family_id) FROM family_members WHERE member_type = 'parent' 
-          AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS recentFamilies
+        (SELECT COUNT(DISTINCT user_id) FROM persons) AS totalFamilies,
+        (SELECT COUNT(*) FROM persons) AS totalMembers,
+        (SELECT COUNT(*) FROM relationships WHERE relation = 'child') AS totalChildren,
+        (
+          SELECT COUNT(DISTINCT user_id)
+          FROM persons
+          ${hasPersonCreatedAt ? "WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)" : ""}
+        ) AS recentFamilies
     `);
 
     const stats = {
@@ -232,59 +245,41 @@ exports.dashboard = async (req, res) => {
       recentFamilies: statsResult[0].recentFamilies
     };
 
-    const [columns] = await db.query(
-      `
-        SELECT COLUMN_NAME
-        FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'family_members'
-      `
-    );
-    const availableColumns = new Set(columns.map(col => col.COLUMN_NAME));
+    const hasMobile = personColumnSet.has("mobile");
+    const hasOccupation = personColumnSet.has("occupation");
+    const hasState = personColumnSet.has("state");
+    const hasDistrict = personColumnSet.has("district");
 
-    const hasName = availableColumns.has("name");
-    const hasMemberName = availableColumns.has("member_name");
-    const hasMobile = availableColumns.has("mobile");
-    const hasOccupation = availableColumns.has("occupation");
-    const hasState = availableColumns.has("state");
-    const hasDistrict = availableColumns.has("district");
-
-    const nameExpression = hasName
-      ? "fm.name"
-      : hasMemberName
-        ? "fm.member_name"
-        : "''";
-    const districtExpression = hasDistrict ? "fm.district" : "''";
-    const stateExpression = hasState ? "fm.state" : "''";
-    const occupationExpression = hasOccupation ? "fm.occupation" : "''";
+    const districtExpression = hasDistrict ? "p.district" : "''";
+    const stateExpression = hasState ? "p.state" : "''";
+    const occupationExpression = hasOccupation ? "p.occupation" : "''";
 
     let sql = `
       SELECT
-        fm.family_id AS id,
-        ${nameExpression} AS name,
+        p.user_id AS id,
+        p.name AS name,
         ${districtExpression} AS district,
         ${stateExpression} AS state,
         ${occupationExpression} AS occupation,
         (
           SELECT COUNT(*)
-          FROM family_members c
-          WHERE c.family_id = fm.family_id AND c.member_type = 'child'
+          FROM relationships r
+          WHERE r.user_id = p.user_id AND r.person_id = p.id AND r.relation = 'child'
         ) AS children_count
-      FROM family_members fm
-      WHERE fm.member_type = 'parent'
-      AND fm.id = (
-        SELECT MIN(id)
-        FROM family_members
-        WHERE family_id = fm.family_id AND member_type = 'parent'
+      FROM persons p
+      WHERE p.id = (
+        SELECT MIN(p2.id)
+        FROM persons p2
+        WHERE p2.user_id = p.user_id
       )
     `;
     const params = [];
     const countParams = [];
     const searchColumns = [];
 
-    if (hasName) searchColumns.push("fm.name");
-    else if (hasMemberName) searchColumns.push("fm.member_name");
-    if (hasMobile) searchColumns.push("fm.mobile");
-    if (hasOccupation) searchColumns.push("fm.occupation");
+    searchColumns.push("p.name");
+    if (hasMobile) searchColumns.push("p.mobile");
+    if (hasOccupation) searchColumns.push("p.occupation");
 
     if (q && searchColumns.length > 0) {
       const qCondition = searchColumns.map(col => `${col} LIKE ?`).join(" OR ");
@@ -297,25 +292,24 @@ exports.dashboard = async (req, res) => {
     }
 
     if (state && hasState) {
-      sql += " AND fm.state = ?";
+      sql += " AND p.state = ?";
       params.push(state);
       countParams.push(state);
     }
 
     if (district && hasDistrict) {
-      sql += " AND fm.district = ?";
+      sql += " AND p.district = ?";
       params.push(district);
       countParams.push(district);
     }
 
     let countSql = `
-      SELECT COUNT(DISTINCT fm.family_id) AS total
-      FROM family_members fm
-      WHERE fm.member_type = 'parent'
-      AND fm.id = (
-        SELECT MIN(id)
-        FROM family_members
-        WHERE family_id = fm.family_id AND member_type = 'parent'
+      SELECT COUNT(DISTINCT p.user_id) AS total
+      FROM persons p
+      WHERE p.id = (
+        SELECT MIN(p2.id)
+        FROM persons p2
+        WHERE p2.user_id = p.user_id
       )
     `;
 
@@ -323,10 +317,10 @@ exports.dashboard = async (req, res) => {
       const qCondition = searchColumns.map(col => `${col} LIKE ?`).join(" OR ");
       countSql += ` AND (${qCondition})`;
     }
-    if (state && hasState) countSql += " AND fm.state = ?";
-    if (district && hasDistrict) countSql += " AND fm.district = ?";
+    if (state && hasState) countSql += " AND p.state = ?";
+    if (district && hasDistrict) countSql += " AND p.district = ?";
 
-    sql += " ORDER BY fm.family_id LIMIT ? OFFSET ?";
+    sql += " ORDER BY p.user_id DESC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     const [rows] = await db.query(sql, params);
