@@ -1,0 +1,54 @@
+<form action="/admin/search" method="GET">
+  <div class="row g-2 align-items-center">
+    
+    <!-- Search Input -->
+    <div class="col-12 col-md-4 col-lg-3">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text"
+               name="q"
+               class="form-control border-start-0 ps-0"
+               placeholder="Search by name..."
+               value="<%= searchValue || '' %>">
+      </div>
+    </div>
+
+    <!-- State Filter -->
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="state" class="form-select">
+        <option value="">All States</option>
+        <% if (states && states.length > 0) { %>
+          <% states.forEach(function(state) { %>
+            <option value="<%= state %>" <%= selectedState === state ? 'selected' : '' %>>
+              <%= state %>
+            </option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
+
+    <!-- District Filter -->
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="district" class="form-select">
+        <option value="">All Districts</option>
+        <% if (districts && districts.length > 0) { %>
+          <% districts.forEach(function(district) { %>
+            <option value="<%= district %>" <%= selectedDistrict === district ? 'selected' : '' %>>
+              <%= district %>
+            </option>
+          <% }); %>
+        <% } %>
+      </select>
+    </div>
+
+    <!-- Filter Button -->
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary px-3">
+        <i class="bi bi-funnel me-1"></i>Filter
+      </button>
+    </div>
+
+  </div>
+</form>

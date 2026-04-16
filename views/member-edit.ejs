@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Member</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Brown Theme -->
+  <style>
+    :root {
+      --main-color: #495057;
+      --light-bg: #f8f9fa;
+      --border-color: #dee2e6;
+    }
+
+    body {
+      background-color: var(--light-bg);
+    }
+
+    h3, h5 {
+      color: var(--main-color);
+      font-weight: 600;
+    }
+
+    .card {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      body {
+        font-size: 14px;
+      }
+      .btn {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .form-control {
+        font-size: 14px;
+      }
+      .img-thumbnail {
+        max-height: 80px;
+        display: block; /* Show existing photo in placeholder */
+      }
+    }
+
+    .btn-primary {
+      background-color: var(--main-color);
+      border-color: var(--main-color);
+    }
+
+    .btn-primary:hover {
+      background-color: #343a40;
+      border-color: #343a40;
+    }
+
+    .form-control:focus {
+      border-color: var(--main-color);
+      box-shadow: 0 0 0 0.2rem rgba(73, 80, 87, 0.25);
+    }
+
+    .img-thumbnail {
+      max-height: 150px;
+      object-fit: cover;
+      display: none;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body class="container-fluid mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+  <h3 class="mb-3 mb-md-0">Edit Member</h3>
+  <a href="/my-family" class="btn btn-secondary">Back to My Family</a>
+</div>
+
+<form id="editMemberForm" enctype="multipart/form-data">
+  <div class="row g-2">
+    <div class="col-12">
+      <div class="card p-3">
+        <div class="row g-2">
+          <div class="col-12 col-md-6">
+            <h5 class="mb-3 small">Member Details</h5>
+            <input class="form-control mb-2 small" name="name" placeholder="Name" required>
+            <input class="form-control mb-2 small" name="mobile" placeholder="Mobile" type="tel">
+            <input class="form-control mb-2 small" name="occupation" placeholder="Occupation">
+            <input type="date" class="form-control mb-2 small" name="dob">
+            <select class="form-control mb-2 small" name="gender">
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+            <select class="form-control mb-2 small" name="relationship">
+              <option value="">Select Relationship</option>
+              <option value="husband">Husband</option>
+              <option value="wife">Wife</option>
+              <option value="son">Son</option>
+              <option value="daughter">Daughter</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <h5 class="mb-3 small">Photo</h5>
+            <div class="mb-3">
+              <label class="form-label small">Member Photo</label>
+              <input type="file" class="form-control small d-none" name="photo" accept="image/*" id="photoFile_file" onchange="handlePhotoSelect(this, 'photoFile')">
+              <div id="photoFile_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('photoFile')">
+                <span class="text-muted">Click to upload or capture photo</span>
+              </div>
+              <img id="photo_preview" class="img-thumbnail" style="display: none;">
+            </div>
+          </div>
+        </div>
+
+        <h5 class="mt-4 mb-3 small">Address</h5>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="sameAsParents">
+          <label class="form-check-label small" for="sameAsParents">Same as Parents' Address</label>
+        </div>
+        <div class="row g-2">
+          <div class="col-12 col-md-6">
+            <input class="form-control mb-2 small" name="door_no" placeholder="Door No">
+            <input class="form-control mb-2 small" name="street" placeholder="Street">
+          </div>
+          <div class="col-12 col-md-6">
+            <select class="form-control mb-2 small" name="state" id="state">
+              <option value="">Select State</option>
+            </select>
+            <select class="form-control mb-2 small" name="district" id="district">
+              <option value="">Select District</option>
+            </select>
+          </div>
+        </div>
+
+        <input class="form-control mb-3 small" name="pincode" placeholder="Pincode" type="text">
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-fill">Update</button>
+          <a href="/my-family" class="btn btn-secondary flex-fill">Cancel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script src="/js/family.js"></script>
+
+<script>
+  let parentsAddress = {};
+
+  function handlePhotoSelect(input, target) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      processPhotoFile(file, target);
+    }
+  }
+
+  // Load existing member data and parents' address
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const memberId = window.location.pathname.split('/').pop();
+      const res = await fetch(`/get-child/${memberId}`);
+      const member = await res.json();
+
+      if (member) {
+        document.querySelector('input[name="name"]').value = member.name || '';
+        document.querySelector('input[name="mobile"]').value = member.mobile || '';
+        document.querySelector('input[name="occupation"]').value = member.occupation || '';
+        document.querySelector('input[name="dob"]').value = member.dob || '';
+        document.querySelector('select[name="gender"]').value = member.gender || '';
+        document.querySelector('select[name="relationship"]').value = member.relationship || '';
+        document.querySelector('input[name="door_no"]').value = member.door_no || '';
+        document.querySelector('input[name="street"]').value = member.street || '';
+        document.querySelector('input[name="pincode"]').value = member.pincode || '';
+
+        if (member.photo) {
+          document.getElementById('photo_preview').src = '/' + member.photo;
+          document.getElementById('photo_preview').style.display = 'block';
+
+          // Also show in placeholder
+          const placeholder = document.getElementById('photoFile_placeholder');
+          if (placeholder) {
+            placeholder.innerHTML = `<img src="/${member.photo}" style="max-height: 80px; max-width: 100px; object-fit: cover;"><br><small class="text-muted">Existing photo</small>`;
+          }
+        }
+
+        // Load states and set district after states are loaded
+        await loadStatesForMemberEdit(member.state, member.district);
+      }
+
+      // Fetch parents' address
+      const parentsRes = await fetch('/my-family-json');
+      const familyData = await parentsRes.json();
+      if (familyData.success && familyData.members) {
+        const parents = familyData.members.filter(m => m.member_type === 'parent');
+        if (parents.length > 0) {
+          // Use the first parent's address (assuming husband or wife)
+          const parent = parents[0];
+          parentsAddress = {
+            door_no: parent.door_no || '',
+            street: parent.street || '',
+            state: parent.state || '',
+            district: parent.district || '',
+            pincode: parent.pincode || ''
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error loading data:", err);
+    }
+  });
+
+  // Load states for member edit
+  async function loadStatesForMemberEdit(selectedState, selectedDistrict) {
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+
+    try {
+      const res = await fetch("/data/india-states-districts.json");
+      const indiaData = await res.json();
+
+      // Clear existing options
+      stateSelect.innerHTML = '<option value="">Select State</option>';
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+
+      // Add states
+      Object.keys(indiaData).forEach(state => {
+        const option = document.createElement("option");
+        option.value = state;
+        option.textContent = state;
+        if (state === selectedState) option.selected = true;
+        stateSelect.appendChild(option);
+      });
+
+      // Load districts if state is selected
+      if (selectedState && indiaData[selectedState]) {
+        indiaData[selectedState].forEach(district => {
+          const option = document.createElement("option");
+          option.value = district;
+          option.textContent = district;
+          if (district === selectedDistrict) option.selected = true;
+          districtSelect.appendChild(option);
+        });
+      }
+
+      // Add change event listener for state
+      stateSelect.addEventListener("change", function () {
+        const selectedState = this.value;
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+
+        if (selectedState && indiaData[selectedState]) {
+          indiaData[selectedState].forEach(district => {
+            const option = document.createElement("option");
+            option.value = district;
+            option.textContent = district;
+            districtSelect.appendChild(option);
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error("Error loading states for member edit:", error);
+    }
+  }
+
+  // Handle checkbox for same as parents address
+  document.getElementById('sameAsParents').addEventListener('change', function() {
+    const isChecked = this.checked;
+    const addressFields = ['door_no', 'street', 'state', 'district', 'pincode'];
+
+    addressFields.forEach(field => {
+      const element = document.querySelector(`[name="${field}"]`);
+      if (isChecked) {
+        element.value = parentsAddress[field] || '';
+        element.disabled = true;
+      } else {
+        element.disabled = false;
+        // Optionally clear fields or keep current values
+      }
+    });
+  });
+
+  document.getElementById('editMemberForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const memberId = window.location.pathname.split('/').pop();
+    const formData = new FormData(e.target);
+
+    try {
+      const res = await fetch(`/update-member/${memberId}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Member updated successfully!',
+          confirmButtonColor: '#495057'
+        }).then(() => {
+          window.location.href = '/my-family';
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: result.message || 'Failed to update member',
+          confirmButtonColor: '#495057'
+        });
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Network error occurred',
+        confirmButtonColor: '#495057'
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

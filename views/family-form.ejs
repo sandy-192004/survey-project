@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head') %>
+
+    <body class="d-flex flex-column min-vh-100">
+
+        <%- include('partials/navbar') %>
+
+            <div class="container-fluid px-3 px-md-4 py-4" style="flex: 1; background-color: var(--gray-50);">
+
+                <!-- Page Header -->
+                <div class="mb-4">
+                    <h1 class="h3 fw-bold mb-0"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Add Family</h1>
+                </div>
+
+                <style>
+                    .card {
+                        border: 1px solid var(--border-color);
+                        border-radius: 10px;
+                        background-color: #ffffff;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .btn-primary {
+                        background-color: var(--primary);
+                        border-color: var(--primary);
+                    }
+
+                    .btn-primary:hover {
+                        background-color: var(--primary-dark);
+                        border-color: var(--primary-dark);
+                    }
+
+                    .img-thumbnail {
+                        max-height: 150px;
+                        object-fit: cover;
+                        display: none;
+                        margin-top: 8px;
+                    }
+                </style>
+
+                <form id="familyForm" action="/save-family" method="POST" enctype="multipart/form-data">
+                    <div class="row g-2">
+                        <div class="col-12">
+
+                            <!-- 1. MY PARENTS -->
+                            <div class="card p-4 mb-3">
+                                <h5 class="mb-3 text-primary"><i class="bi bi-people-fill me-2"></i>SECTION 1: MY
+                                    PARENTS</h5>
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6 border-end-md pe-md-4">
+                                        <h6 class="fw-bold">Father Details</h6>
+                                        <input class="form-control mb-2 small" name="father_name"
+                                            placeholder="Father Name" required>
+                                        <div class="upload-box" onclick="openImageModal('father_image')" id="file_text_father_image">
+                                            <i class="bi bi-camera me-2"></i>Take Photo → Camera
+                                        </div>
+                                        <input type="file" id="father_image" name="father_image" class="d-none" accept="image/*" hidden>
+                                        <input type="file" id="father_image_camera" accept="image/*" capture="environment" style="display:none;">
+                                        <img id="preview_father_image" class="img-thumbnail w-100"
+                                            style="display:none;">
+                                    </div>
+                                    <div class="col-12 col-md-6 ps-md-4">
+                                        <h6 class="fw-bold">Mother Details</h6>
+                                        <input class="form-control mb-2 small" name="mother_name"
+                                            placeholder="Mother Name" required>
+                                        <div class="upload-box" onclick="openImageModal('mother_image')" id="file_text_mother_image">
+                                            <i class="bi bi-camera me-2"></i>Take Photo → Camera
+                                        </div>
+                                        <input type="file" id="mother_image" name="mother_image" class="d-none" accept="image/*" hidden>
+                                        <input type="file" id="mother_image_camera" accept="image/*" capture="environment" style="display:none;">
+                                        <img id="preview_mother_image" class="img-thumbnail w-100"
+                                            style="display:none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. MY DETAILS -->
+                            <div class="card p-4 mb-3">
+                                <h5 class="mb-3 text-primary"><i class="bi bi-person-badge me-2"></i>SECTION 2: MY
+                                    DETAILS</h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-6">
+                                        <input class="form-control mb-2 small" name="my_name" placeholder="Full Name"
+                                            required>
+                                        <select class="form-select mb-2 small" name="my_gender" required>
+                                            <option value="">Select Gender</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <input type="date" class="form-control mb-2 small" name="my_dob">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <input type="tel" class="form-control mb-2 small" name="my_mobile"
+                                            placeholder="Mobile Number" pattern="[0-9]{10}">
+                                        <input class="form-control mb-2 small" name="my_occupation"
+                                            placeholder="Occupation">
+                                    </div>
+                                    <div class="col-12 col-md-6 mt-2">
+                                        <div class="upload-box" onclick="openImageModal('my_image')" id="file_text_my_image">
+                                            <i class="bi bi-camera me-2"></i>Take Photo → Camera
+                                        </div>
+                                        <input type="file" id="my_image" name="my_image" class="d-none" accept="image/*" hidden>
+                                        <input type="file" id="my_image_camera" accept="image/*" capture="environment" style="display:none;">
+                                        <img id="preview_my_image" class="img-thumbnail"
+                                            style="display:none; max-width:200px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. MY SPOUSE -->
+                            <div class="card p-4 mb-3">
+                                <h5 class="mb-3 text-primary"><i class="bi bi-heart-fill me-2 text-danger"></i>SECTION
+                                    3: MY SPOUSE</h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-6">
+                                        <input class="form-control mb-2 small" name="spouse_name"
+                                            placeholder="Spouse Name">
+                                        <select class="form-select mb-2 small" name="spouse_gender">
+                                            <option value="">Select Gender</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <input type="tel" class="form-control mb-2 small" name="spouse_mobile"
+                                            placeholder="Spouse Mobile" pattern="[0-9]{10}">
+                                        <input class="form-control mb-2 small" name="spouse_occupation"
+                                            placeholder="Occupation">
+                                    </div>
+                                    <div class="col-12 col-md-6 mt-2">
+                                        <div class="upload-box" onclick="openImageModal('spouse_image')" id="file_text_spouse_image">
+                                            <i class="bi bi-camera me-2"></i>Take Photo → Camera
+                                        </div>
+                                        <input type="file" id="spouse_image" name="spouse_image" class="d-none" accept="image/*" hidden>
+                                        <input type="file" id="spouse_image_camera" accept="image/*" capture="environment" style="display:none;">
+                                        <img id="preview_spouse_image" class="img-thumbnail"
+                                            style="display:none; max-width:200px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. ADDRESS -->
+                            <div class="card p-4 mb-3">
+                                <h5 class="mb-3 text-primary"><i class="bi bi-geo-alt-fill me-2"></i>SECTION 4: ADDRESS
+                                </h5>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-6">
+                                        <input class="form-control mb-2 small" name="door_no" placeholder="Door No">
+                                        <input class="form-control mb-2 small" name="street" placeholder="Street">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <select class="form-select mb-2 small" name="state" id="state" onchange="loadDistricts()">
+                                            <option value="">Select State</option>
+                                        </select>
+                                        <select class="form-select mb-2 small" name="district" id="district">
+                                            <option value="">Select District</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <input class="form-control mb-2 small" name="pincode" placeholder="Pincode"
+                                            type="text" pattern="[0-9]{6}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-0">
+                                <!-- 5. CHILDREN -->
+                                <div class="col-12 col-xl-6 pe-xl-2 mb-3">
+                                    <div class="card p-4 h-100">
+                                        <h5 class="mb-3 text-primary"><i class="bi bi-people me-2"></i>SECTION 5:
+                                            CHILDREN</h5>
+                                        <div id="childrenContainer"></div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm mt-2"
+                                            onclick="addChild()">
+                                            <i class="bi bi-plus-circle me-1"></i> Add Child
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 6. SIBLINGS -->
+                                <div class="col-12 col-xl-6 ps-xl-2 mb-3">
+                                    <div class="card p-4 h-100">
+                                        <h5 class="mb-3 text-primary"><i class="bi bi-people me-2"></i>SECTION 6:
+                                            SIBLINGS</h5>
+                                        <div id="siblingsContainer"></div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm mt-2"
+                                            onclick="addSibling()">
+                                            <i class="bi bi-plus-circle me-1"></i> Add Sibling
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Save Button -->
+                            <div class="mt-4 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm fw-bold">
+                                    <i class="bi bi-check-lg me-2"></i>Save Family Details
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <script id="familyDataJson" type="application/json"><%- typeof familyData !== 'undefined' && familyData ? familyData : 'null' %></script>
+
+            <div id="imageModal" class="modal">
+                <div class="modal-content">
+                    <h3>Select Image Option</h3>
+                    <button type="button" class="btn btn-outline-secondary" onclick="chooseUpload()">Upload Photo</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="chooseCamera()">Take Photo</button>
+                    <button type="button" class="btn btn-light" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
+
+            <%- include('partials/footer') %>
+
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+                <script src="/india-state-district.js"></script>
+                <%- include('partials/scripts') %>
+
+                    <style>
+                        .upload-box {
+                            background-color: #f8f9fa;
+                            border: 2px dashed #dee2e6;
+                            border-radius: 8px;
+                            padding: 15px;
+                            text-align: center;
+                            cursor: pointer;
+                            color: #6c757d;
+                            transition: all 0.2s;
+                        }
+
+                        .upload-box:hover {
+                            background-color: #e9ecef;
+                            border-color: #adb5bd;
+                            color: #495057;
+                        }
+
+                        #imageModal {
+                            display: none;
+                            position: fixed;
+                            z-index: 1055;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            height: 100%;
+                            background: rgba(0, 0, 0, 0.55);
+                        }
+
+                        #imageModal .modal-content {
+                            background: #fff;
+                            width: 92%;
+                            max-width: 360px;
+                            margin: 15vh auto 0;
+                            border-radius: 10px;
+                            padding: 20px;
+                            text-align: center;
+                            display: grid;
+                            gap: 10px;
+                        }
+                    </style>
+
+                    <script>
+                        let childIndex = 0;
+                        let siblingIndex = 0;
+                        let currentInput = "";
+                        let statesMap = {};
+
+                        function addChild(data = null) {
+                            const name = data && data.name ? data.name : '';
+                            const gender = data && data.gender ? data.gender : '';
+                            const dob = data && data.dob ? new Date(data.dob).toISOString().split('T')[0] : '';
+                            const imgPath = data && data.image ? data.image : '';
+                            const displayImg = imgPath ? (imgPath.startsWith('/') ? imgPath : '/' + (imgPath.startsWith('uploads/') ? imgPath : 'uploads/' + imgPath)) : '';
+
+                            const html = `
+      <div class="border rounded p-3 mb-3 bg-light position-relative" id="childRow_${childIndex}">
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="document.getElementById('childRow_${childIndex}').remove()"></button>
+        <h6 class="fw-bold mb-3 small text-muted">Child #${childIndex + 1}</h6>
+        <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" value="${name}" required>
+        <select class="form-select mb-2 small" name="children[${childIndex}][gender]">
+          <option value="">Gender</option>
+          <option value="male" ${gender === 'male' || gender === 'Male' ? 'selected' : ''}>Male</option>
+          <option value="female" ${gender === 'female' || gender === 'Female' ? 'selected' : ''}>Female</option>
+          <option value="other" ${gender === 'other' || gender === 'Other' ? 'selected' : ''}>Other</option>
+        </select>
+        <input type="date" class="form-control mb-2 small" name="children[${childIndex}][dob]" value="${dob}">
+                <div class="upload-box mt-2 py-2 small" onclick="openImageModal('child_img_${childIndex}')" id="file_text_child_img_${childIndex}">
+          <i class="bi bi-camera me-1"></i>Take Photo → Camera
+        </div>
+                <input type="file" id="child_img_${childIndex}" name="children[${childIndex}][image]" class="d-none" accept="image/*" hidden>
+                <input type="file" id="child_img_${childIndex}_camera" accept="image/*" capture="environment" style="display:none;">
+        <input type="hidden" name="children[${childIndex}][existing_image]" value="${imgPath}">
+        <img id="preview_child_img_${childIndex}" src="${displayImg}" class="img-thumbnail mt-2" style="display:${displayImg ? 'block' : 'none'}; max-height:100px;">
+      </div>
+    `;
+                            document.getElementById('childrenContainer').insertAdjacentHTML('beforeend', html);
+                                                        setupImageInputPair(`child_img_${childIndex}`);
+                            childIndex++;
+                        }
+
+                        function addSibling(data = null) {
+                            const name = data && data.name ? data.name : '';
+                            const gender = data && data.gender ? data.gender : '';
+                            const rel = data && data.relation_type ? data.relation_type : '';
+                            const imgPath = data && data.image ? data.image : '';
+                            const displayImg = imgPath ? (imgPath.startsWith('/') ? imgPath : '/' + (imgPath.startsWith('uploads/') ? imgPath : 'uploads/' + imgPath)) : '';
+
+                            const html = `
+      <div class="border rounded p-3 mb-3 bg-light position-relative" id="siblingRow_${siblingIndex}">
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="document.getElementById('siblingRow_${siblingIndex}').remove()"></button>
+        <h6 class="fw-bold mb-3 small text-muted">Sibling #${siblingIndex + 1}</h6>
+        <input class="form-control mb-2 small" name="siblings[${siblingIndex}][name]" placeholder="Sibling Name" value="${name}" required>
+        <select class="form-select mb-2 small" name="siblings[${siblingIndex}][gender]">
+          <option value="">Gender</option>
+          <option value="male" ${gender === 'male' || gender === 'Male' ? 'selected' : ''}>Male</option>
+          <option value="female" ${gender === 'female' || gender === 'Female' ? 'selected' : ''}>Female</option>
+          <option value="other" ${gender === 'other' || gender === 'Other' ? 'selected' : ''}>Other</option>
+        </select>
+        <select class="form-select mb-2 small" name="siblings[${siblingIndex}][relation]">
+          <option value="">Relation</option>
+          <option value="Brother" ${rel === 'Brother' || gender === 'Male' || gender === 'male' ? 'selected' : ''}>Brother</option>
+          <option value="Sister" ${rel === 'Sister' || gender === 'Female' || gender === 'female' ? 'selected' : ''}>Sister</option>
+        </select>
+        <div class="upload-box mt-2 py-2 small" onclick="openImageModal('sibling_img_${siblingIndex}')" id="file_text_sibling_img_${siblingIndex}">
+          <i class="bi bi-camera me-1"></i>Take Photo → Camera
+        </div>
+        <input type="file" id="sibling_img_${siblingIndex}" name="siblings[${siblingIndex}][image]" class="d-none" accept="image/*" hidden>
+        <input type="file" id="sibling_img_${siblingIndex}_camera" accept="image/*" capture="environment" style="display:none;">
+        <input type="hidden" name="siblings[${siblingIndex}][existing_image]" value="${imgPath}">
+        <img id="preview_sibling_img_${siblingIndex}" src="${displayImg}" class="img-thumbnail mt-2" style="display:${displayImg ? 'block' : 'none'}; max-height:100px;">
+      </div>
+    `;
+                            document.getElementById('siblingsContainer').insertAdjacentHTML('beforeend', html);
+                            setupImageInputPair(`sibling_img_${siblingIndex}`);
+                            siblingIndex++;
+                        }
+
+                        function openImageModal(inputId) {
+                            currentInput = inputId;
+                            document.getElementById("imageModal").style.display = "block";
+                        }
+
+                        function closeModal() {
+                            document.getElementById("imageModal").style.display = "none";
+                        }
+
+                        function chooseUpload() {
+                            const input = document.getElementById(currentInput);
+                            if (input) input.click();
+                            closeModal();
+                        }
+
+                        function chooseCamera() {
+                            const cameraInput = document.getElementById(currentInput + '_camera');
+                            if (cameraInput) cameraInput.click();
+                            closeModal();
+                        }
+
+                        function showFileSize(baseId) {
+                            const uploadInput = document.getElementById(baseId);
+                            const fileTextBox = document.getElementById('file_text_' + baseId);
+                            if (!uploadInput || !uploadInput.files[0]) return;
+                            const file = uploadInput.files[0];
+                            const sizeKB = (file.size / 1024).toFixed(2);
+                            if (fileTextBox) {
+                                fileTextBox.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>Selected: ' + sizeKB + ' KB';
+                            }
+                        }
+
+                        function setupImageInputPair(baseId) {
+                            const uploadInput = document.getElementById(baseId);
+                            const cameraInput = document.getElementById(baseId + '_camera');
+
+                            if (uploadInput && !uploadInput.dataset.bound) {
+                                uploadInput.addEventListener('change', function () {
+                                    showFileSize(baseId);
+                                });
+                                uploadInput.dataset.bound = '1';
+                            }
+
+                            if (cameraInput && !cameraInput.dataset.bound) {
+                                cameraInput.addEventListener('change', function () {
+                                    const file = this.files && this.files[0];
+                                    if (!file || !uploadInput) return;
+                                    const dt = new DataTransfer();
+                                    dt.items.add(file);
+                                    uploadInput.files = dt.files;
+                                    showFileSize(baseId);
+                                });
+                                cameraInput.dataset.bound = '1';
+                            }
+                        }
+
+                        function loadStates() {
+                            const stateDropdown = document.getElementById('state');
+                            if (!stateDropdown) return;
+
+                            stateDropdown.innerHTML = '<option value="">Select State</option>';
+                            Object.keys(statesMap).forEach(state => {
+                                stateDropdown.innerHTML += `<option value="${state}">${state}</option>`;
+                            });
+                        }
+
+                        function loadDistricts() {
+                            const state = document.getElementById('state').value;
+                            const districtDropdown = document.getElementById('district');
+
+                            districtDropdown.innerHTML = '<option value="">Select District</option>';
+
+                            if (state && statesMap[state]) {
+                                statesMap[state].forEach(district => {
+                                    districtDropdown.innerHTML += `<option value="${district}">${district}</option>`;
+                                });
+                            }
+                        }
+
+                        window.onclick = function (event) {
+                            const modal = document.getElementById('imageModal');
+                            if (event.target === modal) closeModal();
+                        };
+
+                        window.onload = function () {
+                            setTimeout(() => {
+                                if (window.states) {
+                                    statesMap = window.states;
+                                    loadStates();
+                                } else {
+                                    console.error("States data not loaded");
+                                }
+                            }, 200);
+
+                            // Setup image file size display for all inputs
+                            setupImageInputPair('father_image');
+                            setupImageInputPair('mother_image');
+                            setupImageInputPair('my_image');
+                            setupImageInputPair('spouse_image');
+
+                            const familyDataNode = document.getElementById('familyDataJson');
+                            const existingData = familyDataNode ? JSON.parse(familyDataNode.textContent || 'null') : null;
+                            const form = document.getElementById('familyForm');
+                            const setVal = (n, v) => {
+                                const el = document.querySelector(`[name="${n}"]`);
+                                if (v && el) el.value = v;
+                            };
+                            const setImg = (id, path, hiddenName) => {
+                                if (!path) return;
+                                const hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = hiddenName;
+                                hidden.value = path;
+                                form.appendChild(hidden);
+
+                                const displayPath = path.startsWith('/') ? path : '/' + (path.startsWith('uploads/') ? path : 'uploads/' + path);
+                                const img = document.getElementById(id);
+                                if (img) {
+                                    img.src = displayPath;
+                                    img.style.display = 'block';
+                                }
+                            };
+
+                            if (existingData) {
+                                setVal('father_name', existingData.father?.name);
+                                setImg('preview_father_image', existingData.father?.image, 'existing_father_image');
+
+                                setVal('mother_name', existingData.mother?.name);
+                                setImg('preview_mother_image', existingData.mother?.image, 'existing_mother_image');
+
+                                setVal('my_name', existingData.self?.name);
+                                setVal('my_gender', existingData.self?.gender ? existingData.self.gender.toLowerCase() : '');
+                                setVal('my_dob', existingData.self?.dob ? new Date(existingData.self.dob).toISOString().split('T')[0] : '');
+                                setVal('my_mobile', existingData.self?.mobile);
+                                setVal('my_occupation', existingData.self?.occupation);
+                                setImg('preview_my_image', existingData.self?.image, 'existing_my_image');
+
+                                setVal('spouse_name', existingData.spouse?.name);
+                                setVal('spouse_gender', existingData.spouse?.gender ? existingData.spouse.gender.toLowerCase() : '');
+                                setVal('spouse_mobile', existingData.spouse?.mobile);
+                                setVal('spouse_occupation', existingData.spouse?.occupation);
+                                setImg('preview_spouse_image', existingData.spouse?.image, 'existing_spouse_image');
+
+                                setVal('door_no', existingData.self?.door_no);
+                                setVal('street', existingData.self?.street);
+                                setVal('pincode', existingData.self?.pincode);
+
+                                if (existingData.self?.state) {
+                                    const stateSelect = document.getElementById('state');
+                                    stateSelect.value = existingData.self.state;
+                                    loadDistricts();
+                                    if (existingData.self?.district) {
+                                        setVal('district', existingData.self.district);
+                                    }
+                                }
+
+                                document.getElementById('childrenContainer').innerHTML = '';
+                                if (existingData.children?.length > 0) {
+                                    existingData.children.forEach(c => addChild(c));
+                                } else {
+                                    addChild();
+                                }
+
+                                document.getElementById('siblingsContainer').innerHTML = '';
+                                if (existingData.siblings?.length > 0) {
+                                    existingData.siblings.forEach(s => addSibling(s));
+                                } else {
+                                    addSibling();
+                                }
+                            } else {
+                                addChild();
+                                addSibling();
+                            }
+                        };
+                    </script>
+                    
+
+    </body>
+
+</html>

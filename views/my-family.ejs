@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head') %>
+
+  <body class="d-flex flex-column min-vh-100">
+
+    <%- include('partials/navbar') %>
+
+      <!-- No Family Details Modal -->
+      <div class="modal fade" id="noFamilyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning bg-opacity-10 border-0 py-2">
+              <h6 class="modal-title mb-0"><i class="bi bi-exclamation-circle text-warning me-2"></i>No Details Found
+              </h6>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-3">
+              <i class="bi bi-inbox text-muted mb-2" style="font-size: 2.5rem;"></i>
+              <h6 class="fw-bold mb-2">No Family Details</h6>
+              <p class="text-muted small mb-3">Please add your family details to continue.</p>
+              <a href="/family-form" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Add Family
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container-fluid px-3 px-md-4 py-4"
+        style="flex: 1; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+
+        <!-- Page Header with Gradient -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 class="h3 fw-bold mb-1">
+                <i class="bi bi-people-fill text-primary me-2"></i>My Family
+              </h1>
+              <p class="text-muted small mb-0">Manage your family details</p>
+            </div>
+            <% if (members && members.length> 0) { %>
+              <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                <i class="bi bi-person-fill me-1"></i>
+                <%= members.length %> Member<%= members.length !==1 ? 's' : '' %>
+              </div>
+              <% } %>
+          </div>
+        </div>
+
+        <% if (!members || !members.length) { %>
+          <!-- No Family Data -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+              <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+              <h4 class="fw-bold mb-3">No Family Data Found</h4>
+              <p class="text-muted mb-4">Start by adding your family details</p>
+              <a href="/family-form" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>Add Family Details
+              </a>
+            </div>
+          </div>
+          <% } else { %>
+            <% function renderCard(person) { if (!person) return '' ; let photoSrc=person.image; if (photoSrc &&
+              photoSrc.trim() !=='' ) { if (photoSrc.startsWith('/')) photoSrc=photoSrc.substring(1); if
+              (!photoSrc.startsWith('uploads/')) photoSrc='uploads/' + photoSrc; } %>
+              <div class="col-12 col-md-6">
+                <div class="card h-100 shadow-sm border-0"
+                  style="border-radius: 12px; overflow: hidden; background: #fff;">
+                  <div class="d-flex flex-row h-100">
+                    <div class="d-flex align-items-center justify-content-center bg-light border-end"
+                      style="width: 140px; min-height: 180px; padding: 10px;">
+                      <% if (photoSrc) { %>
+                        <img src="/<%= photoSrc %>" alt="<%= person.name %>"
+                          style="width: 120px; height: 150px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <% } else { %>
+                          <div class="d-flex align-items-center justify-content-center bg-white shadow-sm"
+                            style="width: 120px; height: 150px; border-radius: 6px; border: 1px dashed #ccc;">
+                            <i class="bi bi-person-fill text-muted" style="font-size: 3.5rem;"></i>
+                          </div>
+                          <% } %>
+                    </div>
+                    <div class="p-3 flex-grow-1 d-flex flex-column justify-content-center text-start">
+                      <h5 class="fw-bold text-dark mb-1 text-truncate" style="max-width: 200px;">
+                        <%= person.name %>
+                      </h5>
+                      <span
+                        class="badge bg-primary bg-opacity-10 text-primary fw-bold text-capitalize px-3 py-2 mb-3 d-inline-block"
+                        style="width: fit-content; font-size: 0.85rem;">
+                        <i class="bi bi-person-badge me-1"></i>
+                        <%= person.relation || 'Self' %>
+                      </span>
+                      <div class="text-muted small" style="line-height: 1.5;">
+                        <% if (person.door_no || person.street) { %>
+                          <div class="mb-1 text-truncate" style="max-width: 220px;">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                            <%= [person.door_no, person.street].filter(Boolean).join(', ') %>
+                        </div>
+                      <% } %>
+                      <% if (person.district || person.state) { %>
+                        <div class="mb-1 ms-3 text-truncate" style="max-width: 200px;">
+                          <%= [person.district, person.state].filter(Boolean).join(' , ') %>
+                        </div>
+                      <% } %>
+                      <% if (person.pincode) { %>
+                        <div class="ms-3 mb-2">PIN: <%= person.pincode %></div>
+                      <% } %>
+                      <% if (!person.door_no && !person.street && !person.district && !person.state) { %>
+                        <div class="mb-2"><i class="bi bi-info-circle text-secondary me-1"></i> Address not provided</div>
+                      <% } %>
+                      <% if (person.mobile) { %>
+                        <div><i class="bi bi-telephone-fill me-1 text-secondary"></i><%= person.mobile %></div>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+            <% 
+              const parents = members.filter(m => m.relation === 'father' || m.relation==='mother' ); 
+              const selfAndSpouse=members.filter(m=> m.relation === 'Self' || m.relation === 'spouse');
+              const siblingsList = members.filter(m => m.relation === 'sibling');
+              const childrenList = members.filter(m => m.relation === 'child');
+              const selfMember = members.find(m => m.relation === 'Self');
+            %>
+
+                              <!-- PARENTS ROW -->
+                              <% if (parents.length> 0) { %>
+                                <div class="d-flex align-items-center mb-3 mt-2 border-bottom pb-2">
+                                  <i class="bi bi-people-fill fs-4 text-primary me-2"></i>
+                                  <h5 class="fw-bold text-secondary mb-0">Parents</h5>
+                                </div>
+                                <div class="row g-4 mb-4">
+                                  <% parents.forEach(p=> renderCard(p)) %>
+                                </div>
+                                <% } %>
+
+                                  <!-- SELF + SPOUSE ROW -->
+                                  <% if (selfAndSpouse.length> 0) { %>
+                                    <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                                      <i class="bi bi-heart-fill fs-4 text-danger me-2"></i>
+                                      <h5 class="fw-bold text-secondary mb-0">Self & Spouse</h5>
+                                    </div>
+                                    <div class="row g-4 mb-4">
+                                      <% selfAndSpouse.forEach(p=> renderCard(p)) %>
+                                    </div>
+                                    <% } %>
+
+                                      <!-- SIBLINGS ROW -->
+                                      <% if (siblingsList.length> 0) { %>
+                                        <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                                          <i class="bi bi-person-lines-fill fs-4 text-info me-2"></i>
+                                          <h5 class="fw-bold text-secondary mb-0">Siblings</h5>
+                                        </div>
+                                        <div class="row g-4 mb-4">
+                                          <% siblingsList.forEach(p=> renderCard(p)) %>
+                                        </div>
+                                        <% } %>
+
+                                          <!-- CHILDREN ROW -->
+                                          <% if (childrenList.length> 0) { %>
+                                            <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                                              <i class="bi bi-emoji-smile-fill fs-4 text-success me-2"></i>
+                                              <h5 class="fw-bold text-secondary mb-0">Children</h5>
+                                            </div>
+                                            <div class="row g-4 mb-4">
+                                              <% childrenList.forEach(p=> renderCard(p)) %>
+                                            </div>
+                                            <% } %>
+
+                                              <div class="text-center mt-5 mb-3 bg-white p-4 rounded shadow-sm border">
+                                                <h5 class="fw-bold mb-3">Want to update family details?</h5>
+                                                <button class="btn btn-primary px-5 py-2 shadow-sm"
+                                                  onclick="window.location.href='/family-edit/<%= selfMember ? selfMember.id : "" %>'">
+                                                  <i class="bi bi-pencil-square me-2"></i>Edit Family Complete Form
+                                                </button>
+                                              </div>
+                                              <% } %>
+
+                          </div>
+
+                          <!-- Edit Member Modal -->
+                          <div class="modal fade" id="editMemberModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                              <div class="modal-content">
+                                <div class="modal-header bg-light">
+                                  <h5 class="modal-title fw-bold" id="editModalTitle">
+                                    <i class="bi bi-pencil-square me-2"></i>Edit Member
+                                  </h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <form id="editMemberForm" enctype="multipart/form-data">
+                                    <input type="hidden" id="memberId" name="memberId">
+                                    <input type="hidden" id="memberType" name="memberType">
+
+                                    <!-- Basic Information -->
+                                    <div class="card mb-3 border-0 bg-light">
+                                      <div class="card-body">
+                                        <h6 class="fw-bold mb-3"><i
+                                            class="bi bi-person-fill me-2 text-primary"></i>Basic Information
+                                        </h6>
+                                        <div class="row g-3">
+                                          <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Name <span
+                                                class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="editName" name="name" required>
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Mobile</label>
+                                            <input type="text" class="form-control" id="editMobile" name="mobile"
+                                              placeholder="+91 XXXXX XXXXX">
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Occupation</label>
+                                            <input type="text" class="form-control" id="editOccupation"
+                                              name="occupation">
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Date of Birth</label>
+                                            <input type="date" class="form-control" id="editDob" name="dob">
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Gender</label>
+                                            <select class="form-control" id="editGender" name="gender">
+                                              <option value="">Select</option>
+                                              <option value="Male">Male</option>
+                                              <option value="Female">Female</option>
+                                            </select>
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Photo</label>
+                                            <input type="file" class="d-none" id="editPhoto_file" name="photo"
+                                              accept="image/*" onchange="handlePhotoSelect(this, 'editPhoto')">
+                                            <!-- Styled clickable area -->
+                                            <div id="editPhoto_placeholder"
+                                              class="border rounded p-3 bg-light text-center"
+                                              onclick="showPhotoOptions('editPhoto')" style="cursor: pointer;">
+                                              <i class="bi bi-camera-fill text-muted" style="font-size: 1.5rem;"></i>
+                                              <p class="small text-muted mb-0">Click to upload photo</p>
+                                            </div>
+                                            <!-- Current photo display -->
+                                            <img id="currentPhoto" src="" alt="" class="img-thumbnail mt-2"
+                                              style="max-height: 100px; display: none;">
+                                            <!-- Photo info display -->
+                                            <div id="editPhotoInfo" class="mt-2" style="display: none;">
+                                              <span id="editPhotoName" class="small text-success"></span>
+                                              <button type="button" class="btn btn-sm btn-outline-danger ms-2"
+                                                onclick="deleteEditPhoto()">
+                                                <i class="bi bi-trash"></i>
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <!-- Address Information -->
+                                    <div class="card mb-3 border-0 bg-light" id="addressSection" style="display: none;">
+                                      <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                          <h6 class="fw-bold mb-0"><i
+                                              class="bi bi-geo-alt-fill me-2 text-danger"></i>Address
+                                            Information
+                                          </h6>
+                                          <div class="form-check form-switch" id="sameAsParentToggle"
+                                            style="display: none;">
+                                            <input class="form-check-input" type="checkbox" id="sameAsParentCheckbox"
+                                              onchange="toggleChildAddress()">
+                                            <label class="form-check-label small fw-semibold"
+                                              for="sameAsParentCheckbox">
+                                              <i class="bi bi-house-fill me-1"></i>Same as Parent
+                                            </label>
+                                          </div>
+                                        </div>
+                                        <div id="addressFields">
+                                          <div class="row g-3">
+                                            <div class="col-md-6">
+                                              <label class="form-label small fw-semibold">Door No</label>
+                                              <input type="text" class="form-control" id="editDoorNo" name="door_no"
+                                                placeholder="House/Flat No">
+                                            </div>
+                                            <div class="col-md-6">
+                                              <label class="form-label small fw-semibold">Street</label>
+                                              <input type="text" class="form-control" id="editStreet" name="street"
+                                                placeholder="Street Name">
+                                            </div>
+                                            <div class="col-md-4">
+                                              <label class="form-label small fw-semibold">District</label>
+                                              <input type="text" class="form-control" id="editDistrict" name="district"
+                                                placeholder="District">
+                                            </div>
+                                            <div class="col-md-4">
+                                              <label class="form-label small fw-semibold">State</label>
+                                              <input type="text" class="form-control" id="editState" name="state"
+                                                placeholder="State">
+                                            </div>
+                                            <div class="col-md-4">
+                                              <label class="form-label small fw-semibold">Pincode</label>
+                                              <input type="text" class="form-control" id="editPincode" name="pincode"
+                                                placeholder="Pincode">
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div class="mt-3 d-flex justify-content-end gap-2">
+                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-circle me-1"></i>Cancel
+                                      </button>
+                                      <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-lg me-1"></i>Save Changes
+                                      </button>
+                                    </div>
+                                  </form>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <%- include('partials/footer') %>
+                            <%- include('partials/scripts') %>
+                              <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                              <script src="/js/family.js"></script>
+
+                              <script>
+                                // Check if no family exists and show modal
+                                if (!members || !members.length) {
+                                  document.addEventListener('DOMContentLoaded', function () {
+                                    // Only show modal if not redirecting to form
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    if (!urlParams.get('showModal')) {
+                                      window.location.href = '/family-form';
+                                    }
+                                  });
+                                }
+
+                                function toggleChildAddress() {
+                                  const checkbox = document.getElementById('sameAsParentCheckbox');
+                                  const addressFields = document.getElementById('addressFields');
+
+                                  if (checkbox.checked) {
+                                    // Disable and clear address fields
+                                    addressFields.style.opacity = '0.5';
+                                    addressFields.querySelectorAll('input').forEach(input => {
+                                      input.disabled = true;
+                                      input.value = '';
+                                    });
+                                  } else {
+                                    // Enable address fields
+                                    addressFields.style.opacity = '1';
+                                    addressFields.querySelectorAll('input').forEach(input => {
+                                      input.disabled = false;
+                                    });
+                                  }
+                                }
+
+                                function openEditModal(type, memberId) {
+                                  const modal = new bootstrap.Modal(document.getElementById('editMemberModal'));
+
+                                  // Set modal title
+                                  const titles = {
+                                    husband: 'Edit Husband',
+                                    wife: 'Edit Wife',
+                                    child: 'Edit Child'
+                                  };
+                                  document.getElementById('editModalTitle').innerHTML = '<i class="bi bi-pencil-square me-2"></i>' + (titles[type] || 'Edit Member');
+
+                                  // Set hidden fields
+                                  document.getElementById('memberId').value = memberId;
+                                  document.getElementById('memberType').value = type;
+
+                                  // Show/hide address section and toggle
+                                  const addressSection = document.getElementById('addressSection');
+                                  const sameAsParentToggle = document.getElementById('sameAsParentToggle');
+
+                                  addressSection.style.display = 'block'; // Always show address section
+
+                                  if (type === 'child') {
+                                    sameAsParentToggle.style.display = 'block'; // Show toggle for children
+                                  } else {
+                                    sameAsParentToggle.style.display = 'none'; // Hide toggle for parents
+                                  }
+
+                                  // Fetch member data
+                                  fetch(`/get-member/${memberId}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                      if (data.success) {
+                                        const member = data.member;
+                                        document.getElementById('editName').value = member.name || '';
+                                        document.getElementById('editMobile').value = member.mobile || '';
+                                        document.getElementById('editOccupation').value = member.occupation || '';
+                                        document.getElementById('editDob').value = member.dob ? member.dob.split('T')[0] : '';
+                                        document.getElementById('editGender').value = member.gender || '';
+
+                                        // Handle address fields for both parents and children
+                                        document.getElementById('editDoorNo').value = member.door_no || '';
+                                        document.getElementById('editStreet').value = member.street || '';
+                                        document.getElementById('editDistrict').value = member.district || '';
+                                        document.getElementById('editState').value = member.state || '';
+                                        document.getElementById('editPincode').value = member.pincode || '';
+
+                                        // Handle "same as parent" checkbox for children only
+                                        if (type === 'child') {
+                                          const hasOwnAddress = member.door_no || member.street || member.district;
+                                          const checkbox = document.getElementById('sameAsParentCheckbox');
+
+                                          if (hasOwnAddress) {
+                                            // Child has own address
+                                            checkbox.checked = false;
+                                            toggleChildAddress();
+                                          } else {
+                                            // Child uses parent address
+                                            checkbox.checked = true;
+                                            toggleChildAddress();
+                                          }
+                                        } else {
+                                          // For parents, enable all fields
+                                          const addressFields = document.getElementById('addressFields');
+                                          addressFields.style.opacity = '1';
+                                          addressFields.querySelectorAll('input').forEach(input => {
+                                            input.disabled = false;
+                                          });
+                                        }
+
+                                        // Show current photo if exists
+                                        if (member.photo) {
+                                          let photoSrc = member.photo;
+                                          if (photoSrc.startsWith('/')) photoSrc = photoSrc.substring(1);
+                                          if (!photoSrc.startsWith('uploads/')) photoSrc = 'uploads/' + photoSrc;
+                                          document.getElementById('currentPhoto').src = '/' + photoSrc;
+                                          document.getElementById('currentPhoto').style.display = 'block';
+                                        } else {
+                                          document.getElementById('currentPhoto').style.display = 'none';
+                                        }
+
+                                        modal.show();
+                                      }
+                                    })
+                                    .catch(err => {
+                                      console.error('Error fetching member:', err);
+                                      Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Failed to load member details',
+                                        confirmButtonColor: '#4F46E5'
+                                      });
+                                    });
+                                }
+
+                                // Handle form submission
+                                document.getElementById('editMemberForm').addEventListener('submit', function (e) {
+                                  e.preventDefault();
+
+                                  const formData = new FormData(this);
+                                  const memberId = document.getElementById('memberId').value;
+                                  const memberType = document.getElementById('memberType').value;
+
+                                  let endpoint = '';
+                                  if (memberType === 'husband') {
+                                    endpoint = '/update-husband';
+                                  } else {
+                                    endpoint = `/update-member/${memberId}`;
+                                  }
+
+                                  fetch(endpoint, {
+                                    method: 'POST',
+                                    body: formData
+                                  })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                      if (data.success) {
+                                        Swal.fire({
+                                          icon: 'success',
+                                          title: 'Success',
+                                          text: 'Member updated successfully!',
+                                          confirmButtonColor: '#4F46E5'
+                                        }).then(() => {
+                                          window.location.reload();
+                                        });
+                                      } else {
+                                        Swal.fire({
+                                          icon: 'error',
+                                          title: 'Update Failed',
+                                          text: data.message || 'Failed to update member',
+                                          confirmButtonColor: '#4F46E5'
+                                        });
+                                      }
+                                    })
+                                    .catch(err => {
+                                      console.error('Error:', err);
+                                      Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'An error occurred while updating the member',
+                                        confirmButtonColor: '#4F46E5'
+                                      });
+                                    });
+                                });
+
+                                // ========== EDIT PHOTO FUNCTIONS ==========
+                                let editCameraStream = null;
+
+                                // Show photo options for edit modal
+                                function showEditPhotoOptions() {
+                                  Swal.fire({
+                                    title: 'Choose Photo Option',
+                                    html: `
+      <div class="d-flex flex-column gap-2">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('editPhoto_file').click(); Swal.close();">
+          <i class="bi bi-folder-fill me-2"></i>Choose File
+        </button>
+        <button type="button" class="btn btn-success" onclick="Swal.close(); openEditCamera();">
+          <i class="bi bi-camera-fill me-2"></i>Take Photo
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="Swal.close();">
+          <i class="bi bi-x-circle-fill me-2"></i>Cancel
+        </button>
+      </div>
+    `,
+                                    showConfirmButton: false,
+                                    showCancelButton: false
+                                  });
+                                }
+
+                                // Handle file selection for edit modal
+                                function handleEditPhotoSelect(input) {
+                                  if (input.files && input.files[0]) {
+                                    const file = input.files[0];
+                                    processEditPhotoFile(file);
+                                  }
+                                }
+
+                                // Open camera for edit modal
+                                function openEditCamera() {
+                                  Swal.fire({
+                                    title: 'Capture Photo',
+                                    html: '<video id="editCameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Capture',
+                                    cancelButtonText: 'Cancel',
+                                    confirmButtonColor: '#4F46E5',
+                                    didOpen: () => {
+                                      navigator.mediaDevices.getUserMedia({ video: true })
+                                        .then(stream => {
+                                          editCameraStream = stream;
+                                          const video = document.getElementById('editCameraVideo');
+                                          video.srcObject = stream;
+                                        })
+                                        .catch(err => {
+                                          console.error('Error accessing camera:', err);
+                                          Swal.fire('Error', 'Unable to access camera', 'error');
+                                        });
+                                    },
+                                    preConfirm: () => {
+                                      return new Promise((resolve) => {
+                                        const video = document.getElementById('editCameraVideo');
+                                        const canvas = document.createElement('canvas');
+                                        canvas.width = video.videoWidth;
+                                        canvas.height = video.videoHeight;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(video, 0, 0);
+                                        canvas.toBlob(resolve, 'image/jpeg', 0.9);
+                                      });
+                                    }
+                                  }).then((result) => {
+                                    if (result.isConfirmed && result.value) {
+                                      if (editCameraStream) {
+                                        editCameraStream.getTracks().forEach(track => track.stop());
+                                        editCameraStream = null;
+                                      }
+                                      processEditPhotoFile(result.value);
+                                    } else {
+                                      if (editCameraStream) {
+                                        editCameraStream.getTracks().forEach(track => track.stop());
+                                        editCameraStream = null;
+                                      }
+                                    }
+
+
+
+
+
+                                  });
+                                }
+
+                                // Process photo file for edit modal (50KB limit)
+                                function processEditPhotoFile(file) {
+                                  const maxSizeKB = 50;
+                                  const maxSizeBytes = maxSizeKB * 1024;
+
+                                  if (file.size <= maxSizeBytes) {
+                                    updateEditPhotoInfo(file.name, file.size, file);
+                                  } else {
+                                    compressEditPhoto(file, maxSizeBytes);
+                                  }
+                                }
+
+                                // Compress image for edit modal
+                                function compressEditPhoto(file, maxSizeBytes) {
+                                  const canvas = document.createElement('canvas');
+                                  const ctx = canvas.getContext('2d');
+                                  const img = new Image();
+
+                                  img.onload = function () {
+                                    let quality = 0.8;
+
+                                    const compress = () => {
+                                      canvas.width = img.width;
+                                      canvas.height = img.height;
+                                      ctx.drawImage(img, 0, 0);
+
+                                      canvas.toBlob((blob) => {
+                                        if (blob.size <= maxSizeBytes) {
+                                          const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                                          updateEditPhotoInfo(compressedFile.name, compressedFile.size, compressedFile);
+                                          const input = document.getElementById('editPhoto_file');
+                                          const dt = new DataTransfer();
+                                          dt.items.add(compressedFile);
+                                          input.files = dt.files;
+                                        } else if (quality > 0.1) {
+                                          quality -= 0.1;
+                                          compress();
+                                        } else {
+                                          const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                                          updateEditPhotoInfo(compressedFile.name, compressedFile.size, compressedFile);
+                                          const input = document.getElementById('editPhoto_file');
+                                          const dt = new DataTransfer();
+                                          dt.items.add(compressedFile);
+                                          input.files = dt.files;
+                                          Swal.fire({
+                                            icon: 'warning',
+                                            title: 'Large Photo',
+                                            text: 'Photo is larger than 50KB even after compression. It will still be uploaded.',
+                                            confirmButtonColor: '#4F46E5'
+                                          });
+                                        }
+                                      }, 'image/jpeg', quality);
+                                    };
+
+                                    compress();
+                                  };
+
+                                  img.src = URL.createObjectURL(file);
+                                }
+
+                                // Update photo info display with preview
+                                function updateEditPhotoInfo(name, size, file) {
+                                  const sizeKB = (size / 1024).toFixed(2);
+                                  document.getElementById('editPhotoName').textContent = `Selected: ${name} (${sizeKB} KB)`;
+                                  document.getElementById('editPhotoInfo').style.display = 'block';
+                                  document.getElementById('editPhoto_placeholder').style.display = 'none';
+
+                                  // Show preview of the captured photo
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                      document.getElementById('currentPhoto').src = e.target.result;
+                                      document.getElementById('currentPhoto').style.display = 'block';
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }
+
+                                // Delete selected photo
+                                function deleteEditPhoto() {
+                                  const input = document.getElementById('editPhoto_file');
+                                  input.value = '';
+                                  document.getElementById('editPhotoInfo').style.display = 'none';
+                                  document.getElementById('editPhotoName').textContent = '';
+                                  document.getElementById('editPhoto_placeholder').style.display = 'flex';
+                                }
+                              </script>
+
+  </body>
+
+</html>

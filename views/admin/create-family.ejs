@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Create Family</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border: 1px solid #dee2e6;
+    }
+    .form-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #dee2e6;
+    }
+    .btn-primary {
+      background-color: #495057;
+      border-color: #495057;
+    }
+    .btn-primary:hover {
+      background-color: #343a40;
+      border-color: #343a40;
+    }
+    .text-primary {
+      color: #495057 !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary">Create New Family (Admin)</h2>
+    <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
+  <form id="createFamilyForm" enctype="multipart/form-data">
+
+    <!-- Husband Details -->
+    <div class="form-section">
+      <h5>Husband Details</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Name *</label>
+          <input type="text" class="form-control" name="husband_name" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Gender</label>
+          <select class="form-control" name="husband_gender">
+            <option value="Male" selected>Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <label class="form-label">Mobile</label>
+          <input type="tel" class="form-control" name="mobile">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Occupation</label>
+          <input type="text" class="form-control" name="occupation">
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <label class="form-label">Photo</label>
+          <input type="file" id="husband_photo_file" class="form-control d-none" name="husband_photo" accept="image/*" onchange="handlePhotoSelect(this, 'husband')">
+          <div id="husband_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('husband')">
+            <span class="text-muted">Click to upload or capture photo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wife Details -->
+    <div class="form-section">
+      <h5>Wife Details</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-control" name="wife_name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Gender</label>
+          <select class="form-control" name="wife_gender">
+            <option value="Female" selected>Female</option>
+            <option value="Male">Male</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <label class="form-label">Mobile</label>
+          <input type="tel" class="form-control" name="wife_mobile">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Occupation</label>
+          <input type="text" class="form-control" name="wife_occupation">
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <label class="form-label">Photo</label>
+          <input type="file" id="wife_photo_file" class="form-control d-none" name="wife_photo" accept="image/*" onchange="handlePhotoSelect(this, 'wife')">
+          <div id="wife_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('wife')">
+            <span class="text-muted">Click to upload or capture photo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address (PARENTS) -->
+    <div class="form-section">
+      <h5>Address</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Door No</label>
+          <input type="text" class="form-control" name="door_no" id="parent_door_no">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Street</label>
+          <input type="text" class="form-control" name="street" id="parent_street">
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-4">
+          <label class="form-label">State</label>
+          <select class="form-control" name="state" id="state">
+            <option value="">Select State</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">District</label>
+          <select class="form-control" name="district" id="district">
+            <option value="">Select District</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Pincode</label>
+          <input type="text" class="form-control" name="pincode" id="parent_pincode">
+        </div>
+      </div>
+    </div>
+
+    <!-- Children -->
+    <div class="form-section">
+      <h5>Children</h5>
+      <div id="children-container"></div>
+      <button type="button" class="btn btn-outline-primary mt-3" onclick="addChild()">+ Add Child</button>
+    </div>
+
+    <!-- Submit -->
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-primary btn-lg">Create Family</button>
+    </div>
+
+  </form>
+
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content text-center">
+        <div class="modal-body">
+          <h4 class="text-success">✔ Saved Successfully</h4>
+          <p>Family and all members stored in database.</p>
+          <button class="btn btn-primary" onclick="window.location='/admin/dashboard'">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let childIndex = 0;
+
+// Load states and districts (UNCHANGED)
+fetch('/data/india-states-districts.json')
+  .then(response => response.json())
+  .then(data => {
+    const states = Object.keys(data);
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+
+    states.forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+
+    stateSelect.addEventListener('change', function() {
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+      if (this.value && data[this.value]) {
+        data[this.value].forEach(district => {
+          const option = document.createElement('option');
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        });
+      }
+    });
+  });
+
+// ✅ UPDATED: ADD CHILD WITH ADDRESS + CHECKBOX
+function addChild() {
+  const container = document.getElementById('children-container');
+
+  const childDiv = document.createElement('div');
+  childDiv.className = 'child-entry border p-3 mb-3 rounded';
+
+  childDiv.innerHTML = `
+    <h6>Child ${childIndex + 1}</h6>
+
+    <div class="row">
+      <div class="col-md-6">
+        <label class="form-label">Name *</label>
+        <input type="text" class="form-control" name="children[${childIndex}][name]" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Relationship</label>
+        <select class="form-control" name="children[${childIndex}][relationship]">
+          <option value="son">Son</option>
+          <option value="daughter">Daughter</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-md-4">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" class="form-control" name="children[${childIndex}][dob]">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Gender</label>
+        <select class="form-control" name="children[${childIndex}][gender]">
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Occupation</label>
+        <input type="text" class="form-control" name="children[${childIndex}][occupation]">
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <label class="form-label">Photo</label>
+        <input type="file" id="child_${childIndex}_photo_file" class="form-control d-none" name="children[${childIndex}][photo]" accept="image/*" onchange="handlePhotoSelect(this, 'child_${childIndex}')">
+        <div id="child_${childIndex}_photo_placeholder" class="d-flex align-items-center justify-content-center position-relative" style="height: 100px; background-color: #f8f9fa; border: 1px dashed #dee2e6; cursor: pointer;" onclick="showPhotoOptions('child_${childIndex}')">
+          <span class="text-muted">Click to upload or capture photo</span>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+    <h6>Child Address</h6>
+
+    <label>
+      <input type="checkbox" class="same-address-checkbox">
+      Same as Parents
+    </label>
+
+    <div class="row mt-2">
+      <div class="col-md-6">
+        <label>Door No</label>
+        <input type="text" class="form-control child-door" name="children[${childIndex}][door_no]">
+      </div>
+      <div class="col-md-6">
+        <label>Street</label>
+        <input type="text" class="form-control child-street" name="children[${childIndex}][street]">
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-md-4">
+        <label>State</label>
+        <select class="form-control child-state" name="children[${childIndex}][state]">
+          <option value="">Select State</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label>District</label>
+        <select class="form-control child-district" name="children[${childIndex}][district]">
+          <option value="">Select District</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label>Pincode</label>
+        <input type="text" class="form-control child-pincode" name="children[${childIndex}][pincode]">
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-md-12">
+        <button type="button" class="btn btn-outline-danger btn-sm remove-child-btn">
+          Remove Child
+        </button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(childDiv);
+
+  // Copy state options to child dropdown
+  const parentState = document.getElementById("state");
+  const childState = childDiv.querySelector(".child-state");
+
+  parentState.querySelectorAll("option").forEach(opt=>{
+    const newOpt = opt.cloneNode(true);
+    childState.appendChild(newOpt);
+  });
+
+  // When child state changes → load districts
+  childState.addEventListener("change", function(){
+    const childDistrict = childDiv.querySelector(".child-district");
+    childDistrict.innerHTML = '<option value="">Select District</option>';
+
+    fetch('/data/india-states-districts.json')
+      .then(res=>res.json())
+      .then(data=>{
+        if(data[this.value]){
+          data[this.value].forEach(d=>{
+            const opt=document.createElement("option");
+            opt.value=d;
+            opt.textContent=d;
+            childDistrict.appendChild(opt);
+          });
+        }
+      });
+  });
+
+  // ✅ SAME AS PARENTS CHECKBOX LOGIC
+  childDiv.querySelector(".same-address-checkbox").addEventListener("change", function(){
+    if(this.checked){
+      childDiv.querySelector(".child-door").value = document.getElementById("parent_door_no").value;
+      childDiv.querySelector(".child-street").value = document.getElementById("parent_street").value;
+      childDiv.querySelector(".child-pincode").value = document.getElementById("parent_pincode").value;
+      childDiv.querySelector(".child-state").value = document.getElementById("state").value;
+    }
+  });
+
+  childIndex++;
+}
+
+// Remove child (UNCHANGED)
+document.addEventListener("click", function (e) {
+  if (e.target.classList.contains("remove-child-btn")) {
+    e.target.closest(".child-entry").remove();
+  }
+});
+
+// FORM SUBMIT (UNCHANGED)
+document.getElementById('createFamilyForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+
+  fetch('/admin/create-family', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      showSuccessPopup();
+    } else {
+      showErrorPopup(result.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showErrorPopup('An error occurred. Please try again.');
+  });
+});
+
+function showSuccessPopup() {
+  const modal = new bootstrap.Modal(document.getElementById('successModal'));
+  modal.show();
+}
+
+// Global variables for photo handling
+let currentPhotoTarget = null;
+let cameraStream = null;
+
+// Show photo options modal
+function showPhotoOptions(target) {
+  currentPhotoTarget = target;
+  Swal.fire({
+    title: 'Choose Photo Option',
+    showCancelButton: true,
+    showDenyButton: true,
+    confirmButtonText: 'Upload Photo',
+    denyButtonText: 'Take Photo',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#8B4513',
+    denyButtonColor: '#8B4513'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Upload Photo
+      const fileInput = document.getElementById(`${target}_photo_file`);
+      fileInput.click();
+    } else if (result.isDenied) {
+      // Take Photo
+      openCamera(target);
+    }
+  });
+}
+
+// Open camera for photo capture
+function openCamera(target) {
+  Swal.fire({
+    title: 'Capture Photo',
+    html: '<video id="cameraVideo" autoplay style="width: 100%; max-width: 400px;"></video>',
+    showCancelButton: true,
+    confirmButtonText: 'Capture',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#8B4513',
+    didOpen: () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          cameraStream = stream;
+          const video = document.getElementById('cameraVideo');
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          console.error('Error accessing camera:', err);
+          Swal.fire('Error', 'Unable to access camera', 'error');
+        });
+    },
+    preConfirm: () => {
+      return new Promise((resolve) => {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(resolve, 'image/jpeg', 0.9);
+      });
+    }
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      // Stop camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      // Process captured image
+      processPhotoFile(result.value, target);
+    } else {
+      // Stop camera stream if cancelled
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+    }
+  });
+}
+
+// Process photo file (compress if needed)
+function processPhotoFile(file, target) {
+  const maxSizeKB = 250;
+  const maxSizeBytes = maxSizeKB * 1024;
+
+  if (file.size <= maxSizeBytes) {
+    // File is already small enough
+    updatePhotoPlaceholder(target, file.size);
+    assignFileToInput(file, target);
+  } else {
+    // Compress the image
+    compressImage(file, maxSizeBytes, target);
+  }
+}
+
+// Compress image to fit within size limit
+function compressImage(file, maxSizeBytes, target) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+
+  img.onload = function() {
+    let quality = 0.8;
+    let compressedFile;
+
+    const compress = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob.size <= maxSizeBytes) {
+          compressedFile = blob;
+          updatePhotoPlaceholder(target, blob.size);
+          assignFileToInput(blob, target);
+        } else if (quality > 0.1) {
+          quality -= 0.1;
+          compress();
+        } else {
+          // Even at lowest quality, still too big - use as is
+          updatePhotoPlaceholder(target, blob.size);
+          assignFileToInput(blob, target);
+        }
+      }, 'image/jpeg', quality);
+    };
+
+    compress();
+  };
+
+  img.src = URL.createObjectURL(file);
+}
+
+// Update placeholder with selected photo info
+function updatePhotoPlaceholder(target, sizeBytes) {
+  const placeholder = document.getElementById(`${target}_photo_placeholder`);
+  const sizeKB = (sizeBytes / 1024).toFixed(2);
+  placeholder.innerHTML = `<span class="text-success">Photo Selected - Size: ${sizeKB} KB</span>`;
+}
+
+// Assign compressed file to input field
+function assignFileToInput(file, target) {
+  const input = document.getElementById(`${target}_photo_file`);
+  const dt = new DataTransfer();
+  dt.items.add(new File([file], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+  input.files = dt.files;
+}
+
+// Handle photo selection (upload)
+function handlePhotoSelect(input, target) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processPhotoFile(file, target);
+  }
+}
+
+function showErrorPopup(message) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: message,
+    confirmButtonText: 'OK'
+  });
+}
+</script>
+
+</body>
+</html>
