@@ -333,7 +333,13 @@ exports.myFamily = async (req, res) => {
     if (selfCheck.length === 0) {
       // IF empty: render page with "No family data found"
       return res.render("my-family", {
-        members: null,
+        members: [],
+        father: null,
+        mother: null,
+        self: null,
+        spouse: null,
+        siblings: [],
+        children: [],
         message: "No family data found"
       });
     }
@@ -367,15 +373,34 @@ exports.myFamily = async (req, res) => {
       }
     }
 
+    const father = uniqueMembers.find((m) => m.relation === "father") || null;
+    const mother = uniqueMembers.find((m) => m.relation === "mother") || null;
+    const self = uniqueMembers.find((m) => m.relation === "Self") || null;
+    const spouse = uniqueMembers.find((m) => m.relation === "spouse") || null;
+    const siblings = uniqueMembers.filter((m) => m.relation === "sibling");
+    const children = uniqueMembers.filter((m) => m.relation === "child");
+
     return res.render("my-family", {
       members: uniqueMembers,
+      father,
+      mother,
+      self,
+      spouse,
+      siblings,
+      children,
       message: null
     });
 
   } catch (err) {
     console.error("myFamily ERROR:", err);
     return res.render("my-family", {
-      members: null,
+      members: [],
+      father: null,
+      mother: null,
+      self: null,
+      spouse: null,
+      siblings: [],
+      children: [],
       message: "An error occurred while loading family data."
     });
   }
