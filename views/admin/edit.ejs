@@ -226,9 +226,16 @@
     </div>
   </div>
 
+  <!-- Family data store -->
+  <div id="familyDataStore" style="display:none;" 
+       data-children='<%= JSON.stringify(family.children || []) %>'
+       data-siblings='<%= JSON.stringify(family.siblings || []) %>'></div>
+
   <script>
-    const childrenData = <%- JSON.stringify(family.children || []) %>;
-    const siblingsData = <%- JSON.stringify(family.siblings || []) %>;
+    // Parse family data from HTML attributes
+    const dataStore = document.getElementById('familyDataStore');
+    const childrenData = JSON.parse(dataStore.dataset.children);
+    const siblingsData = JSON.parse(dataStore.dataset.siblings);
     let childIndex = childrenData.length;
     let siblingIndex = siblingsData.length;
     let currentPhotoInputId = null;
