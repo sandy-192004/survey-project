@@ -41,12 +41,13 @@ router.get("/my-family-json", controller.getMyFamilyJson);
 router.post("/add-child", isLoggedIn, upload.single('photo'), controller.addChild);
 
 // Edit routes
-router.get("/family-edit", isLoggedIn, controller.showFamilyEdit);
+router.get("/family-edit/:id", isLoggedIn, controller.showFamilyEdit);
 router.get("/member-edit/:id", isLoggedIn, controller.showMemberEdit);
 router.get("/get-child/:id", isLoggedIn, controller.getChild);
 router.get("/get-member/:id", isLoggedIn, controller.getMember);
 router.post("/update-husband", isLoggedIn, upload.single('photo'), controller.updateHusband);
 router.post("/update-member/:id", isLoggedIn, upload.single('photo'), controller.updateMember);
+router.post("/update-family/:id", isLoggedIn, processUpload, controller.updateFamily);
 
 // ================== DELETE FAMILY ==================
 router.delete("/delete-family", isLoggedIn, controller.deleteFamily);
