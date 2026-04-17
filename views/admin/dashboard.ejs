@@ -190,8 +190,8 @@
                       <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); location='/admin/view/<%= member.id %>'" title="View">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'" title="Edit">
-                        <i class="bi bi-pencil-square"></i>
+                      <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); location='/admin/edit/<%= member.user_id || member.id %>'" title="Edit Family">
+                        ✏️
                       </button>
                       <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); confirmDelete('<%= member.id %>', '<%= member.name %>')" title="Delete">
                         <i class="bi bi-trash"></i>

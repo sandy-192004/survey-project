@@ -1,6 +1,7 @@
 const express = require("express");
 const session = require("express-session");
 require('dotenv').config();
+global.__dotenvConfigured = true;
 // const hemlet = require("helmet");
 
 const path = require("path");
@@ -70,11 +71,27 @@ app.use((err, req, res, next) => {
 
 // ================== SERVER START ==================
 
-const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
+const BASE_PORT = Number(process.env.PORT) || 3000;
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port http://localhost:${PORT}`);
-});        
+function startServer(port) {
+  const server = app.listen(port, HOST, () => {
+    console.log(`Server running on port http://localhost:${port}`);
+  });
+
+  server.on("error", (err) => {
+    if (err && err.code === "EADDRINUSE") {
+      const nextPort = Number(port) + 1;
+      console.warn(`Port ${port} is in use. Retrying on port ${nextPort}...`);
+      setTimeout(() => startServer(nextPort), 200);
+      return;
+    }
+
+    throw err;
+  });
+}
+
+startServer(BASE_PORT);
 
 
      

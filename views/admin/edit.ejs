@@ -1,443 +1,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edit Family Member</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<style>
-.option-btn {
-  background: #8B4513;
-  color: white;
-  border: none;
-}
-.option-btn:hover {
-  background: #6e340e;
-}
-.cancel-btn {
-  background: #87CEEB;
-  color: black;
-  border: none;
-}
-.cancel-btn:hover {
-  background: #5ec6e8;
-}
-.size-info {
-  display: block;
-  text-align: center;
-  font-size: 14px;
-  color: #555;
-  margin-top: 5px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Family</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      background-color: #f5f7fb;
+    }
+    .section-title {
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      color: #213547;
+    }
+    .card {
+      border: 0;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border-radius: 14px;
+    }
+    .preview {
+      width: 88px;
+      height: 88px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+    }
+    .dynamic-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.9rem;
+      background: #fff;
+    }
+  </style>
 </head>
 <body>
-
-<% if (message) { %>
-<div class="alert alert-success alert-dismissible fade show">
-  <%= message %>
-  <button class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-<% } %>
-
-<% if (!parent) { %>
-<div class="alert alert-danger">Parent record missing</div>
-<% } else { %>
-
-<div class="container mt-4">
-  <div class="d-flex justify-content-between mb-3">
-    <h4>Edit Family</h4>
-    <a href="/admin/dashboard" class="btn btn-danger btn-sm">X</a>
-  </div>
-
-  <form id="editForm" method="POST" action="/admin/edit/<%= familyId %>" enctype="multipart/form-data">
-
-    <div class="row">
-      <!-- HUSBAND -->
-      <div class="col-md-6">
-        <div class="card mb-4">
-          <div class="card-header"><h5>Husband Details</h5></div>
-          <div class="card-body">
-            <input class="form-control mb-2" name="name" value="<%= parent.husband_name %>" required>
-            <input class="form-control mb-2" name="mobile" value="<%= parent.mobile %>" required>
-            <input class="form-control mb-2" name="occupation" value="<%= parent.occupation %>">
-
-            <div class="mb-3 text-center">
-              <label>Husband Photo</label><br>
-              <input type="file" class="d-none" name="husband_photo" id="husband_photo_input" accept="image/*" onchange="uploadImage(this)">
-              <div class="border p-3 bg-light mt-2" onclick="showPhotoOptions('husband_photo_input')" style="cursor:pointer">Click to upload photo</div>
-              <div id="size_husband_photo_input" class="size-info"></div>
-            </div>
-
-            <h6>Address</h6>
-            <input class="form-control mb-2" name="door_no" value="<%= parent.door_no %>">
-            <input class="form-control mb-2" name="street" value="<%= parent.street %>">
-
-            <!--  Dropdowns for State & District -->
-            <select class="form-control mb-2" id="stateSelect" name="state">
-              <option value="">Select State</option>
-            </select>
-
-            <select class="form-control mb-2" id="districtSelect" name="district">
-              <option value="">Select District</option>
-            </select>
-
-            <input class="form-control mb-2" name="pincode" value="<%= parent.pincode %>">
-          </div>
-        </div>
-      </div>
-
-      <!-- WIFE -->
-      <div class="col-md-6">
-        <% if (wife) { %>
-        <div class="card mb-4">
-          <div class="card-header"><h5>Wife Details</h5></div>
-          <div class="card-body">
-            <input class="form-control mb-2" name="wife_name" value="<%= wife.name %>">
-            <input class="form-control mb-2" name="wife_mobile" value="<%= wife.mobile %>">
-            <input class="form-control mb-2" name="wife_occupation" value="<%= wife.occupation %>">
-
-            <div class="mb-3 text-center">
-              <label>Wife Photo</label><br>
-              <input type="file" class="d-none" name="wife_photo" id="wife_photo_input" accept="image/*" onchange="uploadImage(this)">
-              <div class="border p-3 bg-light mt-2" onclick="showPhotoOptions('wife_photo_input')" style="cursor:pointer">Click to upload photo</div>
-              <div id="size_wife_photo_input" class="size-info"></div>
-            </div>
-
-            <input class="form-control mb-2" name="wife_door_no" value="<%= wife.door_no %>">
-            <input class="form-control mb-2" name="wife_street" value="<%= wife.street %>">
-
-            <!-- Dropdowns for State & District -->
-            <select class="form-control mb-2" id="wifeStateSelect" name="wife_state">
-              <option value="">Select State</option>
-            </select>
-
-            <select class="form-control mb-2" id="wifeDistrictSelect" name="wife_district">
-              <option value="">Select District</option>
-            </select>
-
-            <input class="form-control mb-2" name="wife_pincode" value="<%= wife.pincode %>">
-          </div>
-        </div>
-        <% } %>
-      </div>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Edit Family</h3>
+      <a href="/admin/dashboard" class="btn btn-outline-secondary">Back</a>
     </div>
 
-   <!-- CHILDREN -->
-<div class="card mb-4">
-  <div class="card-header"><h5>Children</h5></div>
-  <div class="card-body" id="children">
-    <% if (children && children.length > 0) { %>
-      <% children.forEach((c,i)=>{ %>
-        <div class="border p-3 mb-3 child">
-          <input type="hidden" name="children[<%=i%>][id]" value="<%=c.child_id%>">
-          <input class="form-control mb-1" name="children[<%=i%>][name]" value="<%=c.child_name%>">
-          <select class="form-control mb-1" name="children[<%=i%>][gender]">
-            <option>Select Gender</option>
-            <option value="Male" <%=c.gender==='Male'?'selected':''%>>Male</option>
-            <option value="Female" <%=c.gender==='Female'?'selected':''%>>Female</option>
-            <option value="Other" <%=c.gender==='Other'?'selected':''%>>Other</option>
-          </select>
-          <input class="form-control mb-1" name="children[<%=i%>][occupation]" value="<%=c.occupation%>">
-          <input type="date" class="form-control mb-1" name="children[<%=i%>][dob]" value="<%=c.date_of_birth? new Date(c.date_of_birth).toISOString().split('T')[0]:''%>">
-
-          <label>Photo</label>
-          <input type="file" class="d-none" id="child_photo_<%=i%>" name="children[<%=i%>][photo]" accept="image/*" onchange="uploadImage(this)">
-          <div class="border p-2 text-center bg-light" onclick="showPhotoOptions('child_photo_<%=i%>')" style="cursor:pointer">Upload Photo</div>
-          <div id="size_child_photo_<%=i%>" class="size-info"></div>
-
-          <h6 class="mt-2">Address</h6>
-          <div class="form-check mb-2">
-            <input class="form-check-input same-address" type="checkbox" id="sameAddress_<%=i%>">
-            <label class="form-check-label" for="sameAddress_<%=i%>">Same as parents's address</label>
-          </div>
-
-          <input class="form-control mb-2 child-door" name="children[<%=i%>][door_no]" value="<%=c.door_no%>">
-          <input class="form-control mb-2 child-street" name="children[<%=i%>][street]" value="<%=c.street%>">
-
-          <!--  Child Dropdowns Added -->
-          <select class="form-control mb-2 child-state" name="children[<%=i%>][state]" id="childState_<%=i%>">
-            <option value="">Select State</option>
-          </select>
-
-          <select class="form-control mb-2 child-district" name="children[<%=i%>][district]" id="childDistrict_<%=i%>">
-            <option value="">Select District</option>
-          </select>
-
-          <input class="form-control mb-2 child-pincode" name="children[<%=i%>][pincode]" value="<%=c.pincode%>">
-          <button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
-        </div>
-      <% }) %>
-    <% } else { %>
-      <p>No children added yet.</p>
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
     <% } %>
+    <% if (message) { %>
+      <div class="alert alert-success"><%= message %></div>
+      <script>window.setTimeout(function(){ alert("Family updated successfully"); }, 100);</script>
+    <% } %>
+
+    <form method="POST" action="/admin/edit/<%= userId %>" enctype="multipart/form-data" id="adminEditForm">
+      <div class="card p-3 mb-3">
+        <h5 class="section-title">MY PARENTS</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Father Name</label>
+            <input class="form-control" name="father_name" value="<%= family.father.name %>">
+            <label class="form-label mt-2">Father Mobile</label>
+            <input class="form-control mobile-field" name="father_mobile" maxlength="10" value="<%= family.father.mobile %>">
+            <label class="form-label mt-2">Father Occupation</label>
+            <input class="form-control" name="father_occupation" value="<%= family.father.occupation %>">
+            <label class="form-label mt-2">Father Image</label>
+            <div class="d-flex align-items-center gap-2">
+              <img src="<%= family.father.image ? '/uploads/' + family.father.image : 'https://via.placeholder.com/88?text=Father' %>" class="preview" id="fatherPreview">
+              <input type="file" class="d-none photo-input" id="father_image_input" accept="image/*" name="father_image" data-preview-id="fatherPreview" onchange="previewImage(this, 'fatherPreview')">
+              <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="father_image_input">Upload Photo</button>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Mother Name</label>
+            <input class="form-control" name="mother_name" value="<%= family.mother.name %>">
+            <label class="form-label mt-2">Mother Mobile</label>
+            <input class="form-control mobile-field" name="mother_mobile" maxlength="10" value="<%= family.mother.mobile %>">
+            <label class="form-label mt-2">Mother Occupation</label>
+            <input class="form-control" name="mother_occupation" value="<%= family.mother.occupation %>">
+            <label class="form-label mt-2">Mother Image</label>
+            <div class="d-flex align-items-center gap-2">
+              <img src="<%= family.mother.image ? '/uploads/' + family.mother.image : 'https://via.placeholder.com/88?text=Mother' %>" class="preview" id="motherPreview">
+              <input type="file" class="d-none photo-input" id="mother_image_input" accept="image/*" name="mother_image" data-preview-id="motherPreview" onchange="previewImage(this, 'motherPreview')">
+              <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="mother_image_input">Upload Photo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <h5 class="section-title">MY DETAILS</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Name *</label>
+            <input class="form-control" name="my_name" required value="<%= family.self.name %>">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Gender</label>
+            <select class="form-select" name="my_gender">
+              <option value="">Select</option>
+              <option value="Male" <%= family.self.gender === 'Male' ? 'selected' : '' %>>Male</option>
+              <option value="Female" <%= family.self.gender === 'Female' ? 'selected' : '' %>>Female</option>
+              <option value="Other" <%= family.self.gender === 'Other' ? 'selected' : '' %>>Other</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">DOB</label>
+            <input type="date" class="form-control" name="my_dob" value="<%= family.self.dob %>">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Mobile *</label>
+            <input class="form-control mobile-field" name="my_mobile" maxlength="10" required value="<%= family.self.mobile %>">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Occupation</label>
+            <input class="form-control" name="my_occupation" value="<%= family.self.occupation %>">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Image</label>
+            <div class="d-flex align-items-center gap-2">
+              <img src="<%= family.self.image ? '/uploads/' + family.self.image : 'https://via.placeholder.com/88?text=Me' %>" class="preview" id="selfPreview">
+              <input type="file" class="d-none photo-input" id="my_image_input" accept="image/*" name="my_image" data-preview-id="selfPreview" onchange="previewImage(this, 'selfPreview')">
+              <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="my_image_input">Upload Photo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <h5 class="section-title">MY SPOUSE</h5>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="spouse_name" value="<%= family.spouse.name %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Gender</label>
+            <select class="form-select" name="spouse_gender">
+              <option value="">Select</option>
+              <option value="Male" <%= family.spouse.gender === 'Male' ? 'selected' : '' %>>Male</option>
+              <option value="Female" <%= family.spouse.gender === 'Female' ? 'selected' : '' %>>Female</option>
+              <option value="Other" <%= family.spouse.gender === 'Other' ? 'selected' : '' %>>Other</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Mobile</label>
+            <input class="form-control mobile-field" name="spouse_mobile" maxlength="10" value="<%= family.spouse.mobile %>">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Occupation</label>
+            <input class="form-control" name="spouse_occupation" value="<%= family.spouse.occupation %>">
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Image</label>
+            <div class="d-flex align-items-center gap-2">
+              <img src="<%= family.spouse.image ? '/uploads/' + family.spouse.image : 'https://via.placeholder.com/88?text=Spouse' %>" class="preview" id="spousePreview">
+              <input type="file" class="d-none photo-input" id="spouse_image_input" accept="image/*" name="spouse_image" data-preview-id="spousePreview" onchange="previewImage(this, 'spousePreview')">
+              <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="spouse_image_input">Upload Photo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <h5 class="section-title">ADDRESS</h5>
+        <div class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label">Door No</label>
+            <input class="form-control" name="door_no" value="<%= family.self.door_no %>">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Street</label>
+            <input class="form-control" name="street" value="<%= family.self.street %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">District</label>
+            <input class="form-control" name="district" value="<%= family.self.district %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">State</label>
+            <input class="form-control" name="state" value="<%= family.self.state %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Pincode</label>
+            <input class="form-control" name="pincode" value="<%= family.self.pincode %>">
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="section-title mb-0">CHILDREN</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="addChildBtn">+ Add Child</button>
+        </div>
+        <div id="childrenContainer"></div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="section-title mb-0">SIBLINGS</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="addSiblingBtn">+ Add Sibling</button>
+        </div>
+        <div id="siblingsContainer"></div>
+      </div>
+
+      <div class="d-flex gap-2 mb-4">
+        <button class="btn btn-primary" type="submit">Update Family</button>
+        <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
   </div>
-  <button type="button" class="btn btn-secondary my-2" id="addChild">+ Add Child</button>
-</div>
 
-
-    <div class="mt-3">
-      <button class="btn btn-primary">Update Family</button>
-      <a href="/admin/dashboard" class="btn btn-outline-secondary">Cancel</a>
+  <div class="modal fade" id="photoOptionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Select Photo Option</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body d-flex gap-2 justify-content-center">
+          <button type="button" class="btn btn-primary" id="browseBtn">Browse</button>
+          <button type="button" class="btn btn-secondary" id="cameraBtn">Take Photo</button>
+        </div>
+      </div>
     </div>
-  </form>
-</div>
-<% } %>
+  </div>
 
-<!-- State–District Script -->
-<script>
-// Load all states and districts from JSON
-let stateDistricts = {};
+  <script>
+    const childrenData = <%- JSON.stringify(family.children || []) %>;
+    const siblingsData = <%- JSON.stringify(family.siblings || []) %>;
+    let childIndex = childrenData.length;
+    let siblingIndex = siblingsData.length;
+    let currentPhotoInputId = null;
 
-fetch("/data/india-states-districts.json")
-  .then(res => res.json())
-  .then(data => {
-    stateDistricts = data;
-    populateAllDropdowns();
-  });
+    const photoOptionModalElement = document.getElementById("photoOptionModal");
+    const photoOptionModal = new bootstrap.Modal(photoOptionModalElement);
 
-//  Populate for Husband, Wife, and Children
-function populateAllDropdowns() {
-  const husbandState = document.getElementById("stateSelect");
-  const husbandDistrict = document.getElementById("districtSelect");
-  const wifeState = document.getElementById("wifeStateSelect");
-  const wifeDistrict = document.getElementById("wifeDistrictSelect");
-
-  const selectedHState = "<%= parent.state || '' %>";
-  const selectedHDistrict = "<%= parent.district || '' %>";
-  const selectedWState = "<%= wife ? wife.state : '' %>";
-  const selectedWDistrict = "<%= wife ? wife.district : '' %>";
-
-  // 🔹 Populate Husband and Wife dropdowns
-  for (let state in stateDistricts) {
-    husbandState.add(new Option(state, state, false, state === selectedHState));
-    wifeState.add(new Option(state, state, false, state === selectedWState));
-  }
-
-  populateDistricts(selectedHState, husbandDistrict, selectedHDistrict);
-  populateDistricts(selectedWState, wifeDistrict, selectedWDistrict);
-
-  husbandState.addEventListener("change", () => populateDistricts(husbandState.value, husbandDistrict));
-  wifeState.addEventListener("change", () => populateDistricts(wifeState.value, wifeDistrict));
-
-  // 🔹 Populate for every child
-  // Pre-render children data server-side to avoid "index is not defined" error
-  const childrenData = <%- JSON.stringify(children || []) %>;
-  
-  document.querySelectorAll("[id^='childState_']").forEach((stateSel, index) => {
-    const districtSel = document.getElementById("childDistrict_" + index);
-    const cState = childrenData[index]?.state || "";
-    const cDistrict = childrenData[index]?.district || "";
-
-    // Fill state options
-    for (let state in stateDistricts) {
-      stateSel.add(new Option(state, state, false, state === cState));
+    function previewImage(input, previewId) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById(previewId).src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
-    populateDistricts(cState, districtSel, cDistrict);
+    function childTemplate(index, child) {
+      const gender = child && child.gender ? child.gender : "";
+      const image = child && child.image ? "/uploads/" + child.image : "https://via.placeholder.com/88?text=Child";
+      return `
+      <div class="dynamic-item" data-type="child">
+        <input type="hidden" name="children[${index}][id]" value="${child && child.id ? child.id : ""}">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="children[${index}][name]" value="${child && child.name ? child.name : ""}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Gender</label>
+            <select class="form-select" name="children[${index}][gender]">
+              <option value="">Select</option>
+              <option value="Male" ${gender === "Male" ? "selected" : ""}>Male</option>
+              <option value="Female" ${gender === "Female" ? "selected" : ""}>Female</option>
+              <option value="Other" ${gender === "Other" ? "selected" : ""}>Other</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">DOB</label>
+            <input type="date" class="form-control" name="children[${index}][dob]" value="${child && child.dob ? child.dob : ""}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Image</label>
+            <input type="file" class="d-none photo-input" id="child_image_${index}" accept="image/*" name="children[${index}][image]" data-preview-id="childPreview_${index}" onchange="previewImage(this, 'childPreview_${index}')">
+            <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="child_image_${index}">Upload Photo</button>
+          </div>
+          <div class="col-md-1 text-center">
+            <img id="childPreview_${index}" src="${image}" class="preview" alt="Child">
+          </div>
+          <div class="col-md-1 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    }
 
-    // When state changes → update districts
-    stateSel.addEventListener("change", () => {
-      populateDistricts(stateSel.value, districtSel);
+    function siblingTemplate(index, sibling) {
+      const gender = sibling && sibling.gender ? sibling.gender : "";
+      const relation = sibling && sibling.relation ? sibling.relation.toLowerCase() : "brother";
+      const image = sibling && sibling.image ? "/uploads/" + sibling.image : "https://via.placeholder.com/88?text=Sibling";
+      return `
+      <div class="dynamic-item" data-type="sibling">
+        <input type="hidden" name="siblings[${index}][id]" value="${sibling && sibling.id ? sibling.id : ""}">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="siblings[${index}][name]" value="${sibling && sibling.name ? sibling.name : ""}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Gender</label>
+            <select class="form-select" name="siblings[${index}][gender]">
+              <option value="">Select</option>
+              <option value="Male" ${gender === "Male" ? "selected" : ""}>Male</option>
+              <option value="Female" ${gender === "Female" ? "selected" : ""}>Female</option>
+              <option value="Other" ${gender === "Other" ? "selected" : ""}>Other</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Relation</label>
+            <select class="form-select" name="siblings[${index}][relation]">
+              <option value="brother" ${relation === "brother" ? "selected" : ""}>Brother</option>
+              <option value="sister" ${relation === "sister" ? "selected" : ""}>Sister</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Image</label>
+            <input type="file" class="d-none photo-input" id="sibling_image_${index}" accept="image/*" name="siblings[${index}][image]" data-preview-id="siblingPreview_${index}" onchange="previewImage(this, 'siblingPreview_${index}')">
+            <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="sibling_image_${index}">Upload Photo</button>
+          </div>
+          <div class="col-md-1 text-center">
+            <img id="siblingPreview_${index}" src="${image}" class="preview" alt="Sibling">
+          </div>
+          <div class="col-md-1 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderInitialCollections() {
+      const childContainer = document.getElementById("childrenContainer");
+      const siblingContainer = document.getElementById("siblingsContainer");
+
+      if (childrenData.length === 0) {
+        childContainer.innerHTML = childTemplate(0, {});
+        childIndex = 1;
+      } else {
+        childrenData.forEach((child, index) => {
+          childContainer.insertAdjacentHTML("beforeend", childTemplate(index, child));
+        });
+      }
+
+      if (siblingsData.length === 0) {
+        siblingContainer.innerHTML = siblingTemplate(0, {});
+        siblingIndex = 1;
+      } else {
+        siblingsData.forEach((sibling, index) => {
+          siblingContainer.insertAdjacentHTML("beforeend", siblingTemplate(index, sibling));
+        });
+      }
+    }
+
+    function validateMobileFields(event) {
+      const invalid = Array.from(document.querySelectorAll(".mobile-field"))
+        .filter(field => field.value && !/^\d{10}$/.test(field.value.trim()));
+
+      if (invalid.length > 0) {
+        event.preventDefault();
+        alert("Mobile number must be exactly 10 digits");
+        invalid[0].focus();
+      }
+    }
+
+    function setInputFile(inputElement, file) {
+      if (!inputElement || !file) {
+        return;
+      }
+
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      inputElement.files = transfer.files;
+
+      const previewId = inputElement.dataset.previewId;
+      if (previewId) {
+        previewImage(inputElement, previewId);
+      }
+    }
+
+    function capturePhoto(inputId) {
+      const inputElement = document.getElementById(inputId);
+      if (!inputElement) {
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          const overlay = document.createElement("div");
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:2000;";
+
+          const panel = document.createElement("div");
+          panel.style.cssText = "background:#fff;padding:12px;border-radius:10px;max-width:92vw;";
+
+          const video = document.createElement("video");
+          video.autoplay = true;
+          video.playsInline = true;
+          video.srcObject = stream;
+          video.style.cssText = "max-width:80vw;max-height:60vh;border-radius:8px;display:block;";
+
+          const controls = document.createElement("div");
+          controls.style.cssText = "display:flex;gap:8px;justify-content:flex-end;margin-top:10px;";
+
+          const captureBtn = document.createElement("button");
+          captureBtn.type = "button";
+          captureBtn.className = "btn btn-primary btn-sm";
+          captureBtn.textContent = "Capture";
+
+          const cancelBtn = document.createElement("button");
+          cancelBtn.type = "button";
+          cancelBtn.className = "btn btn-outline-secondary btn-sm";
+          cancelBtn.textContent = "Cancel";
+
+          const cleanUp = () => {
+            stream.getTracks().forEach(track => track.stop());
+            overlay.remove();
+          };
+
+          cancelBtn.onclick = cleanUp;
+
+          captureBtn.onclick = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                cleanUp();
+                return;
+              }
+
+              const photoFile = new File([blob], `capture_${Date.now()}.jpg`, { type: "image/jpeg" });
+              setInputFile(inputElement, photoFile);
+              cleanUp();
+            }, "image/jpeg", 0.92);
+          };
+
+          controls.appendChild(cancelBtn);
+          controls.appendChild(captureBtn);
+          panel.appendChild(video);
+          panel.appendChild(controls);
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+        })
+        .catch(() => {
+          alert("Camera is not available on this device/browser");
+        });
+    }
+
+    document.getElementById("addChildBtn").addEventListener("click", function() {
+      const childContainer = document.getElementById("childrenContainer");
+      childContainer.insertAdjacentHTML("beforeend", childTemplate(childIndex, {}));
+      childIndex += 1;
     });
-  });
-}
 
-// Helper to fill districts based on selected state
-function populateDistricts(state, districtDropdown, selectedDistrict = "") {
-  districtDropdown.innerHTML = '<option value="">Select District</option>';
-  if (state && stateDistricts[state]) {
-    stateDistricts[state].forEach(d => {
-      districtDropdown.add(new Option(d, d, false, d === selectedDistrict));
+    document.getElementById("addSiblingBtn").addEventListener("click", function() {
+      const siblingContainer = document.getElementById("siblingsContainer");
+      siblingContainer.insertAdjacentHTML("beforeend", siblingTemplate(siblingIndex, {}));
+      siblingIndex += 1;
     });
-  }
-}
-</script>
 
+    document.addEventListener("click", function(event) {
+      if (event.target.classList.contains("choose-photo-btn")) {
+        currentPhotoInputId = event.target.dataset.inputId;
+        photoOptionModal.show();
+        return;
+      }
 
-<!-- PHOTO OPTION MODAL -->
-<div class="modal fade" id="photoOptionModal">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content text-center p-4">
-      <h5 class="mb-4">Select Option</h5>
-      <div class="d-flex gap-3">
-        <button class="btn flex-fill option-btn" id="browseBtn">Browse</button>
-        <button class="btn flex-fill option-btn" id="cameraBtn">Take Picture</button>
-        <button class="btn flex-fill cancel-btn" data-bs-dismiss="modal">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
+      if (event.target.classList.contains("remove-item")) {
+        event.target.closest(".dynamic-item").remove();
+      }
+    });
 
-<script>
-let currentInput = null;
-let childIndex = <%= children ? children.length : 0 %>;
+    document.getElementById("browseBtn").addEventListener("click", function() {
+      if (!currentPhotoInputId) {
+        return;
+      }
+      photoOptionModal.hide();
+      const inputElement = document.getElementById(currentPhotoInputId);
+      if (inputElement) {
+        inputElement.click();
+      }
+    });
 
-function showPhotoOptions(id){
-  currentInput = id;
-  new bootstrap.Modal(document.getElementById("photoOptionModal")).show();
-}
+    document.getElementById("cameraBtn").addEventListener("click", function() {
+      if (!currentPhotoInputId) {
+        return;
+      }
+      photoOptionModal.hide();
+      capturePhoto(currentPhotoInputId);
+    });
 
-document.getElementById("browseBtn").onclick=()=>{
-  if (!currentInput) return;
-  document.getElementById(currentInput).click();
-};
-
-document.getElementById("cameraBtn").onclick=()=>{
-  if (!currentInput) return;
-  capturePhoto(currentInput);
-};
-
-function capturePhoto(inputId){
-  const input=document.getElementById(inputId);
-  navigator.mediaDevices.getUserMedia({video:true})
-  .then(stream=>{
-    const video=document.createElement("video");
-    video.srcObject=stream;
-    video.play();
-    const canvas=document.createElement("canvas");
-    const ctx=canvas.getContext("2d");
-    const modal=document.createElement("div");
-    modal.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:20px";
-    modal.appendChild(video);
-    const controls=document.createElement("div");
-    controls.style.cssText="margin-top:10px;display:flex;gap:10px";
-    const cap=document.createElement("button");
-    cap.innerText="Capture";
-    cap.className="btn btn-primary";
-    cap.onclick=()=>{
-      canvas.width=video.videoWidth;
-      canvas.height=video.videoHeight;
-      ctx.drawImage(video,0,0);
-      canvas.toBlob(blob=>{
-        const file=new File([blob], `capture_${Date.now()}.jpg`, {type:"image/jpeg"});
-        const dt=new DataTransfer();
-        dt.items.add(file);
-        input.files=dt.files;
-        uploadImage(input);
-        stream.getTracks().forEach(t=>t.stop());
-        modal.remove();
-      }, 'image/jpeg', 0.9);
-    };
-    const cancel=document.createElement("button");
-    cancel.innerText="Cancel";
-    cancel.className="btn btn-secondary";
-    cancel.onclick=()=>{
-      stream.getTracks().forEach(t=>t.stop());
-      modal.remove();
-    };
-    controls.appendChild(cap);
-    controls.appendChild(cancel);
-    modal.appendChild(controls);
-    document.body.appendChild(modal);
-  })
-  .catch(()=>alert("Camera not available"));
-}
-
-// UPDATED — only show size, no preview image
-function uploadImage(input){
-  const file = input.files[0];
-  if(!file) return;
-
-  const fileSizeKB = (file.size / 1024).toFixed(2);
-  const sizeElementId = "size_" + input.id;
-
-  // Remove previous size info
-  const existing = document.getElementById(sizeElementId);
-  if (existing) existing.remove();
-
-  const sizeElement = document.createElement("div");
-  sizeElement.id = sizeElementId;
-  sizeElement.className = "size-info";
-  sizeElement.textContent = file.size < 1024*1024
-    ? `File size: ${fileSizeKB} KB`
-    : `File size: ${(file.size / (1024*1024)).toFixed(2)} MB`;
-
-  input.parentElement.appendChild(sizeElement);
-}
-
-// =============================
-// COPY FATHER ADDRESS TO CHILD
-// =============================
-$(document).on("change", ".same-address", function() {
-  const isChecked = $(this).is(":checked");
-  const parentCard = $(this).closest(".child");
-
-  if (isChecked) {
-    const fatherDoor = $("input[name='door_no']").val() || "";
-    const fatherStreet = $("input[name='street']").val() || "";
-    const fatherDistrict = $("#districtSelect").val() || "";
-    const fatherState = $("#stateSelect").val() || "";
-    const fatherPincode = $("input[name='pincode']").val() || "";
-
-    parentCard.find(".child-door").val(fatherDoor);
-    parentCard.find(".child-street").val(fatherStreet);
-    parentCard.find(".child-district").val(fatherDistrict);
-    parentCard.find(".child-state").val(fatherState);
-    parentCard.find(".child-pincode").val(fatherPincode);
-
-    parentCard.find(".child-door, .child-street, .child-district, .child-state, .child-pincode")
-      .attr("readonly", true)
-      .css("background-color", "#f8f9fa");
-  } else {
-    parentCard.find(".child-door, .child-street, .child-district, .child-state, .child-pincode")
-      .val("")
-      .removeAttr("readonly")
-      .css("background-color", "white");
-  }
-});
-
-// =============================
-// ADD CHILD SECTION DYNAMICALLY
-// =============================
-$("#addChild").click(function(){
-  const newChild = `
-  <div class="border p-3 mb-3 child">
-    <input class="form-control mb-1" name="children[${childIndex}][name]" placeholder="Child Name">
-    <select class="form-control mb-1" name="children[${childIndex}][gender]">
-      <option>Select Gender</option>
-      <option>Male</option>
-      <option>Female</option>
-      <option>Other</option>
-    </select>
-    <input class="form-control mb-1" name="children[${childIndex}][occupation]" placeholder="Occupation">
-    <input type="date" class="form-control mb-1" name="children[${childIndex}][dob]">
-
-    <label>Photo</label>
-    <input type="file" class="d-none" id="child_photo_${childIndex}" name="children[${childIndex}][photo]" accept="image/*" onchange="uploadImage(this)">
-    <div class="border p-2 text-center bg-light" onclick="showPhotoOptions('child_photo_${childIndex}')" style="cursor:pointer">Upload Photo</div>
-    <div id="size_child_photo_${childIndex}" class="size-info"></div>
-
-    <h6 class="mt-2">Address</h6>
-    <div class="form-check mb-2">
-      <input class="form-check-input same-address" type="checkbox" id="sameAddress_${childIndex}">
-      <label class="form-check-label" for="sameAddress_${childIndex}">Same as Father’s Address</label>
-    </div>
-
-    <input class="form-control mb-2 child-door" name="children[${childIndex}][door_no]" placeholder="Door No">
-    <input class="form-control mb-2 child-street" name="children[${childIndex}][street]" placeholder="Street">
-    <input class="form-control mb-2 child-district" name="children[${childIndex}][district]" placeholder="District">
-    <input class="form-control mb-2 child-state" name="children[${childIndex}][state]" placeholder="State">
-    <input class="form-control mb-2 child-pincode" name="children[${childIndex}][pincode]" placeholder="Pincode">
-
-    <button type="button" class="btn btn-danger btn-sm mt-2 removeChild">Remove</button>
-  </div>
-  `;
-  $("#children").append(newChild);
-  childIndex++;
-});
-
-// =============================
-// REMOVE CHILD SECTION
-// =============================
-$(document).on("click", ".removeChild", function() {
-  $(this).closest(".child").remove();
-});
-</script>
-
+    document.getElementById("adminEditForm").addEventListener("submit", validateMobileFields);
+    renderInitialCollections();
+  </script>
 </body>
-</html>     
+</html>
