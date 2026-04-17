@@ -327,13 +327,15 @@
       deleteModal.show();
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
       if (!deleteFamilyId) return;
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/admin/delete/' + deleteFamilyId;
-      document.body.appendChild(form);
-      form.submit();
+      try {
+        await fetch('/admin/delete/' + deleteFamilyId, { method: 'POST' });
+        window.location.href = '/admin/dashboard?deleted=true';
+      } catch (error) {
+        console.error('Delete failed:', error);
+        window.location.href = '/admin/dashboard?message=Delete failed';
+      }
     });
 
     function openPdfExportModal() {

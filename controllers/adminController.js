@@ -1240,13 +1240,38 @@ exports.logout = async (req, res) => {
 // DELETE FAMILY
 // =======================
 exports.deleteFamily = async (req, res) => {
+  let connection;
   try {
-    const familyId = req.params.id;
-    await db.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
+    const familyId = Number(req.params.id);
+    if (!Number.isInteger(familyId) || familyId <= 0) {
+      return res.redirect("/admin/dashboard?message=Invalid family id");
+    }
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    await connection.query(
+      `DELETE FROM relationships WHERE user_id = ?`,
+      [familyId]
+    );
+
+    await connection.query(
+      `DELETE FROM persons WHERE user_id = ?`,
+      [familyId]
+    );
+
+    await connection.commit();
     res.redirect("/admin/dashboard?deleted=true");
   } catch (err) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error(err);
     res.status(500).send("Server Error");
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
