@@ -68,12 +68,18 @@
               </h1>
               <p class="text-muted small mb-0">Manage your family details</p>
             </div>
-            <% if (hasAnyMembers) { %>
+            <div class="d-flex align-items-center gap-2">
+              <% if (hasAnyMembers) { %>
               <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
                 <i class="bi bi-person-fill me-1"></i>
                 <%= allMembers.length %> Member<%= allMembers.length !==1 ? 's' : '' %>
               </div>
+              <a class="btn btn-primary btn-sm px-3 py-2 shadow-sm"
+                href="/family-edit/<%= resolvedSelf ? resolvedSelf.id : '' %>">
+                <i class="bi bi-pencil-square me-1"></i>Edit
+              </a>
               <% } %>
+            </div>
           </div>
         </div>
 
@@ -179,7 +185,7 @@
             <!-- SELF + SPOUSE ROW -->
             <% if (resolvedSelf || resolvedSpouse) { %>
               <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                <i class="bi bi-heart-fill fs-4 text-danger me-2"></i>
+                <i class="bi bi-heart-fill fs-4 text-warning me-2"></i>
                 <h5 class="fw-bold text-secondary mb-0">Self & Spouse</h5>
               </div>
               <div class="row g-4 mb-4">
@@ -195,7 +201,7 @@
             <!-- SIBLINGS ROW -->
             <% if (resolvedSiblings.length > 0) { %>
               <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                <i class="bi bi-person-lines-fill fs-4 text-info me-2"></i>
+                <i class="bi bi-person-lines-fill fs-4 text-primary me-2"></i>
                 <h5 class="fw-bold text-secondary mb-0">Siblings</h5>
               </div>
               <div class="row g-4 mb-4">
@@ -208,7 +214,7 @@
             <!-- CHILDREN ROW -->
             <% if (resolvedChildren.length > 0) { %>
               <div class="d-flex align-items-center mb-3 border-bottom pb-2">
-                <i class="bi bi-emoji-smile-fill fs-4 text-success me-2"></i>
+                <i class="bi bi-emoji-smile-fill fs-4 text-warning me-2"></i>
                 <h5 class="fw-bold text-secondary mb-0">Children</h5>
               </div>
               <div class="row g-4 mb-4">
@@ -218,13 +224,6 @@
               </div>
             <% } %>
 
-            <div class="text-center mt-5 mb-3 bg-white p-4 rounded shadow-sm border">
-              <h5 class="fw-bold mb-3">Want to update family details?</h5>
-              <a class="btn btn-primary px-5 py-2 shadow-sm"
-                href="/family-edit/<%= resolvedSelf ? resolvedSelf.id : '' %>">
-                <i class="bi bi-pencil-square me-2"></i>Edit Family Complete Form
-              </a>
-            </div>
           <% } %>
 
                           </div>
@@ -495,7 +494,7 @@
                                         icon: 'error',
                                         title: 'Error',
                                         text: 'Failed to load member details',
-                                        confirmButtonColor: '#4F46E5'
+                                        confirmButtonColor: '#6D4C41'
                                       });
                                     });
                                 }
@@ -526,7 +525,7 @@
                                           icon: 'success',
                                           title: 'Success',
                                           text: 'Member updated successfully!',
-                                          confirmButtonColor: '#4F46E5'
+                                          confirmButtonColor: '#6D4C41'
                                         }).then(() => {
                                           window.location.reload();
                                         });
@@ -535,7 +534,7 @@
                                           icon: 'error',
                                           title: 'Update Failed',
                                           text: data.message || 'Failed to update member',
-                                          confirmButtonColor: '#4F46E5'
+                                          confirmButtonColor: '#6D4C41'
                                         });
                                       }
                                     })
@@ -545,7 +544,7 @@
                                         icon: 'error',
                                         title: 'Error',
                                         text: 'An error occurred while updating the member',
-                                        confirmButtonColor: '#4F46E5'
+                                        confirmButtonColor: '#6D4C41'
                                       });
                                     });
                                 });
@@ -591,7 +590,7 @@
                                     showCancelButton: true,
                                     confirmButtonText: 'Capture',
                                     cancelButtonText: 'Cancel',
-                                    confirmButtonColor: '#4F46E5',
+                                    confirmButtonColor: '#6D4C41',
                                     didOpen: () => {
                                       navigator.mediaDevices.getUserMedia({ video: true })
                                         .then(stream => {
@@ -684,7 +683,7 @@
                                             icon: 'warning',
                                             title: 'Large Photo',
                                             text: 'Photo is larger than 50KB even after compression. It will still be uploaded.',
-                                            confirmButtonColor: '#4F46E5'
+                                            confirmButtonColor: '#6D4C41'
                                           });
                                         }
                                       }, 'image/jpeg', quality);
