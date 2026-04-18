@@ -16,6 +16,15 @@ const mainDir = path.join(__dirname, "../uploads/main");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    if (
+      file.fieldname.includes("parent") ||
+      file.fieldname.includes("husband") ||
+      file.fieldname.includes("wife") ||
+      file.fieldname.includes("father") ||
+      file.fieldname.includes("mother") ||
+      file.fieldname.includes("spouse") ||
+      file.fieldname.includes("my_image")
+    ) {
     if (file.fieldname.includes("father") || file.fieldname.includes("mother") || file.fieldname.includes("parent")) {
       cb(null, parentDir);
     } else if (file.fieldname.includes("my_") || file.fieldname.includes("spouse")) {
@@ -82,6 +91,31 @@ const uploadFields = [
   { name: "spouse_image", maxCount: 1 }
 ];
 
+const processUpload = (req, res, next) => {
+  const fields = [
+    { name: "parent[husband_photo]", maxCount: 1 },
+    { name: "parent[wife_photo]", maxCount: 1 },
+    { name: "photo", maxCount: 1 },
+    { name: "husband_photo", maxCount: 1 },
+    { name: "wife_photo", maxCount: 1 },
+    { name: "father_image", maxCount: 1 },
+    { name: "mother_image", maxCount: 1 },
+    { name: "my_image", maxCount: 1 },
+    { name: "spouse_image", maxCount: 1 },
+  ];
+
+  for (let index = 0; index < 50; index += 1) {
+    fields.push({ name: `children[${index}][photo]`, maxCount: 1 });
+    fields.push({ name: `children[${index}][image]`, maxCount: 1 });
+    fields.push({ name: `siblings[${index}][photo]`, maxCount: 1 });
+    fields.push({ name: `siblings[${index}][image]`, maxCount: 1 });
+  }
+
+  upload.fields(fields)(req, res, async (err) => {
+    if (err) {
+      console.error("Multer error:", err);
+      return next(err);
+    }
 for (let i = 0; i <= 20; i++) {
   uploadFields.push({ name: `children[${i}][image]`, maxCount: 1 });
   uploadFields.push({ name: `siblings[${i}][image]`, maxCount: 1 });

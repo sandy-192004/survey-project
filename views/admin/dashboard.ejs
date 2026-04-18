@@ -190,8 +190,8 @@
                       <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); location='/admin/view/<%= member.id %>'" title="View">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); location='/admin/edit/<%= member.id %>'" title="Edit">
-                        <i class="bi bi-pencil-square"></i>
+                      <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); location='/admin/edit/<%= member.user_id || member.id %>'" title="Edit Family">
+                        ✏️
                       </button>
                       <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); confirmDelete('<%= member.id %>', '<%= member.name %>')" title="Delete">
                         <i class="bi bi-trash"></i>
@@ -327,13 +327,15 @@
       deleteModal.show();
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
       if (!deleteFamilyId) return;
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/admin/delete/' + deleteFamilyId;
-      document.body.appendChild(form);
-      form.submit();
+      try {
+        await fetch('/admin/delete/' + deleteFamilyId, { method: 'POST' });
+        window.location.href = '/admin/dashboard?deleted=true';
+      } catch (error) {
+        console.error('Delete failed:', error);
+        window.location.href = '/admin/dashboard?message=Delete failed';
+      }
     });
 
     function openPdfExportModal() {

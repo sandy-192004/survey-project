@@ -559,61 +559,72 @@ exports.viewMember = async (req, res) => {
 // =======================
 exports.editMember = async (req, res) => {
   try {
-    const familyId = req.params.id;
-    const FamilyMember = require("../models/FamilyMember");
-    const members = await FamilyMember.getByFamilyId(familyId);
+    const userId = Number(req.params.id);
 
-    const parents = members.filter(m => m.member_type === "parent");
-    const children = members.filter(m => m.member_type === "child");
+    if (!Number.isFinite(userId)) {
+      return res.status(400).send("Invalid user id");
+    }
 
-    const parent = parents.find(p => p.relationship === "husband") || parents[0];
-    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+    const [persons] = await db.query(
+      `SELECT id, user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode
+       FROM persons
+       WHERE user_id = ?
+       ORDER BY id ASC`,
+      [userId]
+    );
 
-    const formattedChildren = children.map(c => ({
-      child_id: c.id,
-      child_name: c.name,
-      gender: c.gender,
-      occupation: c.occupation,
-      date_of_birth: c.dob,
-      photo: c.photo,
-      door_no: c.door_no || parent?.door_no || "",
-      street: c.street || parent?.street || "",
-      district: c.district || parent?.district || "",
-      state: c.state || parent?.state || "",
-      pincode: c.pincode || parent?.pincode || ""
-    }));
+    const [relationships] = await db.query(
+      `SELECT id, person_id, related_person_id, relation
+       FROM relationships
+       WHERE user_id = ?`,
+      [userId]
+    );
 
-    const { states, districts } = loadDropdownOptions();
+    const grouped = groupAdminFamily(persons, relationships);
+
+    if (!grouped.self) {
+      return res.status(404).send("Family not found");
+    }
+
+    const toPersonPayload = (person, fallbackGender = "") => ({
+      id: person?.id || null,
+      name: person?.name || "",
+      gender: person?.gender || fallbackGender,
+      dob: toInputDate(person?.dob),
+      mobile: person?.mobile || "",
+      occupation: person?.occupation || "",
+      image: person?.image || "",
+      door_no: person?.door_no || "",
+      street: person?.street || "",
+      district: person?.district || "",
+      state: person?.state || "",
+      pincode: person?.pincode || ""
+    });
 
     res.render("admin/edit", {
-      familyId,
-      parent: parent ? {
-        id: parent.id,
-        husband_name: parent.name,
-        mobile: parent.mobile,
-        occupation: parent.occupation,
-        door_no: parent.door_no,
-        street: parent.street,
-        district: parent.district,
-        state: parent.state,
-        pincode: parent.pincode,
-        husband_photo: parent.photo
-      } : null,
-      wife: wife ? {
-        name: wife.name,
-        mobile: wife.mobile,
-        occupation: wife.occupation,
-        door_no: wife.door_no,
-        street: wife.street,
-        district: wife.district,
-        state: wife.state,
-        pincode: wife.pincode,
-        photo: wife.photo
-      } : null,
-      children: formattedChildren,
-      states: states,
-      districts: districts,
-      message: req.query.message || null
+      userId,
+      family: {
+        father: toPersonPayload(grouped.father, "Male"),
+        mother: toPersonPayload(grouped.mother, "Female"),
+        self: toPersonPayload(grouped.self),
+        spouse: toPersonPayload(grouped.spouse),
+        children: (grouped.children || []).map(child => ({
+          id: child.id,
+          name: child.name || "",
+          gender: child.gender || "",
+          dob: toInputDate(child.dob),
+          image: child.image || ""
+        })),
+        siblings: (grouped.siblings || []).map(sibling => ({
+          id: sibling.id,
+          name: sibling.name || "",
+          gender: sibling.gender || "",
+          relation: sibling.relation || (String(sibling.gender || "").toLowerCase() === "female" ? "sister" : "brother"),
+          image: sibling.image || ""
+        }))
+      },
+      message: req.query.message || null,
+      error: req.query.error || null
     });
 
   } catch (err) {
@@ -626,120 +637,379 @@ exports.editMember = async (req, res) => {
 // UPDATE FAMILY (INCLUDING PHOTOS)
 // =======================
 exports.updateMember = async (req, res) => {
+  const connection = await db.getConnection();
+
   try {
-    const familyId = req.params.id;
-    const FamilyMember = require("../models/FamilyMember");
-    const members = await FamilyMember.getByFamilyId(familyId);
-    const parents = members.filter(m => m.member_type === "parent");
-    const children = members.filter(m => m.member_type === "child");
+    const userId = Number(req.params.id);
+    if (!Number.isFinite(userId)) {
+      return res.status(400).send("Invalid user id");
+    }
 
-    const husband = parents.find(p => p.relationship === "husband") || parents[0];
-    const wife = parents.find(p => p.relationship === "wife") || parents[1];
+    const body = req.body || {};
+    const files = req.files || [];
+    const children = parseCollection(body, "children");
+    const siblings = parseCollection(body, "siblings");
 
-    const uploadedFiles = {};
-    if (req.files) {
-      req.files.forEach(file => {
-        uploadedFiles[file.fieldname] = file.filename;
+    const myName = normalizeValue(body.my_name);
+    const myMobile = normalizeValue(body.my_mobile);
+    if (!myName) {
+      return res.redirect(`/admin/edit/${userId}?error=${encodeURIComponent("Name is required")}`);
+    }
+    if (!myMobile || !isValidMobile(myMobile)) {
+      return res.redirect(`/admin/edit/${userId}?error=${encodeURIComponent("Mobile must be 10 digits")}`);
+    }
+
+    const spouseMobile = normalizeValue(body.spouse_mobile);
+    if (spouseMobile && !isValidMobile(spouseMobile)) {
+      return res.redirect(`/admin/edit/${userId}?error=${encodeURIComponent("Spouse mobile must be 10 digits")}`);
+    }
+
+    await connection.beginTransaction();
+
+    const [persons] = await connection.query(
+      `SELECT id, user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode
+       FROM persons
+       WHERE user_id = ?
+       ORDER BY id ASC`,
+      [userId]
+    );
+
+    const [relationships] = await connection.query(
+      `SELECT id, person_id, related_person_id, relation
+       FROM relationships
+       WHERE user_id = ?`,
+      [userId]
+    );
+
+    const grouped = groupAdminFamily(persons, relationships);
+    if (!grouped.self) {
+      await connection.rollback();
+      return res.redirect(`/admin/dashboard?message=${encodeURIComponent("Family not found")}`);
+    }
+
+    const selfId = Number(grouped.self.id);
+    const sharedAddress = {
+      door_no: normalizeValue(body.door_no),
+      street: normalizeValue(body.street),
+      district: normalizeValue(body.district),
+      state: normalizeValue(body.state),
+      pincode: normalizeValue(body.pincode)
+    };
+
+    const nextMyImage = fileNameFromAnyUpload(files, "my_image")
+      ? `parent/${fileNameFromAnyUpload(files, "my_image")}`
+      : grouped.self.image;
+    if (fileNameFromAnyUpload(files, "my_image") && grouped.self.image) {
+      safeUnlinkUpload(grouped.self.image);
+    }
+
+    await connection.query(
+      `UPDATE persons
+       SET name = ?, gender = ?, dob = ?, mobile = ?, occupation = ?, image = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?
+       WHERE id = ? AND user_id = ?`,
+      [
+        myName,
+        normalizeValue(body.my_gender),
+        normalizeValue(body.my_dob),
+        myMobile,
+        normalizeValue(body.my_occupation),
+        nextMyImage || null,
+        sharedAddress.door_no,
+        sharedAddress.street,
+        sharedAddress.district,
+        sharedAddress.state,
+        sharedAddress.pincode,
+        selfId,
+        userId
+      ]
+    );
+
+    const upsertRelatedPerson = async ({ existingPerson, name, gender, mobile, occupation, dob, imageField, defaultFolder, allowCreate }) => {
+      const normalizedName = normalizeValue(name);
+      const uploadedName = fileNameFromAnyUpload(files, imageField);
+      const nextImage = uploadedName ? `${defaultFolder}/${uploadedName}` : (existingPerson?.image || null);
+
+      if (!normalizedName && !existingPerson) {
+        return null;
+      }
+
+      if (existingPerson) {
+        if (uploadedName && existingPerson.image) {
+          safeUnlinkUpload(existingPerson.image);
+        }
+
+        const nextName = normalizedName || existingPerson.name;
+        await connection.query(
+          `UPDATE persons
+           SET name = ?, gender = ?, dob = ?, mobile = ?, occupation = ?, image = ?, door_no = ?, street = ?, district = ?, state = ?, pincode = ?
+           WHERE id = ? AND user_id = ?`,
+          [
+            nextName,
+            normalizeValue(gender) || existingPerson.gender || null,
+            normalizeValue(dob) || existingPerson.dob || null,
+            normalizeValue(mobile) || existingPerson.mobile || null,
+            normalizeValue(occupation) || existingPerson.occupation || null,
+            nextImage,
+            sharedAddress.door_no,
+            sharedAddress.street,
+            sharedAddress.district,
+            sharedAddress.state,
+            sharedAddress.pincode,
+            existingPerson.id,
+            userId
+          ]
+        );
+        return Number(existingPerson.id);
+      }
+
+      if (!allowCreate || !normalizedName) {
+        return null;
+      }
+
+      const [inserted] = await connection.query(
+        `INSERT INTO persons
+         (user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          normalizedName,
+          normalizeValue(gender),
+          normalizeValue(dob),
+          normalizeValue(mobile),
+          normalizeValue(occupation),
+          nextImage,
+          sharedAddress.door_no,
+          sharedAddress.street,
+          sharedAddress.district,
+          sharedAddress.state,
+          sharedAddress.pincode
+        ]
+      );
+
+      return Number(inserted.insertId);
+    };
+
+    const fatherId = await upsertRelatedPerson({
+      existingPerson: grouped.father,
+      name: body.father_name,
+      gender: "Male",
+      mobile: body.father_mobile,
+      occupation: body.father_occupation,
+      dob: body.father_dob,
+      imageField: "father_image",
+      defaultFolder: "parent",
+      allowCreate: true
+    });
+
+    const motherId = await upsertRelatedPerson({
+      existingPerson: grouped.mother,
+      name: body.mother_name,
+      gender: "Female",
+      mobile: body.mother_mobile,
+      occupation: body.mother_occupation,
+      dob: body.mother_dob,
+      imageField: "mother_image",
+      defaultFolder: "parent",
+      allowCreate: true
+    });
+
+    const spouseId = await upsertRelatedPerson({
+      existingPerson: grouped.spouse,
+      name: body.spouse_name,
+      gender: body.spouse_gender,
+      mobile: body.spouse_mobile,
+      occupation: body.spouse_occupation,
+      dob: body.spouse_dob,
+      imageField: "spouse_image",
+      defaultFolder: "parent",
+      allowCreate: true
+    });
+
+    const [oldChildrenLinks] = await connection.query(
+      `SELECT related_person_id
+       FROM relationships
+       WHERE user_id = ? AND person_id = ? AND relation IN ('child', 'son', 'daughter')`,
+      [userId, selfId]
+    );
+    const [oldSiblingLinks] = await connection.query(
+      `SELECT related_person_id
+       FROM relationships
+       WHERE user_id = ? AND person_id = ? AND relation = 'sibling'`,
+      [userId, selfId]
+    );
+
+    const oldChildrenIds = oldChildrenLinks.map(row => Number(row.related_person_id)).filter(Number.isFinite);
+    const oldSiblingIds = oldSiblingLinks.map(row => Number(row.related_person_id)).filter(Number.isFinite);
+    const allOldDependentIds = [...new Set([...oldChildrenIds, ...oldSiblingIds])];
+
+    const oldImageByPersonId = new Map();
+    if (allOldDependentIds.length > 0) {
+      const [oldDependents] = await connection.query(
+        `SELECT id, image FROM persons WHERE user_id = ? AND id IN (?)`,
+        [userId, allOldDependentIds]
+      );
+
+      oldDependents.forEach((person) => {
+        oldImageByPersonId.set(Number(person.id), person.image || null);
       });
     }
 
-    // Update Husband
-    if (husband) {
-      const husbandData = {
-        name: req.body.name || husband.name, // Use existing value if undefined/null
-        mobile: req.body.mobile || "",
-        occupation: req.body.occupation || "",
-        door_no: req.body.door_no || "",
-        street: req.body.street || "",
-        district: req.body.district || "",
-        state: req.body.state || "",
-        pincode: req.body.pincode || "",
-        photo: uploadedFiles.husband_photo ? `parent/${uploadedFiles.husband_photo}` : husband.photo
-      };
+    const preserveImageIds = new Set();
+    children.forEach((child) => {
+      const existingId = Number(child.id);
+      const hasUpload = Boolean(
+        fileNameFromAnyUpload(files, `children[${child.index}][image]`)
+        || fileNameFromAnyUpload(files, `children[${child.index}][photo]`)
+      );
 
-      // Only update if name has a valid value
-      if (husbandData.name) {
-        if (uploadedFiles.husband_photo && husband.photo) {
-          const oldPath = path.join(__dirname, '../uploads', husband.photo);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
-        await FamilyMember.update(husband.id, husbandData);
+      if (Number.isFinite(existingId) && existingId > 0 && !hasUpload) {
+        preserveImageIds.add(existingId);
       }
-    }
+    });
 
-    // Update Wife
-    if (req.body.wife_name) {
-      const wifeData = {
-        family_id: familyId,
-        member_type: "parent",
-        name: req.body.wife_name,
-        relationship: "wife",
-        mobile: req.body.wife_mobile || "",
-        occupation: req.body.wife_occupation || "",
-        door_no: req.body.wife_door_no || "",
-        street: req.body.wife_street || "",
-        district: req.body.wife_district || "",
-        state: req.body.wife_state || "",
-        pincode: req.body.wife_pincode || "",
-        photo: uploadedFiles.wife_photo ? `parent/${uploadedFiles.wife_photo}` : (wife ? wife.photo : null)
-      };
-      if (wife) await FamilyMember.update(wife.id, wifeData);
-      else await FamilyMember.create(wifeData);
-    }
+    siblings.forEach((sibling) => {
+      const existingId = Number(sibling.id);
+      const hasUpload = Boolean(
+        fileNameFromAnyUpload(files, `siblings[${sibling.index}][image]`)
+        || fileNameFromAnyUpload(files, `siblings[${sibling.index}][photo]`)
+      );
 
-    // Children Updates
-    if (req.body.children) {
-      const childKeys = Object.keys(req.body.children).sort();
-      for (const key of childKeys) {
-        const child = req.body.children[key];
-        if (child.name) {
-          const childPhotoKey = `children[${key}][photo]`;
-          const childPhoto = uploadedFiles[childPhotoKey] || null;
-          
-          // Validate gender - only accept 'Male' or 'Female'
-          const validGender = (child.gender === 'Male' || child.gender === 'Female') ? child.gender : null;
-
-          if (child.id) {
-            const childData = {
-              name: child.name,
-              occupation: child.occupation || "",
-              dob: child.dob,
-              gender: validGender,
-              door_no: child.door_no || "",
-              street: child.street || "",
-              district: child.district || "",
-              state: child.state || "",
-              pincode: child.pincode || ""
-            };
-            if (childPhoto) childData.photo = `children/${childPhoto}`;
-            await FamilyMember.update(child.id, childData);
-          } else {
-            const rel = validGender === 'Male' ? 'son' : validGender === 'Female' ? 'daughter' : 'other';
-            await FamilyMember.create({
-              family_id: familyId,
-              member_type: "child",
-              name: child.name,
-              relationship: rel,
-              occupation: child.occupation || "",
-              dob: child.dob,
-              gender: validGender,
-              door_no: child.door_no || "",
-              street: child.street || "",
-              district: child.district || "",
-              state: child.state || "",
-              pincode: child.pincode || "",
-              photo: childPhoto ? `children/${childPhoto}` : null
-            });
-          }
-        }
+      if (Number.isFinite(existingId) && existingId > 0 && !hasUpload) {
+        preserveImageIds.add(existingId);
       }
+    });
+
+    await connection.query(
+      `DELETE FROM relationships
+       WHERE user_id = ?
+         AND person_id = ?
+         AND relation IN ('father', 'mother', 'spouse', 'child', 'sibling')`,
+      [userId, selfId]
+    );
+
+    if (fatherId) {
+      await insertRelationship(connection, userId, selfId, fatherId, "father");
+    }
+    if (motherId) {
+      await insertRelationship(connection, userId, selfId, motherId, "mother");
+    }
+    if (spouseId) {
+      await insertRelationship(connection, userId, selfId, spouseId, "spouse");
     }
 
-    res.redirect("/admin/dashboard?updated=true");
+    const purgeRelatedPeople = async (ids, skipImageDeleteIds = new Set()) => {
+      if (!ids || ids.length === 0) {
+        return;
+      }
+
+      const [oldPersons] = await connection.query(
+        `SELECT id, image FROM persons WHERE user_id = ? AND id IN (?)`,
+        [userId, ids]
+      );
+
+      oldPersons.forEach((person) => {
+        if (person.image && !skipImageDeleteIds.has(Number(person.id))) {
+          safeUnlinkUpload(person.image);
+        }
+      });
+
+      await connection.query(
+        `DELETE FROM relationships
+         WHERE user_id = ? AND (person_id IN (?) OR related_person_id IN (?))`,
+        [userId, ids, ids]
+      );
+
+      await connection.query(
+        `DELETE FROM persons WHERE user_id = ? AND id IN (?)`,
+        [userId, ids]
+      );
+    };
+
+    await purgeRelatedPeople(oldChildrenIds, preserveImageIds);
+    await purgeRelatedPeople(oldSiblingIds, preserveImageIds);
+
+    for (const child of children) {
+      const childName = normalizeValue(child.name);
+      if (!childName) {
+        continue;
+      }
+
+      const childGender = normalizeValue(child.gender);
+      const childImageName = fileNameFromAnyUpload(files, `children[${child.index}][image]`)
+        || fileNameFromAnyUpload(files, `children[${child.index}][photo]`);
+      const existingChildId = Number(child.id);
+      const previousChildImage = Number.isFinite(existingChildId) ? oldImageByPersonId.get(existingChildId) : null;
+
+      const [inserted] = await connection.query(
+        `INSERT INTO persons
+         (user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          childName,
+          childGender,
+          normalizeValue(child.dob),
+          normalizeValue(child.mobile),
+          normalizeValue(child.occupation),
+          childImageName ? `children/${childImageName}` : (previousChildImage || null),
+          sharedAddress.door_no,
+          sharedAddress.street,
+          sharedAddress.district,
+          sharedAddress.state,
+          sharedAddress.pincode
+        ]
+      );
+
+      await insertRelationship(connection, userId, selfId, Number(inserted.insertId), "child");
+    }
+
+    for (const sibling of siblings) {
+      const siblingName = normalizeValue(sibling.name);
+      if (!siblingName) {
+        continue;
+      }
+
+      const relationRaw = String(normalizeValue(sibling.relation) || "").toLowerCase();
+      const isSister = relationRaw === "sister";
+      const siblingGender = normalizeValue(sibling.gender) || (isSister ? "Female" : "Male");
+
+      const siblingImageName = fileNameFromAnyUpload(files, `siblings[${sibling.index}][image]`)
+        || fileNameFromAnyUpload(files, `siblings[${sibling.index}][photo]`);
+      const existingSiblingId = Number(sibling.id);
+      const previousSiblingImage = Number.isFinite(existingSiblingId) ? oldImageByPersonId.get(existingSiblingId) : null;
+
+      const [inserted] = await connection.query(
+        `INSERT INTO persons
+         (user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          siblingName,
+          siblingGender,
+          normalizeValue(sibling.dob),
+          normalizeValue(sibling.mobile),
+          normalizeValue(sibling.occupation),
+          siblingImageName ? `children/${siblingImageName}` : (previousSiblingImage || null),
+          sharedAddress.door_no,
+          sharedAddress.street,
+          sharedAddress.district,
+          sharedAddress.state,
+          sharedAddress.pincode
+        ]
+      );
+
+      await insertRelationship(connection, userId, selfId, Number(inserted.insertId), "sibling");
+    }
+
+    await connection.commit();
+    return res.redirect("/admin/dashboard?updated=true&message=Family%20updated%20successfully");
 
   } catch (err) {
+    await connection.rollback();
     console.error("Update Error:", err);
     res.status(500).send("Server Error");
+  } finally {
+    connection.release();
   }
 };
 
@@ -791,13 +1061,38 @@ exports.logout = async (req, res) => {
 // DELETE FAMILY
 // =======================
 exports.deleteFamily = async (req, res) => {
+  let connection;
   try {
-    const familyId = req.params.id;
-    await db.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
+    const familyId = Number(req.params.id);
+    if (!Number.isInteger(familyId) || familyId <= 0) {
+      return res.redirect("/admin/dashboard?message=Invalid family id");
+    }
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    await connection.query(
+      `DELETE FROM relationships WHERE user_id = ?`,
+      [familyId]
+    );
+
+    await connection.query(
+      `DELETE FROM persons WHERE user_id = ?`,
+      [familyId]
+    );
+
+    await connection.commit();
     res.redirect("/admin/dashboard?deleted=true");
   } catch (err) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error(err);
     res.status(500).send("Server Error");
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
