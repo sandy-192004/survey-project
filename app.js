@@ -71,8 +71,9 @@ app.use((err, req, res, next) => {
 
 // ================== SERVER START ==================
 
-const HOST = process.env.HOST || "0.0.0.0";
-const BASE_PORT = Number(process.env.PORT) || 3000;
+app.listen(3001, () => {
+  console.log(`Server running on http://localhost:3001`);
+});        
 
 function startServer(port) {
   const server = app.listen(port, HOST, () => {

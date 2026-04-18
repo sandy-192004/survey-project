@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <%- include('partials/head') %>
-<body class="d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);">
+<body class="d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, var(--gray-50) 0%, #efe4d6 100%);">
     <div class="container">
         <!-- Logout Message -->
         <div id="logoutMessage" class="alert alert-info text-center position-fixed top-0 start-50 translate-middle-x mt-3" style="display: none; z-index: 9999; max-width: 90%;">
@@ -14,7 +14,7 @@
                 <div id="loginForm" class="card border-0 shadow-lg">
                     <div class="card-body p-4">
                         <div class="text-center mb-3">
-                            <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-3 mb-2">
+                            <div class="rounded-circle d-inline-flex p-3 mb-2" style="background: color-mix(in srgb, var(--temple-light) 42%, #fff 58%);">
                                 <i class="bi bi-person-circle text-primary" style="font-size: 2.5rem;"></i>
                             </div>
                             <h2 class="fw-bold mb-1 h4">Welcome Back</h2>
@@ -78,8 +78,8 @@
                 <div id="signupForm" class="card border-0 shadow-lg d-none">
                     <div class="card-body p-4">
                         <div class="text-center mb-3">
-                            <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-2">
-                                <i class="bi bi-person-plus text-success" style="font-size: 2.5rem;"></i>
+                            <div class="rounded-circle d-inline-flex p-3 mb-2" style="background: color-mix(in srgb, var(--temple-light) 42%, #fff 58%);">
+                              <i class="bi bi-person-plus text-primary" style="font-size: 2.5rem;"></i>
                             </div>
                             <h2 class="fw-bold mb-1 h4">Create Account</h2>
                             <p class="text-muted small mb-0">Join our family portal</p>
@@ -100,8 +100,6 @@
 
                             <div class="mb-3">
                                 <label for="signupPassword" class="form-label small">Password</label>
-                                <input 
-                                    type="password" 
                                 <input 
                                     type="password" 
                                     class="form-control" 
@@ -169,7 +167,7 @@
     <div class="modal fade" id="invalidCredentialsModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-danger text-white">
+          <div class="modal-header" style="background: var(--temple-dark); color: #fff;">
             <h5 class="modal-title">
               <i class="bi bi-exclamation-triangle-fill me-2"></i>Error
             </h5>
@@ -177,9 +175,9 @@
           </div>
           <div class="modal-body text-center bg-light">
             <div class="mb-4">
-              <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+              <i class="bi bi-exclamation-triangle-fill text-primary" style="font-size: 4rem;"></i>
             </div>
-            <h4 class="text-danger fw-bold mb-3">Invalid Credentials</h4>
+            <h4 class="text-primary fw-bold mb-3">Invalid Credentials</h4>
             <p class="text-muted">Invalid email or password. Please try again.</p>
           </div>
         </div>
@@ -190,7 +188,7 @@
     <div class="modal fade" id="userExistsModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-warning text-dark">
+          <div class="modal-header" style="background: color-mix(in srgb, var(--temple-gold) 70%, #fff 30%); color: var(--temple-dark);">
             <h5 class="modal-title">
               <i class="bi bi-exclamation-circle-fill me-2"></i>User Already Exists
             </h5>
@@ -211,7 +209,7 @@
     <div class="modal fade" id="passwordErrorModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-danger text-white">
+          <div class="modal-header" style="background: var(--temple-dark); color: #fff;">
             <h5 class="modal-title">
               <i class="bi bi-exclamation-triangle-fill me-2"></i>Error
             </h5>
@@ -219,10 +217,29 @@
           </div>
           <div class="modal-body text-center bg-light">
             <div class="mb-4">
-              <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+              <i class="bi bi-exclamation-triangle-fill text-primary" style="font-size: 4rem;"></i>
             </div>
-            <h4 class="text-danger fw-bold mb-3">Password Mismatch</h4>
-     %- include('partials/scripts') %
+            <h4 class="text-primary fw-bold mb-3">Password Mismatch</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="adminAccessModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header" style="background: color-mix(in srgb, var(--temple-gold) 70%, #fff 30%); color: var(--temple-dark);">
+            <h5 class="modal-title">
+              <i class="bi bi-shield-exclamation me-2"></i>Admin Access Required
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center bg-light">
+            <div class="mb-4">
+              <i class="bi bi-shield-lock text-warning" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-warning fw-bold mb-3">Admin account required</h4>
+            <p class="text-muted">This account does not have admin permission. Please sign in with an admin account.</p>
           </div>
         </div>
       </div>
@@ -283,6 +300,12 @@
             modal.show();
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        if (urlParams.get('error') === 'admin') {
+          const modal = new bootstrap.Modal(document.getElementById('adminAccessModal'));
+          modal.show();
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         // Validate signup form

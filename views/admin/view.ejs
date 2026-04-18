@@ -156,7 +156,7 @@
         <% if (person) { %>
           <div class="id-card">
             <% const img = imagePath(person); %>
-            <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Family member' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
+            <img class="id-photo" src="<%= img || '/images/default-profile.png' %>" alt="<%= person.name || 'Family member' %>" onerror="this.src='/images/default-profile.png'">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
               <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || '-' %></div>
@@ -177,7 +177,7 @@
         <% if (person) { %>
           <div class="id-card">
             <% const img = imagePath(person); %>
-            <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Family member' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
+            <img class="id-photo" src="<%= img || '/images/default-profile.png' %>" alt="<%= person.name || 'Family member' %>" onerror="this.src='/images/default-profile.png'">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
               <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || '-' %></div>
@@ -198,7 +198,7 @@
         <% groupedFamily.siblings.forEach((person) => { %>
           <div class="id-card">
             <% const img = imagePath(person); %>
-            <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Sibling' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
+            <img class="id-photo" src="<%= img || '/images/default-profile.png' %>" alt="<%= person.name || 'Sibling' %>" onerror="this.src='/images/default-profile.png'">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
               <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || 'Sibling' %></div>
@@ -221,7 +221,7 @@
         <% groupedFamily.children.forEach((person) => { %>
           <div class="id-card">
             <% const img = imagePath(person); %>
-            <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Child' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
+            <img class="id-photo" src="<%= img || '/images/default-profile.png' %>" alt="<%= person.name || 'Child' %>" onerror="this.src='/images/default-profile.png'">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
               <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || 'Child' %></div>
