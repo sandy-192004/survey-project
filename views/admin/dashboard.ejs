@@ -190,6 +190,9 @@
                       <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); location='/admin/view/<%= member.id %>'" title="View">
                         <i class="bi bi-eye"></i>
                       </button>
+                      <button class="btn btn-sm btn-outline-info" onclick="event.stopPropagation(); location='/family-tree/<%= member.user_id || member.id %>'" title="View Family Tree">
+                        <i class="bi bi-diagram-3 me-1"></i>View Family Tree
+                      </button>
                       <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); location='/admin/edit/<%= member.user_id || member.id %>'" title="Edit Family">
                         ✏️
                       </button>

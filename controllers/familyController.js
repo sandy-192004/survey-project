@@ -3,6 +3,69 @@ const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
 
+function normalizeRelation(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function relationMatches(value, expected) {
+  return normalizeRelation(value) === normalizeRelation(expected);
+}
+
+function relationIn(value, expectedList) {
+  const normalized = normalizeRelation(value);
+  return expectedList.some((item) => normalized === normalizeRelation(item));
+}
+
+async function buildFamilyDataForUser(userId, preferredRootId = null) {
+  let selfId = null;
+
+  const parsedRootId = Number(preferredRootId);
+  if (Number.isInteger(parsedRootId) && parsedRootId > 0) {
+    const [ownerCheck] = await db.query(
+      "SELECT id FROM persons WHERE id = ? AND user_id = ? LIMIT 1",
+      [parsedRootId, userId]
+    );
+    if (ownerCheck.length > 0) {
+      selfId = parsedRootId;
+    }
+  }
+
+  if (!selfId) {
+    const [selfCheck] = await db.query(
+      "SELECT id FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1",
+      [userId]
+    );
+    if (selfCheck.length === 0) {
+      return null;
+    }
+    selfId = selfCheck[0].id;
+  }
+
+  const [relatives] = await db.query(
+    `SELECT r.relation, p.*
+     FROM relationships r
+     JOIN persons p ON p.id = r.related_person_id
+     WHERE r.person_id = ?`,
+    [selfId]
+  );
+  const [selfData] = await db.query("SELECT * FROM persons WHERE id = ?", [selfId]);
+
+  const allMembers = [...relatives];
+  if (selfData.length > 0) {
+    selfData[0].relation = "Self";
+    allMembers.unshift(selfData[0]);
+  }
+
+  return {
+    self: allMembers.find((r) => relationMatches(r.relation, "Self")) || {},
+    father: allMembers.find((r) => relationMatches(r.relation, "father")) || {},
+    mother: allMembers.find((r) => relationMatches(r.relation, "mother")) || {},
+    spouse: allMembers.find((r) => relationMatches(r.relation, "spouse")) || {},
+    children: allMembers.filter((r) => relationIn(r.relation, ["child", "son", "daughter"])),
+    siblings: allMembers.filter((r) => relationIn(r.relation, ["sibling", "brother", "sister"]))
+  };
+}
+
 /* ================= AUTH ================= */
 
 // Show login page
@@ -163,33 +226,7 @@ exports.familyCheck = async (req, res) => {
 exports.showFamilyForm = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const [selfCheck] = await db.query("SELECT id FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1", [userId]);
-    let familyData = null;
-
-    if (selfCheck.length > 0) {
-      const selfId = selfCheck[0].id;
-      const [relatives] = await db.query(
-        `SELECT r.relation, p.* FROM relationships r JOIN persons p ON p.id = r.related_person_id WHERE r.person_id = ?`,
-        [selfId]
-      );
-      const [selfData] = await db.query("SELECT * FROM persons WHERE id = ?", [selfId]);
-
-      let allMembers = [...relatives];
-      if (selfData.length > 0) {
-        selfData[0].relation = "Self";
-        allMembers.unshift(selfData[0]); // Inject self
-      }
-
-      // Map back to structured object for easy prefill
-      familyData = {
-        self: allMembers.find(r => r.relation === 'Self') || {},
-        father: allMembers.find(r => r.relation === 'father') || {},
-        mother: allMembers.find(r => r.relation === 'mother') || {},
-        spouse: allMembers.find(r => r.relation === 'spouse') || {},
-        children: allMembers.filter(r => r.relation === 'child'),
-        siblings: allMembers.filter(r => r.relation === 'sibling')
-      };
-    }
+    const familyData = await buildFamilyDataForUser(userId);
 
     res.render("family-form", {
       addChildMode: req.query.mode === 'addChild',
@@ -536,33 +573,16 @@ exports.addChild = async (req, res) => {
 exports.showFamilyEdit = async (req, res) => {
   try {
     const userId = req.session.user.id;
+    const familyData = await buildFamilyDataForUser(userId, req.params.id);
 
-    // Get all family members for this user
-    const [members] = await db.query(
-      "SELECT fm.* FROM family_members fm JOIN families f ON fm.family_id = f.id WHERE f.user_id = ?",
-      [userId]
-    );
-
-    if (members.length === 0) {
+    if (!familyData) {
       return res.redirect("/family-form");
     }
 
-    // Calculate photo file sizes
-    members.forEach(member => {
-      if (member.photo) {
-        const photoPath = path.join(__dirname, '../uploads', member.photo);
-        if (fs.existsSync(photoPath)) {
-          const stats = fs.statSync(photoPath);
-          member.photoSize = stats.size;
-        } else {
-          member.photoSize = 0;
-        }
-      } else {
-        member.photoSize = 0;
-      }
+    res.render("family-form", {
+      addChildMode: false,
+      familyData: JSON.stringify(familyData)
     });
-
-    res.render("family-edit", { family: null, members });
   } catch (err) {
     console.error("Show family edit error:", err);
     res.status(500).send("Server Error");

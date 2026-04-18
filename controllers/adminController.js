@@ -2,8 +2,6 @@ const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcryptjs");
-const Admin = require("../models/admin");
-const Child = require("../models/Child");
 
 function loadDropdownOptions() {
   try {
@@ -227,6 +225,25 @@ function groupAdminFamily(persons, relationships) {
   return grouped;
 }
 
+function inferChildRelation(gender) {
+  const normalizedGender = String(normalizeValue(gender) || "").toLowerCase();
+
+  if (normalizedGender === "female" || normalizedGender === "f") {
+    return "daughter";
+  }
+
+  if (normalizedGender === "male" || normalizedGender === "m") {
+    return "son";
+  }
+
+  return "child";
+}
+
+function buildUploadedImagePath(files, fieldName, folderName) {
+  const fileName = getUploadedFileName(files, fieldName);
+  return fileName ? `${folderName}/${fileName}` : null;
+}
+
 function parseCollection(body, collectionName) {
   const nestedCollection = body?.[collectionName];
 
@@ -297,6 +314,191 @@ async function insertRelationship(connection, userId, personId, relatedPersonId,
      VALUES (?, ?, ?, ?)`,
     [userId, personId, relatedPersonId, relation]
   );
+}
+
+function buildFamilyPayload(body) {
+  const safeBody = body || {};
+
+  return {
+    myName: normalizeValue(safeBody.my_name),
+    myGender: normalizeValue(safeBody.my_gender),
+    myDob: normalizeValue(safeBody.my_dob),
+    myMobile: normalizeValue(safeBody.my_mobile),
+    myOccupation: normalizeValue(safeBody.my_occupation),
+    fatherName: normalizeValue(safeBody.father_name),
+    motherName: normalizeValue(safeBody.mother_name),
+    spouseName: normalizeValue(safeBody.spouse_name),
+    spouseGender: normalizeValue(safeBody.spouse_gender),
+    spouseMobile: normalizeValue(safeBody.spouse_mobile),
+    spouseOccupation: normalizeValue(safeBody.spouse_occupation),
+    doorNo: normalizeValue(safeBody.door_no),
+    street: normalizeValue(safeBody.street),
+    district: normalizeValue(safeBody.district),
+    state: normalizeValue(safeBody.state),
+    pincode: normalizeValue(safeBody.pincode),
+    children: parseCollection(safeBody, "children"),
+    siblings: parseCollection(safeBody, "siblings"),
+    rawBody: safeBody
+  };
+}
+
+function validateFamilyPayload(payload) {
+  if (!payload.myName) {
+    return "Main person name is required.";
+  }
+
+  if (!payload.myMobile || !isValidMobile(payload.myMobile)) {
+    return "Main mobile must be a 10-digit number.";
+  }
+
+  if (payload.spouseMobile && !isValidMobile(payload.spouseMobile)) {
+    return "Spouse mobile must be a 10-digit number.";
+  }
+
+  const parentMobiles = [payload.rawBody.father_mobile, payload.rawBody.mother_mobile]
+    .map(normalizeValue)
+    .filter(Boolean);
+  if (parentMobiles.some(mobile => !isValidMobile(mobile))) {
+    return "Parent mobile numbers must be 10 digits.";
+  }
+
+  for (const child of payload.children) {
+    const childName = normalizeValue(child.name);
+    const childMobile = normalizeValue(child.mobile);
+
+    if ((childName || childMobile || child.dob || child.gender || child.occupation || child.image) && !childName) {
+      return "Each child entry needs a name.";
+    }
+
+    if (childMobile && !isValidMobile(childMobile)) {
+      return "Child mobile numbers must be 10 digits.";
+    }
+  }
+
+  for (const sibling of payload.siblings) {
+    const siblingName = normalizeValue(sibling.name);
+    const siblingMobile = normalizeValue(sibling.mobile);
+
+    if ((siblingName || siblingMobile || sibling.gender || sibling.relation || sibling.image) && !siblingName) {
+      return "Each sibling entry needs a name.";
+    }
+
+    if (siblingMobile && !isValidMobile(siblingMobile)) {
+      return "Sibling mobile numbers must be 10 digits.";
+    }
+  }
+
+  return null;
+}
+
+async function createFamilyRecords(connection, userId, files, payload) {
+  const sharedAddress = {
+    door_no: payload.doorNo,
+    street: payload.street,
+    district: payload.district,
+    state: payload.state,
+    pincode: payload.pincode
+  };
+
+  const headPersonId = await insertPerson(connection, userId, {
+    name: payload.myName,
+    gender: payload.myGender,
+    dob: payload.myDob,
+    mobile: payload.myMobile,
+    occupation: payload.myOccupation,
+    image: getUploadedFileName(files, "my_image") ? `main/${getUploadedFileName(files, "my_image")}` : null,
+    ...sharedAddress
+  });
+
+  if (payload.fatherName) {
+    const fatherPersonId = await insertPerson(connection, userId, {
+      name: payload.fatherName,
+      gender: "Male",
+      occupation: normalizeValue(payload.rawBody.father_occupation),
+      image: getUploadedFileName(files, "father_image") ? `parent/${getUploadedFileName(files, "father_image")}` : null,
+      ...sharedAddress
+    });
+    await insertRelationship(connection, userId, headPersonId, fatherPersonId, "father");
+  }
+
+  if (payload.motherName) {
+    const motherPersonId = await insertPerson(connection, userId, {
+      name: payload.motherName,
+      gender: "Female",
+      occupation: normalizeValue(payload.rawBody.mother_occupation),
+      image: getUploadedFileName(files, "mother_image") ? `parent/${getUploadedFileName(files, "mother_image")}` : null,
+      ...sharedAddress
+    });
+    await insertRelationship(connection, userId, headPersonId, motherPersonId, "mother");
+  }
+
+  if (payload.spouseName) {
+    const spousePersonId = await insertPerson(connection, userId, {
+      name: payload.spouseName,
+      gender: payload.spouseGender,
+      mobile: payload.spouseMobile,
+      occupation: payload.spouseOccupation,
+      image: getUploadedFileName(files, "spouse_image") ? `main/${getUploadedFileName(files, "spouse_image")}` : null,
+      ...sharedAddress
+    });
+    await insertRelationship(connection, userId, headPersonId, spousePersonId, "spouse");
+  }
+
+  for (const child of payload.children) {
+    const childName = normalizeValue(child.name);
+    if (!childName) {
+      continue;
+    }
+
+    const childImageField = `children[${child.index}][image]`;
+    const childPhotoField = `children[${child.index}][photo]`;
+
+    const childPersonId = await insertPerson(connection, userId, {
+      name: childName,
+      gender: normalizeValue(child.gender),
+      dob: normalizeValue(child.dob),
+      mobile: normalizeValue(child.mobile),
+      occupation: normalizeValue(child.occupation),
+      image: getUploadedFileName(files, childImageField)
+        ? `children/${getUploadedFileName(files, childImageField)}`
+        : getUploadedFileName(files, childPhotoField)
+          ? `children/${getUploadedFileName(files, childPhotoField)}`
+          : null,
+      ...sharedAddress
+    });
+    await insertRelationship(connection, userId, headPersonId, childPersonId, "child");
+  }
+
+  for (const sibling of payload.siblings) {
+    const siblingName = normalizeValue(sibling.name);
+    if (!siblingName) {
+      continue;
+    }
+
+    const siblingImageField = `siblings[${sibling.index}][image]`;
+    const siblingPhotoField = `siblings[${sibling.index}][photo]`;
+
+    const siblingRelation = normalizeValue(sibling.relation)?.toLowerCase() === "sister"
+      ? "sister"
+      : "brother";
+
+    const siblingPersonId = await insertPerson(connection, userId, {
+      name: siblingName,
+      gender: normalizeValue(sibling.gender) || (siblingRelation === "sister" ? "Female" : "Male"),
+      dob: normalizeValue(sibling.dob),
+      mobile: normalizeValue(sibling.mobile),
+      occupation: normalizeValue(sibling.occupation),
+      image: getUploadedFileName(files, siblingImageField)
+        ? `siblings/${getUploadedFileName(files, siblingImageField)}`
+        : getUploadedFileName(files, siblingPhotoField)
+          ? `siblings/${getUploadedFileName(files, siblingPhotoField)}`
+          : null,
+      ...sharedAddress
+    });
+    await insertRelationship(connection, userId, headPersonId, siblingPersonId, "sibling");
+  }
+
+  return headPersonId;
 }
 
 exports.showFamilyLogin = (req, res) => {
@@ -1153,31 +1355,96 @@ exports.updateMember = async (req, res) => {
 // AJAX PHOTO UPLOAD (LIVE UPDATE)
 // =======================
 exports.uploadPhoto = async (req, res) => {
+  let connection;
+
   try {
-    const familyId = req.params.familyId;
-    const file = req.files[0];
-    if (!file) return res.status(400).json({ success: false, message: "No file uploaded" });
-
-    const field = file.fieldname;
-    const folder = field.includes("child") ? "children" : "parent";
-    const photoPath = `${folder}/${file.filename}`;
-
-    if (field === "husband_photo") {
-      await db.query(
-        "UPDATE family_members SET photo = ? WHERE family_id = ? AND relationship = 'husband'",
-        [photoPath, familyId]
-      );
-    } else if (field === "wife_photo") {
-      await db.query(
-        "UPDATE family_members SET photo = ? WHERE family_id = ? AND relationship = 'wife'",
-        [photoPath, familyId]
-      );
+    const familyId = Number(req.params.familyId);
+    if (!Number.isInteger(familyId) || familyId <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid family id" });
     }
 
-    res.json({ success: true, path: photoPath });
+    const files = req.files || [];
+    const file = Array.isArray(files) ? files[0] : null;
+    if (!file || !file.filename) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
+    }
+
+    const field = String(file.fieldname || "");
+    const photoPathMap = {
+      my_image: "main",
+      father_image: "parent",
+      mother_image: "parent",
+      spouse_image: "main",
+      husband_photo: "parent",
+      wife_photo: "parent"
+    };
+    const folderName = photoPathMap[field];
+
+    if (!folderName) {
+      return res.status(400).json({ success: false, message: "Unsupported upload field" });
+    }
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    const [persons] = await connection.query(
+      `SELECT id, user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode
+       FROM persons
+       WHERE user_id = ?
+       ORDER BY id ASC`,
+      [familyId]
+    );
+
+    const [relationships] = await connection.query(
+      `SELECT id, person_id, related_person_id, relation
+       FROM relationships
+       WHERE user_id = ?`,
+      [familyId]
+    );
+
+    const family = groupAdminFamily(persons, relationships);
+    const targetByField = {
+      my_image: family.self,
+      father_image: family.father,
+      mother_image: family.mother,
+      spouse_image: family.spouse,
+      husband_photo: family.self,
+      wife_photo: family.spouse
+    };
+
+    const targetPerson = targetByField[field];
+    if (!targetPerson) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: "Person not found for uploaded field" });
+    }
+
+    const previousImage = targetPerson.image || null;
+    const photoPath = `${folderName}/${file.filename}`;
+
+    await connection.query(
+      `UPDATE persons
+       SET image = ?
+       WHERE id = ? AND user_id = ?`,
+      [photoPath, Number(targetPerson.id), familyId]
+    );
+
+    await connection.commit();
+
+    if (previousImage && previousImage !== photoPath) {
+      safeUnlinkUpload(previousImage);
+    }
+
+    return res.json({ success: true, path: photoPath });
   } catch (err) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error("Upload error:", err);
     res.status(500).json({ success: false, message: "Upload failed" });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
@@ -1313,179 +1580,14 @@ exports.createFamily = async (req, res) => {
 
     const userId = req.session.user.id;
     const files = req.files || {};
-    const body = req.body || {};
-    const myName = normalizeValue(body.my_name);
-    const myGender = normalizeValue(body.my_gender);
-    const myDob = normalizeValue(body.my_dob);
-    const myMobile = normalizeValue(body.my_mobile);
-    const myOccupation = normalizeValue(body.my_occupation);
-    const fatherName = normalizeValue(body.father_name);
-    const motherName = normalizeValue(body.mother_name);
-    const spouseName = normalizeValue(body.spouse_name);
-    const spouseGender = normalizeValue(body.spouse_gender);
-    const spouseMobile = normalizeValue(body.spouse_mobile);
-    const spouseOccupation = normalizeValue(body.spouse_occupation);
-    const doorNo = normalizeValue(body.door_no);
-    const street = normalizeValue(body.street);
-    const district = normalizeValue(body.district);
-    const state = normalizeValue(body.state);
-    const pincode = normalizeValue(body.pincode);
-
-    const children = parseCollection(body, "children");
-    const siblings = parseCollection(body, "siblings");
-
-    if (!myName) {
-      return res.status(400).json({ success: false, message: "Main person name is required." });
-    }
-
-    if (!myMobile || !isValidMobile(myMobile)) {
-      return res.status(400).json({ success: false, message: "Main mobile must be a 10-digit number." });
-    }
-
-    if (spouseMobile && !isValidMobile(spouseMobile)) {
-      return res.status(400).json({ success: false, message: "Spouse mobile must be a 10-digit number." });
-    }
-
-    const parentMobiles = [body.father_mobile, body.mother_mobile].map(normalizeValue).filter(Boolean);
-    if (parentMobiles.some(mobile => !isValidMobile(mobile))) {
-      return res.status(400).json({ success: false, message: "Parent mobile numbers must be 10 digits." });
-    }
-
-    for (const child of children) {
-      const childName = normalizeValue(child.name);
-      const childMobile = normalizeValue(child.mobile);
-
-      if ((childName || childMobile || child.dob || child.gender || child.occupation || child.image) && !childName) {
-        return res.status(400).json({ success: false, message: "Each child entry needs a name." });
-      }
-
-      if (childMobile && !isValidMobile(childMobile)) {
-        return res.status(400).json({ success: false, message: "Child mobile numbers must be 10 digits." });
-      }
-    }
-
-    for (const sibling of siblings) {
-      const siblingName = normalizeValue(sibling.name);
-      const siblingMobile = normalizeValue(sibling.mobile);
-
-      if ((siblingName || siblingMobile || sibling.gender || sibling.relation || sibling.image) && !siblingName) {
-        return res.status(400).json({ success: false, message: "Each sibling entry needs a name." });
-      }
-
-      if (siblingMobile && !isValidMobile(siblingMobile)) {
-        return res.status(400).json({ success: false, message: "Sibling mobile numbers must be 10 digits." });
-      }
+    const payload = buildFamilyPayload(req.body);
+    const validationError = validateFamilyPayload(payload);
+    if (validationError) {
+      return res.status(400).json({ success: false, message: validationError });
     }
 
     await connection.beginTransaction();
-
-    const sharedAddress = {
-      door_no: doorNo,
-      street,
-      district,
-      state,
-      pincode
-    };
-
-    const headPersonId = await insertPerson(connection, userId, {
-      name: myName,
-      gender: myGender,
-      dob: myDob,
-      mobile: myMobile,
-      occupation: myOccupation,
-      image: getUploadedFileName(files, "my_image") ? `main/${getUploadedFileName(files, "my_image")}` : null,
-      ...sharedAddress
-    });
-
-    const fatherNameValue = fatherName;
-    if (fatherNameValue) {
-      const fatherPersonId = await insertPerson(connection, userId, {
-        name: fatherNameValue,
-        gender: "Male",
-        occupation: normalizeValue(body.father_occupation),
-        image: getUploadedFileName(files, "father_image") ? `parent/${getUploadedFileName(files, "father_image")}` : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, fatherPersonId, "father");
-    }
-
-    const motherNameValue = motherName;
-    if (motherNameValue) {
-      const motherPersonId = await insertPerson(connection, userId, {
-        name: motherNameValue,
-        gender: "Female",
-        occupation: normalizeValue(body.mother_occupation),
-        image: getUploadedFileName(files, "mother_image") ? `parent/${getUploadedFileName(files, "mother_image")}` : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, motherPersonId, "mother");
-    }
-
-    if (spouseName) {
-      const spousePersonId = await insertPerson(connection, userId, {
-        name: spouseName,
-        gender: spouseGender,
-        mobile: spouseMobile,
-        occupation: spouseOccupation,
-        image: getUploadedFileName(files, "spouse_image") ? `main/${getUploadedFileName(files, "spouse_image")}` : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, spousePersonId, "spouse");
-    }
-
-    for (const child of children) {
-      const childName = normalizeValue(child.name);
-      if (!childName) {
-        continue;
-      }
-
-      const childImageField = `children[${child.index}][image]`;
-      const childPhotoField = `children[${child.index}][photo]`;
-
-      const childPersonId = await insertPerson(connection, userId, {
-        name: childName,
-        gender: normalizeValue(child.gender),
-        dob: normalizeValue(child.dob),
-        mobile: normalizeValue(child.mobile),
-        occupation: normalizeValue(child.occupation),
-        image: getUploadedFileName(files, childImageField)
-          ? `children/${getUploadedFileName(files, childImageField)}`
-          : getUploadedFileName(files, childPhotoField)
-            ? `children/${getUploadedFileName(files, childPhotoField)}`
-            : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, childPersonId, "child");
-    }
-
-    for (const sibling of siblings) {
-      const siblingName = normalizeValue(sibling.name);
-      if (!siblingName) {
-        continue;
-      }
-
-      const siblingImageField = `siblings[${sibling.index}][image]`;
-      const siblingPhotoField = `siblings[${sibling.index}][photo]`;
-
-      const siblingRelation = normalizeValue(sibling.relation)?.toLowerCase() === "sister"
-        ? "sister"
-        : "brother";
-
-      const siblingPersonId = await insertPerson(connection, userId, {
-        name: siblingName,
-        gender: normalizeValue(sibling.gender) || (siblingRelation === "sister" ? "Female" : "Male"),
-        dob: normalizeValue(sibling.dob),
-        mobile: normalizeValue(sibling.mobile),
-        occupation: normalizeValue(sibling.occupation),
-        image: getUploadedFileName(files, siblingImageField)
-          ? `children/${getUploadedFileName(files, siblingImageField)}`
-          : getUploadedFileName(files, siblingPhotoField)
-            ? `children/${getUploadedFileName(files, siblingPhotoField)}`
-            : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, siblingPersonId, "sibling");
-    }
+    const headPersonId = await createFamilyRecords(connection, userId, files, payload);
 
     await connection.commit();
 
@@ -1519,7 +1621,7 @@ exports.createFamilyWithUser = async (req, res) => {
     const email = normalizeValue(req.body.email);
     const password = normalizeValue(req.body.password);
     const files = req.files || {};
-    const body = req.body || {};
+    const payload = buildFamilyPayload(req.body);
 
     // Validate email and password
     if (!email || !password) {
@@ -1536,13 +1638,16 @@ exports.createFamilyWithUser = async (req, res) => {
       });
     }
 
+    await connection.beginTransaction();
+
     // Check if email already exists
-    const [existingUser] = await db.query(
+    const [existingUser] = await connection.query(
       "SELECT id FROM users WHERE email = ?",
       [email]
     );
 
     if (existingUser.length > 0) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
         message: "Email already exists. Please use a different email address."
@@ -1553,226 +1658,22 @@ exports.createFamilyWithUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const [userResult] = await db.query(
+    const [userResult] = await connection.query(
       "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
       [email, hashedPassword, "user"]
     );
 
     const userId = userResult.insertId;
-
-    // Extract family data (reuse createFamily validation and logic)
-    const myName = normalizeValue(body.my_name);
-    const myGender = normalizeValue(body.my_gender);
-    const myDob = normalizeValue(body.my_dob);
-    const myMobile = normalizeValue(body.my_mobile);
-    const myOccupation = normalizeValue(body.my_occupation);
-    const fatherName = normalizeValue(body.father_name);
-    const motherName = normalizeValue(body.mother_name);
-    const spouseName = normalizeValue(body.spouse_name);
-    const spouseGender = normalizeValue(body.spouse_gender);
-    const spouseMobile = normalizeValue(body.spouse_mobile);
-    const spouseOccupation = normalizeValue(body.spouse_occupation);
-    const doorNo = normalizeValue(body.door_no);
-    const street = normalizeValue(body.street);
-    const district = normalizeValue(body.district);
-    const state = normalizeValue(body.state);
-    const pincode = normalizeValue(body.pincode);
-
-    const children = parseCollection(body, "children");
-    const siblings = parseCollection(body, "siblings");
-
-    // Validate family data
-    if (!myName) {
-      await db.query("DELETE FROM users WHERE id = ?", [userId]);
+    const validationError = validateFamilyPayload(payload);
+    if (validationError) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: "Main person name is required."
+        message: validationError
       });
     }
 
-    if (!myMobile || !isValidMobile(myMobile)) {
-      await db.query("DELETE FROM users WHERE id = ?", [userId]);
-      return res.status(400).json({
-        success: false,
-        message: "Main mobile must be a 10-digit number."
-      });
-    }
-
-    if (spouseMobile && !isValidMobile(spouseMobile)) {
-      await db.query("DELETE FROM users WHERE id = ?", [userId]);
-      return res.status(400).json({
-        success: false,
-        message: "Spouse mobile must be a 10-digit number."
-      });
-    }
-
-    const parentMobiles = [body.father_mobile, body.mother_mobile].map(normalizeValue).filter(Boolean);
-    if (parentMobiles.some(mobile => !isValidMobile(mobile))) {
-      await db.query("DELETE FROM users WHERE id = ?", [userId]);
-      return res.status(400).json({
-        success: false,
-        message: "Parent mobile numbers must be 10 digits."
-      });
-    }
-
-    for (const child of children) {
-      const childName = normalizeValue(child.name);
-      const childMobile = normalizeValue(child.mobile);
-
-      if ((childName || childMobile || child.dob || child.gender || child.occupation || child.image) && !childName) {
-        await db.query("DELETE FROM users WHERE id = ?", [userId]);
-        return res.status(400).json({
-          success: false,
-          message: "Each child entry needs a name."
-        });
-      }
-
-      if (childMobile && !isValidMobile(childMobile)) {
-        await db.query("DELETE FROM users WHERE id = ?", [userId]);
-        return res.status(400).json({
-          success: false,
-          message: "Child mobile numbers must be 10 digits."
-        });
-      }
-    }
-
-    for (const sibling of siblings) {
-      const siblingName = normalizeValue(sibling.name);
-      const siblingMobile = normalizeValue(sibling.mobile);
-
-      if ((siblingName || siblingMobile || sibling.gender || sibling.relation || sibling.image) && !siblingName) {
-        await db.query("DELETE FROM users WHERE id = ?", [userId]);
-        return res.status(400).json({
-          success: false,
-          message: "Each sibling entry needs a name."
-        });
-      }
-
-      if (siblingMobile && !isValidMobile(siblingMobile)) {
-        await db.query("DELETE FROM users WHERE id = ?", [userId]);
-        return res.status(400).json({
-          success: false,
-          message: "Sibling mobile numbers must be 10 digits."
-        });
-      }
-    }
-
-    // Begin transaction for family creation
-    await connection.beginTransaction();
-
-    const sharedAddress = {
-      door_no: doorNo,
-      street,
-      district,
-      state,
-      pincode
-    };
-
-    // Create family head person
-    const headPersonId = await insertPerson(connection, userId, {
-      name: myName,
-      gender: myGender,
-      dob: myDob,
-      mobile: myMobile,
-      occupation: myOccupation,
-      image: getUploadedFileName(files, "my_image") ? `main/${getUploadedFileName(files, "my_image")}` : null,
-      ...sharedAddress
-    });
-
-    // Create father
-    const fatherNameValue = fatherName;
-    if (fatherNameValue) {
-      const fatherPersonId = await insertPerson(connection, userId, {
-        name: fatherNameValue,
-        gender: "Male",
-        occupation: normalizeValue(body.father_occupation),
-        image: getUploadedFileName(files, "father_image") ? `parent/${getUploadedFileName(files, "father_image")}` : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, fatherPersonId, "father");
-    }
-
-    // Create mother
-    const motherNameValue = motherName;
-    if (motherNameValue) {
-      const motherPersonId = await insertPerson(connection, userId, {
-        name: motherNameValue,
-        gender: "Female",
-        occupation: normalizeValue(body.mother_occupation),
-        image: getUploadedFileName(files, "mother_image") ? `parent/${getUploadedFileName(files, "mother_image")}` : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, motherPersonId, "mother");
-    }
-
-    // Create spouse
-    if (spouseName) {
-      const spousePersonId = await insertPerson(connection, userId, {
-        name: spouseName,
-        gender: spouseGender,
-        mobile: spouseMobile,
-        occupation: spouseOccupation,
-        image: getUploadedFileName(files, "spouse_image") ? `main/${getUploadedFileName(files, "spouse_image")}` : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, spousePersonId, "spouse");
-    }
-
-    // Create children
-    for (const child of children) {
-      const childName = normalizeValue(child.name);
-      if (!childName) {
-        continue;
-      }
-
-      const childImageField = `children[${child.index}][image]`;
-      const childPhotoField = `children[${child.index}][photo]`;
-
-      const childPersonId = await insertPerson(connection, userId, {
-        name: childName,
-        gender: normalizeValue(child.gender),
-        dob: normalizeValue(child.dob),
-        mobile: normalizeValue(child.mobile),
-        occupation: normalizeValue(child.occupation),
-        image: getUploadedFileName(files, childImageField)
-          ? `children/${getUploadedFileName(files, childImageField)}`
-          : getUploadedFileName(files, childPhotoField)
-            ? `children/${getUploadedFileName(files, childPhotoField)}`
-            : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, childPersonId, "child");
-    }
-
-    // Create siblings
-    for (const sibling of siblings) {
-      const siblingName = normalizeValue(sibling.name);
-      if (!siblingName) {
-        continue;
-      }
-
-      const siblingImageField = `siblings[${sibling.index}][image]`;
-      const siblingPhotoField = `siblings[${sibling.index}][photo]`;
-
-      const siblingRelation = normalizeValue(sibling.relation)?.toLowerCase() === "sister"
-        ? "sister"
-        : "brother";
-
-      const siblingPersonId = await insertPerson(connection, userId, {
-        name: siblingName,
-        gender: normalizeValue(sibling.gender) || (siblingRelation === "sister" ? "Female" : "Male"),
-        dob: normalizeValue(sibling.dob),
-        mobile: normalizeValue(sibling.mobile),
-        occupation: normalizeValue(sibling.occupation),
-        image: getUploadedFileName(files, siblingImageField)
-          ? `children/${getUploadedFileName(files, siblingImageField)}`
-          : getUploadedFileName(files, siblingPhotoField)
-            ? `children/${getUploadedFileName(files, siblingPhotoField)}`
-            : null,
-        ...sharedAddress
-      });
-      await insertRelationship(connection, userId, headPersonId, siblingPersonId, "sibling");
-    }
+    const headPersonId = await createFamilyRecords(connection, userId, files, payload);
 
     // Commit transaction
     await connection.commit();
@@ -1802,35 +1703,94 @@ exports.createFamilyWithUser = async (req, res) => {
 // ADD CHILD
 // =======================
 exports.addChild = async (req, res) => {
-  try {
-    const FamilyMember = require("../models/FamilyMember");
-    const { family_id, name, gender, dob, occupation, door_no, street, district, state, pincode } = req.body;
+  let connection;
 
-    if (!family_id || !name) {
+  try {
+    const familyId = Number(req.body?.family_id);
+    const name = normalizeValue(req.body?.name);
+    const gender = normalizeValue(req.body?.gender);
+    const dob = normalizeValue(req.body?.dob);
+    const occupation = normalizeValue(req.body?.occupation);
+    const doorNo = normalizeValue(req.body?.door_no);
+    const street = normalizeValue(req.body?.street);
+    const district = normalizeValue(req.body?.district);
+    const state = normalizeValue(req.body?.state);
+    const pincode = normalizeValue(req.body?.pincode);
+
+    if (!Number.isInteger(familyId) || familyId <= 0 || !name) {
       return res.status(400).send("Family ID and name are required");
     }
 
-    const relationship = gender === 'Male' ? 'son' : gender === 'Female' ? 'daughter' : 'other';
+    connection = await db.getConnection();
+    await connection.beginTransaction();
 
-    await FamilyMember.create({
-      family_id: family_id,
-      member_type: "child",
-      name: name,
-      relationship: relationship,
-      gender: gender,
-      dob: dob,
-      occupation: occupation || "",
-      door_no: door_no || "",
-      street: street || "",
-      district: district || "",
-      state: state || "",
-      pincode: pincode || "",
-      photo: req.files?.find(f => f.fieldname === "photo") ? `children/${req.files.find(f => f.fieldname === "photo").filename}` : null
-    });
+    const [persons] = await connection.query(
+      `SELECT id, user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode
+       FROM persons
+       WHERE user_id = ?
+       ORDER BY id ASC`,
+      [familyId]
+    );
 
-    res.redirect(`/admin/edit/${family_id}?message=Child added successfully`);
+    if (!Array.isArray(persons) || persons.length === 0) {
+      await connection.rollback();
+      return res.status(404).send("Family not found");
+    }
+
+    const [relationships] = await connection.query(
+      `SELECT id, person_id, related_person_id, relation
+       FROM relationships
+       WHERE user_id = ?`,
+      [familyId]
+    );
+
+    const family = groupAdminFamily(persons, relationships);
+    if (!family.self) {
+      await connection.rollback();
+      return res.status(404).send("Family not found");
+    }
+
+    const relationship = inferChildRelation(gender);
+    const photoPath = buildUploadedImagePath(req.files || {}, "photo", "children");
+
+    const [result] = await connection.query(
+      `INSERT INTO persons
+       (user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)` ,
+      [
+        familyId,
+        name,
+        gender,
+        dob,
+        null,
+        occupation,
+        photoPath,
+        doorNo,
+        street,
+        district,
+        state,
+        pincode
+      ]
+    );
+
+    await connection.query(
+      `INSERT INTO relationships (user_id, person_id, related_person_id, relation)
+       VALUES (?, ?, ?, ?)` ,
+      [familyId, Number(family.self.id), Number(result.insertId), relationship]
+    );
+
+    await connection.commit();
+
+    return res.redirect(`/admin/edit/${familyId}?message=Child added successfully`);
   } catch (err) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error(err);
     res.status(500).send("Server Error");
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Family</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     :root {
@@ -26,8 +27,9 @@
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 100%;
       margin: 0 auto;
+      padding: 0 1rem;
     }
 
     h3, h4, h5, h6 {
@@ -63,6 +65,7 @@
       border-left: 5px solid var(--brown-primary);
       transition: all 0.3s ease;
       overflow: hidden;
+      width: 100%;
     }
 
     .card:hover {
@@ -87,11 +90,12 @@
     .dynamic-item {
       border: 2px solid var(--brown-light);
       border-radius: 14px;
-      padding: 1.5rem;
-      margin-bottom: 1.2rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
       background: linear-gradient(135deg, #ffffff, #faf6f1);
       box-shadow: 0 4px 12px rgba(112, 66, 20, 0.08);
       transition: all 0.3s ease;
+      width: 100%;
     }
 
     .dynamic-item:hover {
@@ -99,7 +103,178 @@
       box-shadow: 0 6px 18px rgba(112, 66, 20, 0.12);
     }
 
-    .form-label {
+    .dynamic-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--brown-lighter);
+      gap: 1rem;
+    }
+
+    .dynamic-item-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--brown-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+      flex: 1;
+    }
+
+    .dynamic-item-remove-btn {
+      background: linear-gradient(135deg, #dc3545, #c82333) !important;
+      border: none !important;
+      color: white !important;
+      font-weight: 600;
+      padding: 0.5rem 1rem !important;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dynamic-item-remove-btn:hover {
+      background: linear-gradient(135deg, #c82333, #a71d2a) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(220, 53, 69, 0.35);
+      color: white !important;
+    }
+
+    .dynamic-item-fields {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .dynamic-item-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dynamic-item-field .form-label {
+      margin-bottom: 0.6rem;
+    }
+
+    .dynamic-item-image-block {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #faf6f1, #f4e8d8);
+      border-radius: 12px;
+      border: 2px dashed var(--brown-light);
+      width: fit-content;
+    }
+
+    .dynamic-item-preview {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 3px solid var(--brown-light);
+      background: white;
+      box-shadow: 0 4px 12px rgba(112, 66, 20, 0.1);
+    }
+
+    .dynamic-item-actions {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .dynamic-item-actions .btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .dynamic-item {
+        padding: 1.5rem;
+      }
+
+      .dynamic-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .dynamic-item-title {
+        width: 100%;
+      }
+
+      .dynamic-item-remove-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .dynamic-item-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .dynamic-item-actions .btn {
+        min-width: auto;
+        flex: 1;
+      }
+
+      .dynamic-item-image-block {
+        width: 100%;
+        align-items: center;
+      }
+
+      .dynamic-item-preview {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .dynamic-item {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .dynamic-item-header {
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .dynamic-item-title {
+        font-size: 1rem;
+      }
+
+      .dynamic-item-remove-btn {
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.75rem;
+      }
+
+      .form-label {
+        font-size: 0.85rem;
+      }
+
+      .form-control,
+      .form-select {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.95rem;
+      }
+
+      .dynamic-item-actions {
+        flex-direction: column;
+      }
+
+      .dynamic-item-actions .btn {
+        width: 100%;
+      }
+    }
       font-weight: 700;
       color: var(--brown-primary);
       font-size: 0.95rem;
@@ -381,7 +556,7 @@
       <div class="card p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="section-title mb-0">CHILDREN</h5>
-          <button type="button" class="btn btn-sm btn-outline-primary" id="addChildBtn">+ Add Child</button>
+          <button type="button" class="btn btn-sm btn-primary" id="addChildBtn"><i class="fas fa-plus"></i> Add Child</button>
         </div>
         <div id="childrenContainer"></div>
       </div>
@@ -389,7 +564,7 @@
       <div class="card p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="section-title mb-0">SIBLINGS</h5>
-          <button type="button" class="btn btn-sm btn-outline-primary" id="addSiblingBtn">+ Add Sibling</button>
+          <button type="button" class="btn btn-sm btn-primary" id="addSiblingBtn"><i class="fas fa-plus"></i> Add Sibling</button>
         </div>
         <div id="siblingsContainer"></div>
       </div>
@@ -426,8 +601,6 @@
     const dataStore = document.getElementById('familyDataStore');
     const childrenData = JSON.parse(dataStore.dataset.children);
     const siblingsData = JSON.parse(dataStore.dataset.siblings);
-    let childIndex = childrenData.length;
-    let siblingIndex = siblingsData.length;
     let currentPhotoInputId = null;
 
     const photoOptionModalElement = document.getElementById("photoOptionModal");
@@ -449,12 +622,18 @@
       return `
       <div class="dynamic-item" data-type="child">
         <input type="hidden" name="children[${index}][id]" value="${child && child.id ? child.id : ""}">
-        <div class="row g-2 align-items-end">
-          <div class="col-md-3">
+        
+        <div class="dynamic-item-header">
+          <h6 class="dynamic-item-title"><i class="fas fa-child"></i> Child <span class="dynamic-child-number">${index + 1}</span></h6>
+          <button type="button" class="btn btn-sm dynamic-item-remove-btn" data-remove="child"><i class="fas fa-trash-alt"></i> Remove</button>
+        </div>
+
+        <div class="dynamic-item-fields">
+          <div class="dynamic-item-field">
             <label class="form-label">Name</label>
-            <input class="form-control" name="children[${index}][name]" value="${child && child.name ? child.name : ""}">
+            <input class="form-control" name="children[${index}][name]" value="${child && child.name ? child.name : ""}" placeholder="Full name">
           </div>
-          <div class="col-md-2">
+          <div class="dynamic-item-field">
             <label class="form-label">Gender</label>
             <select class="form-select" name="children[${index}][gender]">
               <option value="">Select</option>
@@ -463,20 +642,19 @@
               <option value="Other" ${gender === "Other" ? "selected" : ""}>Other</option>
             </select>
           </div>
-          <div class="col-md-2">
-            <label class="form-label">DOB</label>
+          <div class="dynamic-item-field">
+            <label class="form-label">Date of Birth</label>
             <input type="date" class="form-control" name="children[${index}][dob]" value="${child && child.dob ? child.dob : ""}">
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Image</label>
-            <input type="file" class="d-none photo-input" id="child_image_${index}" accept="image/*" name="children[${index}][image]" data-preview-id="childPreview_${index}" onchange="previewImage(this, 'childPreview_${index}')">
-            <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="child_image_${index}">Upload Photo</button>
-          </div>
-          <div class="col-md-1 text-center">
-            <img id="childPreview_${index}" src="${image}" class="preview" alt="Child">
-          </div>
-          <div class="col-md-1 text-end">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-item">Remove</button>
+        </div>
+
+        <div style="display: flex; gap: 2rem; align-items: flex-start;">
+          <div class="dynamic-item-image-block">
+            <img id="childPreview_${index}" src="${image}" class="dynamic-item-preview" alt="Child Photo">
+            <div class="dynamic-item-actions">
+              <input type="file" class="d-none photo-input" id="child_image_${index}" accept="image/*" name="children[${index}][image]" data-preview-id="childPreview_${index}" onchange="previewImage(this, 'childPreview_${index}')">
+              <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="child_image_${index}"><i class="fas fa-camera"></i> Upload</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -489,12 +667,18 @@
       return `
       <div class="dynamic-item" data-type="sibling">
         <input type="hidden" name="siblings[${index}][id]" value="${sibling && sibling.id ? sibling.id : ""}">
-        <div class="row g-2 align-items-end">
-          <div class="col-md-3">
+        
+        <div class="dynamic-item-header">
+          <h6 class="dynamic-item-title"><i class="fas fa-person-half-dress"></i> Sibling <span class="dynamic-sibling-number">${index + 1}</span></h6>
+          <button type="button" class="btn btn-sm dynamic-item-remove-btn" data-remove="sibling"><i class="fas fa-trash-alt"></i> Remove</button>
+        </div>
+
+        <div class="dynamic-item-fields">
+          <div class="dynamic-item-field">
             <label class="form-label">Name</label>
-            <input class="form-control" name="siblings[${index}][name]" value="${sibling && sibling.name ? sibling.name : ""}">
+            <input class="form-control" name="siblings[${index}][name]" value="${sibling && sibling.name ? sibling.name : ""}" placeholder="Full name">
           </div>
-          <div class="col-md-2">
+          <div class="dynamic-item-field">
             <label class="form-label">Gender</label>
             <select class="form-select" name="siblings[${index}][gender]">
               <option value="">Select</option>
@@ -503,23 +687,22 @@
               <option value="Other" ${gender === "Other" ? "selected" : ""}>Other</option>
             </select>
           </div>
-          <div class="col-md-2">
+          <div class="dynamic-item-field">
             <label class="form-label">Relation</label>
             <select class="form-select" name="siblings[${index}][relation]">
               <option value="brother" ${relation === "brother" ? "selected" : ""}>Brother</option>
               <option value="sister" ${relation === "sister" ? "selected" : ""}>Sister</option>
             </select>
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Image</label>
-            <input type="file" class="d-none photo-input" id="sibling_image_${index}" accept="image/*" name="siblings[${index}][image]" data-preview-id="siblingPreview_${index}" onchange="previewImage(this, 'siblingPreview_${index}')">
-            <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="sibling_image_${index}">Upload Photo</button>
-          </div>
-          <div class="col-md-1 text-center">
-            <img id="siblingPreview_${index}" src="${image}" class="preview" alt="Sibling">
-          </div>
-          <div class="col-md-1 text-end">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-item">Remove</button>
+        </div>
+
+        <div style="display: flex; gap: 2rem; align-items: flex-start;">
+          <div class="dynamic-item-image-block">
+            <img id="siblingPreview_${index}" src="${image}" class="dynamic-item-preview" alt="Sibling Photo">
+            <div class="dynamic-item-actions">
+              <input type="file" class="d-none photo-input" id="sibling_image_${index}" accept="image/*" name="siblings[${index}][image]" data-preview-id="siblingPreview_${index}" onchange="previewImage(this, 'siblingPreview_${index}')">
+              <button type="button" class="btn btn-outline-secondary choose-photo-btn" data-input-id="sibling_image_${index}"><i class="fas fa-camera"></i> Upload</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -647,27 +830,46 @@
 
     document.getElementById("addChildBtn").addEventListener("click", function() {
       const childContainer = document.getElementById("childrenContainer");
-      childContainer.insertAdjacentHTML("beforeend", childTemplate(childIndex, {}));
-      childIndex += 1;
+      // Get current count of children to use as index
+      const currentChildCount = childContainer.querySelectorAll('.dynamic-item').length;
+      childContainer.insertAdjacentHTML("beforeend", childTemplate(currentChildCount, {}));
     });
 
     document.getElementById("addSiblingBtn").addEventListener("click", function() {
       const siblingContainer = document.getElementById("siblingsContainer");
-      siblingContainer.insertAdjacentHTML("beforeend", siblingTemplate(siblingIndex, {}));
-      siblingIndex += 1;
+      // Get current count of siblings to use as index
+      const currentSiblingCount = siblingContainer.querySelectorAll('.dynamic-item').length;
+      siblingContainer.insertAdjacentHTML("beforeend", siblingTemplate(currentSiblingCount, {}));
     });
 
     document.addEventListener("click", function(event) {
-      if (event.target.classList.contains("choose-photo-btn")) {
-        currentPhotoInputId = event.target.dataset.inputId;
+      // Photo button click
+      if (event.target.classList.contains("choose-photo-btn") || event.target.closest(".choose-photo-btn")) {
+        const btn = event.target.closest(".choose-photo-btn");
+        currentPhotoInputId = btn.dataset.inputId;
         photoOptionModal.show();
         return;
       }
 
-      if (event.target.classList.contains("remove-item")) {
+      // Remove button click
+      if (event.target.closest(".dynamic-item-remove-btn")) {
         event.target.closest(".dynamic-item").remove();
+        // Re-index children and siblings
+        updateDynamicNumbering();
       }
     });
+
+    function updateDynamicNumbering() {
+      // Re-index children
+      document.querySelectorAll('#childrenContainer .dynamic-child-number').forEach((el, index) => {
+        el.textContent = index + 1;
+      });
+
+      // Re-index siblings
+      document.querySelectorAll('#siblingsContainer .dynamic-sibling-number').forEach((el, index) => {
+        el.textContent = index + 1;
+      });
+    }
 
     document.getElementById("browseBtn").addEventListener("click", function() {
       if (!currentPhotoInputId) {

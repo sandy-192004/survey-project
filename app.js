@@ -9,6 +9,7 @@ const path = require("path");
 const familyRoutes = require("./routes/familyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminSearchRoutes = require("./routes/adminSearchRoutes");
+const familytreeRoutes = require("./routes/familyTree");
 const db = require("./config/db");
 
 const app = express();
@@ -57,6 +58,7 @@ app.use(
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
+app.use("/", familytreeRoutes);
 
 
 // ================== ERROR HANDLER ==================

@@ -208,7 +208,7 @@
             <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Family member' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
-              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || '-' %></div>
+              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relation || '-' %></div>
               <div class="id-item"><span class="id-label">Gender:</span><%= person.gender || '-' %></div>
               <div class="id-item"><span class="id-label">DOB:</span><%= formatDob(person.dob) %></div>
               <div class="id-item"><span class="id-label">Mobile:</span><%= person.mobile || '-' %></div>
@@ -229,7 +229,7 @@
             <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Family member' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
-              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || '-' %></div>
+              <div class="id-item"><span class="id-label">Relationship:</span><%= person.id === groupedFamily.self.id ? 'Self' : (person.relation || '-') %></div>
               <div class="id-item"><span class="id-label">Gender:</span><%= person.gender || '-' %></div>
               <div class="id-item"><span class="id-label">DOB:</span><%= formatDob(person.dob) %></div>
               <div class="id-item"><span class="id-label">Mobile:</span><%= person.mobile || '-' %></div>
@@ -250,7 +250,7 @@
             <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Sibling' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
-              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || 'Sibling' %></div>
+              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relation || 'Sibling' %></div>
               <div class="id-item"><span class="id-label">Gender:</span><%= person.gender || '-' %></div>
               <div class="id-item"><span class="id-label">DOB:</span><%= formatDob(person.dob) %></div>
               <div class="id-item"><span class="id-label">Mobile:</span><%= person.mobile || '-' %></div>
@@ -273,7 +273,7 @@
             <img class="id-photo" src="<%= img || 'https://via.placeholder.com/100?text=No+Photo' %>" alt="<%= person.name || 'Child' %>" onerror="this.onerror=null;this.src='https://via.placeholder.com/100?text=No+Photo';">
             <div class="id-details">
               <h3 class="id-name"><%= person.name || '-' %></h3>
-              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relationship || 'Child' %></div>
+              <div class="id-item"><span class="id-label">Relationship:</span><%= person.relation || 'Child' %></div>
               <div class="id-item"><span class="id-label">Gender:</span><%= person.gender || '-' %></div>
               <div class="id-item"><span class="id-label">DOB:</span><%= formatDob(person.dob) %></div>
               <div class="id-item"><span class="id-label">Mobile:</span><%= person.mobile || '-' %></div>
