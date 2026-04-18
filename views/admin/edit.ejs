@@ -174,12 +174,24 @@
             <input class="form-control" name="street" value="<%= family.self.street %>">
           </div>
           <div class="col-md-2">
-            <label class="form-label">District</label>
-            <input class="form-control" name="district" value="<%= family.self.district %>">
+            <label class="form-label">State</label>
+            <select class="form-select" name="state" id="stateSelect">
+              <option value="">Select State</option>
+              <% states.forEach(state => { %>
+                <option value="<%= state %>" <%= family.self.state === state ? 'selected' : '' %>>
+                  <%= state %>
+                </option>
+              <% }); %>
+            </select>
           </div>
           <div class="col-md-2">
-            <label class="form-label">State</label>
-            <input class="form-control" name="state" value="<%= family.self.state %>">
+            <label class="form-label">District</label>
+            <select class="form-select" name="district" id="districtSelect">
+              <option value="">Select District</option>
+              <% if (family.self.state) { %>
+                <!-- Districts will be populated by JavaScript -->
+              <% } %>
+            </select>
           </div>
           <div class="col-md-2">
             <label class="form-label">Pincode</label>
@@ -499,6 +511,39 @@
     });
 
     document.getElementById("adminEditForm").addEventListener("submit", validateMobileFields);
+
+    // Initialize State/District Cascading Dropdowns
+    const stateDistrictMap = <%- JSON.stringify(stateDistrictMap || {}) %>;
+    const currentState = '<%= family.self.state %>';
+    const currentDistrict = '<%= family.self.district %>';
+
+    function populateDistrictDropdown(stateName) {
+      const districtSelect = document.getElementById('districtSelect');
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+
+      if (stateName && stateDistrictMap[stateName]) {
+        stateDistrictMap[stateName].forEach(district => {
+          const option = document.createElement('option');
+          option.value = district;
+          option.textContent = district;
+          if (district === currentDistrict) {
+            option.selected = true;
+          }
+          districtSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Handle state change event
+    document.getElementById('stateSelect').addEventListener('change', function() {
+      populateDistrictDropdown(this.value);
+    });
+
+    // Initialize district dropdown on page load with current state
+    if (currentState) {
+      populateDistrictDropdown(currentState);
+    }
+
     renderInitialCollections();
   </script>
 </body>

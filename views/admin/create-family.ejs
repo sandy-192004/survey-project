@@ -198,8 +198,33 @@
 
     <div id="formAlert" class="alert alert-danger d-none" role="alert"></div>
 
-    <form id="createFamilyForm" method="POST" action="/admin/create-family" enctype="multipart/form-data">
+    <form id="createFamilyForm" method="POST" action="/admin/view/create-family" enctype="multipart/form-data">
       <div class="row g-4">
+        <div class="col-12">
+          <div class="surface-card rounded-4 p-4">
+            <div class="d-flex align-items-start gap-3 mb-4">
+              <div class="section-badge"><i class="bi bi-shield-lock fs-5"></i></div>
+              <div>
+                <h2 class="h5 fw-bold mb-1">User Account</h2>
+                <p class="mb-0 form-hint">Create user account credentials for this family.</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" name="email" placeholder="Enter email address" required>
+                <div class="form-hint mt-1">Must be unique and will be used to sign in.</div>
+              </div>
+              <div class="col-lg-6">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" name="password" placeholder="Enter password" minlength="6" required>
+                <div class="form-hint mt-1">Minimum 6 characters for security.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="col-12">
           <div class="surface-card rounded-4 p-4">
             <div class="d-flex align-items-start gap-3 mb-4">

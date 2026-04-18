@@ -71,28 +71,10 @@ app.use((err, req, res, next) => {
 
 // ================== SERVER START ==================
 
-app.listen(3001, () => {
-  console.log(`Server running on http://localhost:3001`);
+app.listen(4000, () => {
+  console.log(`Server running on http://localhost:4000`);
 });        
 
-function startServer(port) {
-  const server = app.listen(port, HOST, () => {
-    console.log(`Server running on port http://localhost:${port}`);
-  });
-
-  server.on("error", (err) => {
-    if (err && err.code === "EADDRINUSE") {
-      const nextPort = Number(port) + 1;
-      console.warn(`Port ${port} is in use. Retrying on port ${nextPort}...`);
-      setTimeout(() => startServer(nextPort), 200);
-      return;
-    }
-
-    throw err;
-  });
-}
-
-startServer(BASE_PORT);
 
 
      

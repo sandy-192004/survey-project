@@ -28,7 +28,7 @@ router.get("/dashboard", isLoggedIn, controller.dashboard);
 
 // ================== FAMILY FORM ==================
 
-router.get("/family-form", isLoggedIn, controller.showForm);
+router.get("/family-form", isLoggedIn, controller.showFamilyForm);
 router.post("/save-family", isLoggedIn, processUpload, controller.saveFamily);
 
 

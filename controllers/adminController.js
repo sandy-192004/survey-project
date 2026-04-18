@@ -17,11 +17,12 @@ function loadDropdownOptions() {
     });
     return {
       states,
-      districts: [...new Set(districts)]
+      districts: [...new Set(districts)],
+      stateDistrictMap: jsonData
     };
   } catch (error) {
     console.error("Error loading dropdown options:", error);
-    return { states: [], districts: [] };
+    return { states: [], districts: [], stateDistrictMap: {} };
   }
 }
 
@@ -44,6 +45,186 @@ function isValidMobile(value) {
 
 function getUploadedFileName(files, fieldName) {
   return files?.[fieldName]?.[0]?.filename || null;
+}
+
+function toInputDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString().split("T")[0];
+}
+
+function safeUnlinkUpload(relativePath) {
+  if (!relativePath || typeof relativePath !== "string") {
+    return;
+  }
+
+  const fullPath = path.join(__dirname, "../uploads", relativePath);
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+  }
+}
+
+function fileNameFromAnyUpload(files, fieldName) {
+  if (!Array.isArray(files)) {
+    return null;
+  }
+
+  const matched = files.find(file => file.fieldname === fieldName);
+  return matched ? matched.filename : null;
+}
+
+function findHeadPerson(persons, relationships) {
+  if (!Array.isArray(persons) || persons.length === 0) {
+    return null;
+  }
+
+  const relationKinds = new Set(["father", "mother", "spouse", "child", "brother", "sister", "sibling", "son", "daughter"]);
+  const score = new Map();
+
+  (relationships || []).forEach((rel) => {
+    const kind = String(rel.relation || "").trim().toLowerCase();
+    if (!relationKinds.has(kind)) {
+      return;
+    }
+
+    const sourceId = Number(rel.person_id);
+    const targetId = Number(rel.related_person_id);
+
+    if (kind === "father" || kind === "mother") {
+      score.set(sourceId, (score.get(sourceId) || 0) + 3);
+      score.set(targetId, (score.get(targetId) || 0) + 1);
+    } else {
+      score.set(sourceId, (score.get(sourceId) || 0) + 2);
+      score.set(targetId, (score.get(targetId) || 0) + 1);
+    }
+  });
+
+  if (score.size === 0) {
+    return persons[0];
+  }
+
+  const personById = new Map(persons.map(person => [Number(person.id), person]));
+  const sorted = Array.from(score.entries()).sort((left, right) => {
+    if (right[1] !== left[1]) {
+      return right[1] - left[1];
+    }
+    return left[0] - right[0];
+  });
+
+  return personById.get(sorted[0][0]) || persons[0];
+}
+
+function groupAdminFamily(persons, relationships) {
+  const personById = new Map((persons || []).map(person => [Number(person.id), person]));
+  const self = findHeadPerson(persons || [], relationships || []);
+
+  if (!self) {
+    return {
+      self: null,
+      father: null,
+      mother: null,
+      spouse: null,
+      children: [],
+      siblings: []
+    };
+  }
+
+  const selfId = Number(self.id);
+  
+  // CRITICAL: Only read FORWARD direction relationships (person_id = selfId)
+  // This prevents duplicates from bidirectional relationships
+  const relevantLinks = (relationships || []).filter(
+    rel => Number(rel.person_id) === selfId
+  );
+
+  const grouped = {
+    self,
+    father: null,
+    mother: null,
+    spouse: null,
+    children: [],
+    siblings: []
+  };
+
+  const seenChildren = new Set();
+  const seenSiblings = new Set();
+
+  relevantLinks.forEach((rel) => {
+    const relation = String(rel.relation || "").trim().toLowerCase();
+    const relatedPersonId = Number(rel.related_person_id);
+    const related = personById.get(relatedPersonId);
+
+    if (!related || Number(related.id) === selfId) {
+      return;
+    }
+
+    if (relation === "father") {
+      grouped.father = related;
+      return;
+    }
+
+    if (relation === "mother") {
+      grouped.mother = related;
+      return;
+    }
+
+    if (relation === "spouse") {
+      grouped.spouse = related;
+      return;
+    }
+
+    if (relation === "child" || relation === "son" || relation === "daughter") {
+      if (!seenChildren.has(Number(related.id))) {
+        grouped.children.push(related);
+        seenChildren.add(Number(related.id));
+      }
+      return;
+    }
+
+    if (relation === "brother" || relation === "sister" || relation === "sibling") {
+      if (!seenSiblings.has(Number(related.id))) {
+        grouped.siblings.push({
+          ...related,
+          relation: relation === "sibling"
+            ? (String(related.gender || "").toLowerCase() === "female" ? "sister" : "brother")
+            : relation
+        });
+        seenSiblings.add(Number(related.id));
+      }
+    }
+  });
+
+  // Fallback: if parent links are missing, infer from remaining persons in the same user group.
+  const takenIds = new Set([
+    Number(grouped.self?.id),
+    Number(grouped.spouse?.id),
+    ...grouped.children.map(child => Number(child.id)),
+    ...grouped.siblings.map(sibling => Number(sibling.id))
+  ].filter(Number.isFinite));
+
+  const candidates = (persons || []).filter(person => !takenIds.has(Number(person.id)));
+
+  if (!grouped.father) {
+    grouped.father = candidates.find((person) => String(person.gender || "").toLowerCase() === "male")
+      || candidates[0]
+      || null;
+  }
+
+  if (!grouped.mother) {
+    const fatherId = Number(grouped.father?.id);
+    grouped.mother = candidates.find((person) => Number(person.id) !== fatherId && String(person.gender || "").toLowerCase() === "female")
+      || candidates.find((person) => Number(person.id) !== fatherId)
+      || null;
+  }
+
+  return grouped;
 }
 
 function parseCollection(body, collectionName) {
@@ -230,7 +411,7 @@ exports.dashboard = async (req, res) => {
       SELECT
         (SELECT COUNT(DISTINCT user_id) FROM persons) AS totalFamilies,
         (SELECT COUNT(*) FROM persons) AS totalMembers,
-        (SELECT COUNT(*) FROM relationships WHERE relation = 'child') AS totalChildren,
+        (SELECT COUNT(DISTINCT related_person_id) FROM relationships WHERE relation IN ('child', 'son', 'daughter')) AS totalChildren,
         (
           SELECT COUNT(DISTINCT user_id)
           FROM persons
@@ -257,14 +438,15 @@ exports.dashboard = async (req, res) => {
     let sql = `
       SELECT
         p.user_id AS id,
+        p.user_id AS user_id,
         p.name AS name,
         ${districtExpression} AS district,
         ${stateExpression} AS state,
         ${occupationExpression} AS occupation,
         (
-          SELECT COUNT(*)
+          SELECT COUNT(DISTINCT r.related_person_id)
           FROM relationships r
-          WHERE r.user_id = p.user_id AND r.person_id = p.id AND r.relation = 'child'
+          WHERE r.user_id = p.user_id AND r.relation IN ('child', 'son', 'daughter')
         ) AS children_count
       FROM persons p
       WHERE p.id = (
@@ -359,6 +541,7 @@ exports.viewMember = async (req, res) => {
       return res.status(400).send("Invalid family id");
     }
 
+    // Step 1: Fetch all persons for this user
     const [persons] = await db.query(
       `SELECT id, user_id, name, gender, dob, mobile, occupation, image, door_no, street, district, state, pincode
        FROM persons
@@ -382,6 +565,7 @@ exports.viewMember = async (req, res) => {
 
     const personById = new Map(persons.map(person => [Number(person.id), person]));
 
+    // Step 2: Fetch all relationships for this user
     const [allRelations] = await db.query(
       `SELECT person_id, related_person_id, relation
        FROM relationships
@@ -389,7 +573,7 @@ exports.viewMember = async (req, res) => {
       [userId]
     );
 
-    // Resolve the actual family head from relationship graph instead of assuming MIN(person.id)
+    // Step 3: Find the family head (person with most outgoing relationships)
     const relationKinds = new Set(["father", "mother", "spouse", "child", "sibling", "brother", "sister", "son", "daughter"]);
     const outgoingCount = new Map();
 
@@ -402,7 +586,7 @@ exports.viewMember = async (req, res) => {
       outgoingCount.set(sourceId, (outgoingCount.get(sourceId) || 0) + 1);
     });
 
-    let headPerson = persons[0];
+    let selfPerson = persons[0];
     if (outgoingCount.size > 0) {
       const sortedCandidates = Array.from(outgoingCount.entries())
         .sort((a, b) => {
@@ -411,141 +595,73 @@ exports.viewMember = async (req, res) => {
         });
       const headCandidate = personById.get(sortedCandidates[0][0]);
       if (headCandidate) {
-        headPerson = headCandidate;
+        selfPerson = headCandidate;
       }
     }
 
-    const headId = Number(headPerson.id);
-    const relations = allRelations.filter(
-      (rel) => Number(rel.person_id) === headId || Number(rel.related_person_id) === headId
+    const selfId = Number(selfPerson.id);
+
+    // Step 4: Fetch ONLY forward-direction relationships (person_id = selfId)
+    // This prevents reading reverse relationships that would cause duplicates
+    const [relatives] = await db.query(
+      `SELECT r.relation, p.*
+       FROM relationships r
+       JOIN persons p ON p.id = r.related_person_id
+       WHERE r.user_id = ? AND r.person_id = ?`,
+      [userId, selfId]
     );
 
+    // Step 5: Filter only valid relations and remove invalid/reversed ones
+    const validRelations = ["father", "mother", "spouse", "child", "son", "daughter", "sibling", "brother", "sister"];
+    const cleanMembers = relatives.filter(m =>
+      validRelations.includes(String(m.relation || "").trim().toLowerCase())
+    );
+
+    // Step 6: Remove duplicates with priority (prevent parent becoming child)
+    const uniqueMap = new Map();
+    for (const member of cleanMembers) {
+      const memberId = Number(member.id);
+      if (!uniqueMap.has(memberId)) {
+        uniqueMap.set(memberId, member);
+      } else {
+        const existing = uniqueMap.get(memberId);
+        const existingRel = String(existing.relation || "").trim().toLowerCase();
+        const currentRel = String(member.relation || "").trim().toLowerCase();
+
+        // If existing is child but new one is a parent type, replace it
+        if (existingRel === "child" && (currentRel === "father" || currentRel === "mother" || currentRel === "spouse")) {
+          uniqueMap.set(memberId, member);
+        }
+      }
+    }
+
+    const uniqueMembers = Array.from(uniqueMap.values());
+
+    // Step 7: Group members strictly by relation type
     const grouped = {
       father: null,
       mother: null,
-      self: { ...headPerson, relationship: "Self" },
+      self: selfPerson,
       spouse: null,
       siblings: [],
       children: []
     };
 
-    relations.forEach((rel) => {
-      const personId = Number(rel.person_id);
-      const relatedPersonId = Number(rel.related_person_id);
-      const isForward = personId === headId;
-      const relatedId = isForward ? relatedPersonId : personId;
-      const related = personById.get(relatedId);
-      if (!related) {
-        return;
-      }
-
-      const relation = String(rel.relation || "").trim().toLowerCase();
+    uniqueMembers.forEach((member) => {
+      const relation = String(member.relation || "").trim().toLowerCase();
 
       if (relation === "father") {
-        grouped.father = { ...related, relationship: "Father" };
+        grouped.father = member;
       } else if (relation === "mother") {
-        grouped.mother = { ...related, relationship: "Mother" };
+        grouped.mother = member;
       } else if (relation === "spouse") {
-        grouped.spouse = { ...related, relationship: "Spouse" };
+        grouped.spouse = member;
       } else if (relation === "child" || relation === "son" || relation === "daughter") {
-        grouped.children.push({ ...related, relationship: "Child" });
+        grouped.children.push(member);
       } else if (relation === "sibling" || relation === "brother" || relation === "sister") {
-        grouped.siblings.push({
-          ...related,
-          relationship: relation === "brother" ? "Brother" : relation === "sister" ? "Sister" : "Sibling"
-        });
+        grouped.siblings.push(member);
       }
     });
-
-    const uniqueById = (items) => {
-      const seen = new Set();
-      return items.filter((item) => {
-        if (!item || seen.has(item.id)) {
-          return false;
-        }
-        seen.add(item.id);
-        return true;
-      });
-    };
-
-    grouped.children = uniqueById(grouped.children);
-    grouped.siblings = uniqueById(grouped.siblings);
-
-    // Fallback: fetch direct child/sibling rows for head if previous mapping found none.
-    if (grouped.children.length === 0 || grouped.siblings.length === 0) {
-      const [directLinks] = await db.query(
-        `SELECT person_id, related_person_id, relation
-         FROM relationships
-         WHERE user_id = ?
-           AND person_id = ?
-           AND relation IN ('child', 'son', 'daughter', 'sibling', 'brother', 'sister')`,
-        [userId, headId]
-      );
-
-      directLinks.forEach((rel) => {
-        const relation = String(rel.relation || "").trim().toLowerCase();
-        const related = personById.get(Number(rel.related_person_id));
-        if (!related) {
-          return;
-        }
-
-        if (relation === "child" || relation === "son" || relation === "daughter") {
-          grouped.children.push({ ...related, relationship: "Child" });
-        }
-
-        if (relation === "sibling" || relation === "brother" || relation === "sister") {
-          grouped.siblings.push({
-            ...related,
-            relationship: relation === "brother" ? "Brother" : relation === "sister" ? "Sister" : "Sibling"
-          });
-        }
-      });
-
-      grouped.children = uniqueById(grouped.children);
-      grouped.siblings = uniqueById(grouped.siblings);
-    }
-
-    // Secondary fallback: if still empty, derive from all relationships for this user.
-    if (grouped.children.length === 0 || grouped.siblings.length === 0) {
-      const relationToBucket = (value) => {
-        const r = String(value || "").trim().toLowerCase();
-        if (r === "child" || r === "son" || r === "daughter") return "child";
-        if (r === "sibling" || r === "brother" || r === "sister") return "sibling";
-        return null;
-      };
-
-      allRelations.forEach((rel) => {
-        const bucket = relationToBucket(rel.relation);
-        if (!bucket) {
-          return;
-        }
-
-        const personId = Number(rel.person_id);
-        const relatedId = Number(rel.related_person_id);
-
-        const candidates = [personById.get(personId), personById.get(relatedId)].filter(Boolean);
-        candidates.forEach((candidate) => {
-          if (Number(candidate.id) === headId) {
-            return;
-          }
-
-          if (bucket === "child") {
-            grouped.children.push({ ...candidate, relationship: "Child" });
-          }
-
-          if (bucket === "sibling") {
-            const relText = String(rel.relation || "").trim().toLowerCase();
-            grouped.siblings.push({
-              ...candidate,
-              relationship: relText === "brother" ? "Brother" : relText === "sister" ? "Sister" : "Sibling"
-            });
-          }
-        });
-      });
-
-      grouped.children = uniqueById(grouped.children);
-      grouped.siblings = uniqueById(grouped.siblings);
-    }
 
     res.render("admin/view", { family: grouped });
   } catch (err) {
@@ -586,6 +702,23 @@ exports.editMember = async (req, res) => {
       return res.status(404).send("Family not found");
     }
 
+    // Deduplicate children and siblings
+    const deduplicateArray = (items) => {
+      const seen = new Set();
+      return items.filter((item) => {
+        if (seen.has(Number(item.id))) {
+          return false;
+        }
+        seen.add(Number(item.id));
+        return true;
+      });
+    };
+
+    grouped.children = deduplicateArray(grouped.children || []);
+    grouped.siblings = deduplicateArray(grouped.siblings || []);
+
+    const { states, districts, stateDistrictMap } = loadDropdownOptions();
+
     const toPersonPayload = (person, fallbackGender = "") => ({
       id: person?.id || null,
       name: person?.name || "",
@@ -603,19 +736,22 @@ exports.editMember = async (req, res) => {
 
     res.render("admin/edit", {
       userId,
+      states,
+      districts,
+      stateDistrictMap,
       family: {
         father: toPersonPayload(grouped.father, "Male"),
         mother: toPersonPayload(grouped.mother, "Female"),
         self: toPersonPayload(grouped.self),
         spouse: toPersonPayload(grouped.spouse),
-        children: (grouped.children || []).map(child => ({
+        children: grouped.children.map(child => ({
           id: child.id,
           name: child.name || "",
           gender: child.gender || "",
           dob: toInputDate(child.dob),
           image: child.image || ""
         })),
-        siblings: (grouped.siblings || []).map(sibling => ({
+        siblings: grouped.siblings.map(sibling => ({
           id: sibling.id,
           name: sibling.name || "",
           gender: sibling.gender || "",
@@ -697,7 +833,7 @@ exports.updateMember = async (req, res) => {
     };
 
     const nextMyImage = fileNameFromAnyUpload(files, "my_image")
-      ? `parent/${fileNameFromAnyUpload(files, "my_image")}`
+      ? `main/${fileNameFromAnyUpload(files, "my_image")}`
       : grouped.self.image;
     if (fileNameFromAnyUpload(files, "my_image") && grouped.self.image) {
       safeUnlinkUpload(grouped.self.image);
@@ -821,7 +957,7 @@ exports.updateMember = async (req, res) => {
       occupation: body.spouse_occupation,
       dob: body.spouse_dob,
       imageField: "spouse_image",
-      defaultFolder: "parent",
+      defaultFolder: "main",
       allowCreate: true
     });
 
@@ -834,7 +970,7 @@ exports.updateMember = async (req, res) => {
     const [oldSiblingLinks] = await connection.query(
       `SELECT related_person_id
        FROM relationships
-       WHERE user_id = ? AND person_id = ? AND relation = 'sibling'`,
+       WHERE user_id = ? AND person_id = ? AND relation IN ('sibling', 'brother', 'sister')`,
       [userId, selfId]
     );
 
@@ -883,7 +1019,7 @@ exports.updateMember = async (req, res) => {
       `DELETE FROM relationships
        WHERE user_id = ?
          AND person_id = ?
-         AND relation IN ('father', 'mother', 'spouse', 'child', 'sibling')`,
+         AND relation IN ('father', 'mother', 'spouse', 'child', 'son', 'daughter', 'sibling', 'brother', 'sister')`,
       [userId, selfId]
     );
 
@@ -1112,9 +1248,9 @@ exports.search = async (req, res) => {
         p.state,
         p.occupation,
         (
-          SELECT COUNT(*)
+          SELECT COUNT(DISTINCT r.related_person_id)
           FROM relationships r
-          WHERE r.user_id = p.user_id AND r.person_id = p.id AND r.relation = 'child'
+          WHERE r.user_id = p.user_id AND r.relation IN ('child', 'son', 'daughter')
         ) AS children_count
       FROM persons p
       WHERE p.id = (
@@ -1257,7 +1393,7 @@ exports.createFamily = async (req, res) => {
       dob: myDob,
       mobile: myMobile,
       occupation: myOccupation,
-      image: getUploadedFileName(files, "my_image") ? `parent/${getUploadedFileName(files, "my_image")}` : null,
+      image: getUploadedFileName(files, "my_image") ? `main/${getUploadedFileName(files, "my_image")}` : null,
       ...sharedAddress
     });
 
@@ -1291,7 +1427,7 @@ exports.createFamily = async (req, res) => {
         gender: spouseGender,
         mobile: spouseMobile,
         occupation: spouseOccupation,
-        image: getUploadedFileName(files, "spouse_image") ? `parent/${getUploadedFileName(files, "spouse_image")}` : null,
+        image: getUploadedFileName(files, "spouse_image") ? `main/${getUploadedFileName(files, "spouse_image")}` : null,
         ...sharedAddress
       });
       await insertRelationship(connection, userId, headPersonId, spousePersonId, "spouse");
@@ -1374,6 +1510,295 @@ exports.createFamily = async (req, res) => {
 };
 
 // =======================
+// CREATE FAMILY WITH USER (Admin Direct Flow)
+// =======================
+exports.createFamilyWithUser = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const email = normalizeValue(req.body.email);
+    const password = normalizeValue(req.body.password);
+    const files = req.files || {};
+    const body = req.body || {};
+
+    // Validate email and password
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required."
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters."
+      });
+    }
+
+    // Check if email already exists
+    const [existingUser] = await db.query(
+      "SELECT id FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists. Please use a different email address."
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const [userResult] = await db.query(
+      "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+      [email, hashedPassword, "user"]
+    );
+
+    const userId = userResult.insertId;
+
+    // Extract family data (reuse createFamily validation and logic)
+    const myName = normalizeValue(body.my_name);
+    const myGender = normalizeValue(body.my_gender);
+    const myDob = normalizeValue(body.my_dob);
+    const myMobile = normalizeValue(body.my_mobile);
+    const myOccupation = normalizeValue(body.my_occupation);
+    const fatherName = normalizeValue(body.father_name);
+    const motherName = normalizeValue(body.mother_name);
+    const spouseName = normalizeValue(body.spouse_name);
+    const spouseGender = normalizeValue(body.spouse_gender);
+    const spouseMobile = normalizeValue(body.spouse_mobile);
+    const spouseOccupation = normalizeValue(body.spouse_occupation);
+    const doorNo = normalizeValue(body.door_no);
+    const street = normalizeValue(body.street);
+    const district = normalizeValue(body.district);
+    const state = normalizeValue(body.state);
+    const pincode = normalizeValue(body.pincode);
+
+    const children = parseCollection(body, "children");
+    const siblings = parseCollection(body, "siblings");
+
+    // Validate family data
+    if (!myName) {
+      await db.query("DELETE FROM users WHERE id = ?", [userId]);
+      return res.status(400).json({
+        success: false,
+        message: "Main person name is required."
+      });
+    }
+
+    if (!myMobile || !isValidMobile(myMobile)) {
+      await db.query("DELETE FROM users WHERE id = ?", [userId]);
+      return res.status(400).json({
+        success: false,
+        message: "Main mobile must be a 10-digit number."
+      });
+    }
+
+    if (spouseMobile && !isValidMobile(spouseMobile)) {
+      await db.query("DELETE FROM users WHERE id = ?", [userId]);
+      return res.status(400).json({
+        success: false,
+        message: "Spouse mobile must be a 10-digit number."
+      });
+    }
+
+    const parentMobiles = [body.father_mobile, body.mother_mobile].map(normalizeValue).filter(Boolean);
+    if (parentMobiles.some(mobile => !isValidMobile(mobile))) {
+      await db.query("DELETE FROM users WHERE id = ?", [userId]);
+      return res.status(400).json({
+        success: false,
+        message: "Parent mobile numbers must be 10 digits."
+      });
+    }
+
+    for (const child of children) {
+      const childName = normalizeValue(child.name);
+      const childMobile = normalizeValue(child.mobile);
+
+      if ((childName || childMobile || child.dob || child.gender || child.occupation || child.image) && !childName) {
+        await db.query("DELETE FROM users WHERE id = ?", [userId]);
+        return res.status(400).json({
+          success: false,
+          message: "Each child entry needs a name."
+        });
+      }
+
+      if (childMobile && !isValidMobile(childMobile)) {
+        await db.query("DELETE FROM users WHERE id = ?", [userId]);
+        return res.status(400).json({
+          success: false,
+          message: "Child mobile numbers must be 10 digits."
+        });
+      }
+    }
+
+    for (const sibling of siblings) {
+      const siblingName = normalizeValue(sibling.name);
+      const siblingMobile = normalizeValue(sibling.mobile);
+
+      if ((siblingName || siblingMobile || sibling.gender || sibling.relation || sibling.image) && !siblingName) {
+        await db.query("DELETE FROM users WHERE id = ?", [userId]);
+        return res.status(400).json({
+          success: false,
+          message: "Each sibling entry needs a name."
+        });
+      }
+
+      if (siblingMobile && !isValidMobile(siblingMobile)) {
+        await db.query("DELETE FROM users WHERE id = ?", [userId]);
+        return res.status(400).json({
+          success: false,
+          message: "Sibling mobile numbers must be 10 digits."
+        });
+      }
+    }
+
+    // Begin transaction for family creation
+    await connection.beginTransaction();
+
+    const sharedAddress = {
+      door_no: doorNo,
+      street,
+      district,
+      state,
+      pincode
+    };
+
+    // Create family head person
+    const headPersonId = await insertPerson(connection, userId, {
+      name: myName,
+      gender: myGender,
+      dob: myDob,
+      mobile: myMobile,
+      occupation: myOccupation,
+      image: getUploadedFileName(files, "my_image") ? `main/${getUploadedFileName(files, "my_image")}` : null,
+      ...sharedAddress
+    });
+
+    // Create father
+    const fatherNameValue = fatherName;
+    if (fatherNameValue) {
+      const fatherPersonId = await insertPerson(connection, userId, {
+        name: fatherNameValue,
+        gender: "Male",
+        occupation: normalizeValue(body.father_occupation),
+        image: getUploadedFileName(files, "father_image") ? `parent/${getUploadedFileName(files, "father_image")}` : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, fatherPersonId, "father");
+    }
+
+    // Create mother
+    const motherNameValue = motherName;
+    if (motherNameValue) {
+      const motherPersonId = await insertPerson(connection, userId, {
+        name: motherNameValue,
+        gender: "Female",
+        occupation: normalizeValue(body.mother_occupation),
+        image: getUploadedFileName(files, "mother_image") ? `parent/${getUploadedFileName(files, "mother_image")}` : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, motherPersonId, "mother");
+    }
+
+    // Create spouse
+    if (spouseName) {
+      const spousePersonId = await insertPerson(connection, userId, {
+        name: spouseName,
+        gender: spouseGender,
+        mobile: spouseMobile,
+        occupation: spouseOccupation,
+        image: getUploadedFileName(files, "spouse_image") ? `main/${getUploadedFileName(files, "spouse_image")}` : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, spousePersonId, "spouse");
+    }
+
+    // Create children
+    for (const child of children) {
+      const childName = normalizeValue(child.name);
+      if (!childName) {
+        continue;
+      }
+
+      const childImageField = `children[${child.index}][image]`;
+      const childPhotoField = `children[${child.index}][photo]`;
+
+      const childPersonId = await insertPerson(connection, userId, {
+        name: childName,
+        gender: normalizeValue(child.gender),
+        dob: normalizeValue(child.dob),
+        mobile: normalizeValue(child.mobile),
+        occupation: normalizeValue(child.occupation),
+        image: getUploadedFileName(files, childImageField)
+          ? `children/${getUploadedFileName(files, childImageField)}`
+          : getUploadedFileName(files, childPhotoField)
+            ? `children/${getUploadedFileName(files, childPhotoField)}`
+            : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, childPersonId, "child");
+    }
+
+    // Create siblings
+    for (const sibling of siblings) {
+      const siblingName = normalizeValue(sibling.name);
+      if (!siblingName) {
+        continue;
+      }
+
+      const siblingImageField = `siblings[${sibling.index}][image]`;
+      const siblingPhotoField = `siblings[${sibling.index}][photo]`;
+
+      const siblingRelation = normalizeValue(sibling.relation)?.toLowerCase() === "sister"
+        ? "sister"
+        : "brother";
+
+      const siblingPersonId = await insertPerson(connection, userId, {
+        name: siblingName,
+        gender: normalizeValue(sibling.gender) || (siblingRelation === "sister" ? "Female" : "Male"),
+        dob: normalizeValue(sibling.dob),
+        mobile: normalizeValue(sibling.mobile),
+        occupation: normalizeValue(sibling.occupation),
+        image: getUploadedFileName(files, siblingImageField)
+          ? `children/${getUploadedFileName(files, siblingImageField)}`
+          : getUploadedFileName(files, siblingPhotoField)
+            ? `children/${getUploadedFileName(files, siblingPhotoField)}`
+            : null,
+        ...sharedAddress
+      });
+      await insertRelationship(connection, userId, headPersonId, siblingPersonId, "sibling");
+    }
+
+    // Commit transaction
+    await connection.commit();
+
+    // Return success response
+    return res.json({
+      success: true,
+      message: "Family and user created successfully.",
+      userId,
+      headPersonId,
+      redirectUrl: "/admin/dashboard?message=Family and user created successfully"
+    });
+  } catch (err) {
+    await connection.rollback();
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+// =======================
 // ADD CHILD
 // =======================
 exports.addChild = async (req, res) => {
@@ -1409,8 +1834,3 @@ exports.addChild = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
-
-
-
-
-

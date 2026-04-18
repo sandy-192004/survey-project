@@ -160,7 +160,7 @@ exports.familyCheck = async (req, res) => {
 /* ================= FAMILY ================= */
 
 // Show family form
-exports.showForm = async (req, res) => {
+exports.showFamilyForm = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const [selfCheck] = await db.query("SELECT id FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1", [userId]);
@@ -201,7 +201,6 @@ exports.showForm = async (req, res) => {
   }
 };
 
-exports.showFamilyForm = exports.showForm;
 
 // Save family data
 exports.saveFamily = async (req, res) => {
@@ -209,7 +208,7 @@ exports.saveFamily = async (req, res) => {
 
   try {
     const userId = req.session.user.id;
-    console.log("📥 Received Body:", req.body);
+    console.log(" Received Body:", req.body);
 
     const {
       father_name, mother_name,
@@ -531,101 +530,6 @@ exports.addChild = async (req, res) => {
   }
 };
 
-exports.getChildren = async (req, res) => {
-  try {
-    const userId = req.session.user.id;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Not logged in" });
-    }
-
-    // Get family_id from families table
-    const [familyRows] = await db.query(
-      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
-      [userId]
-    );
-
-    if (familyRows.length === 0) {
-      return res.json([]);
-    }
-
-    const familyId = familyRows[0].id;
-
-    const [children] = await db.query(
-      "SELECT * FROM family_members WHERE family_id = ? AND member_type = 'child'",
-      [familyId]
-    );
-
-    res.json(children);
-  } catch (err) {
-    console.error("Get children error:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch children", error: err.message });
-  }
-};
-
-exports.getChild = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const [rows] = await db.query("SELECT * FROM family_members WHERE id = ?", [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Child not found" });
-    }
-    res.json(rows[0]);
-  } catch (err) {
-    console.error("Get child error:", err);
-    res.status(500).json({ error: "Failed to fetch child" });
-  }
-};
-
-exports.updateChild = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { name, dob, gender, occupation, relationship, address } = req.body;
-    let photoPath = null;
-    if (req.file) {
-      photoPath = `children/${req.file.filename}`;
-      const oldPath = path.join('uploads', req.file.filename);
-      const newPath = path.join('uploads', photoPath);
-      fs.renameSync(oldPath, newPath);
-      const stats = fs.statSync(newPath);
-      photoPath = `${photoPath}(${stats.size})`;
-    }
-
-    let sql, params;
-
-    if (photoPath) {
-      sql = `
-        UPDATE family_members
-        SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?, photo=?
-        WHERE id=?
-      `;
-      params = [name, dob, gender, occupation, relationship, address, photoPath, id];
-    } else {
-      sql = `
-        UPDATE family_members
-        SET name=?, dob=?, gender=?, occupation=?, relationship=?, door_no=?
-        WHERE id=?
-      `;
-      params = [name, dob, gender, occupation, relationship, address, id];
-    }
-
-    await db.query(sql, params);
-    res.json({ message: "Updated" });
-  } catch (err) {
-    console.error("Update child error:", err);
-    res.status(500).json({ error: "Failed to update child" });
-  }
-};
-
-exports.deleteChild = async (req, res) => {
-  try {
-    const id = req.params.id;
-    await db.query("DELETE FROM family_members WHERE id=?", [id]);
-    res.json({ message: "Deleted" });
-  } catch (err) {
-    console.error("Delete child error:", err);
-    res.status(500).json({ error: "Failed to delete child" });
-  }
-};
 
 /* ================= PARENT EDIT ================= */
 
@@ -942,5 +846,22 @@ exports.getMember = async (req, res) => {
   } catch (err) {
     console.error('Get member error:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch member' });
+  }
+};
+
+/* ================= GET CHILD BY ID ================= */
+exports.getChild = async (req, res) => {
+  try {
+    const childId = req.params.id;
+    const [rows] = await db.query('SELECT * FROM family_members WHERE id = ?', [childId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Child not found' });
+    }
+
+    res.json({ success: true, child: rows[0] });
+  } catch (err) {
+    console.error('Get child error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch child' });
   }
 };
