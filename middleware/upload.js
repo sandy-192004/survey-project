@@ -62,10 +62,12 @@ const upload = multer({
 /* ================= IMAGE PROCESS ================= */
 const resizeImage = async (filePath) => {
   try {
+    if (!filePath || !fs.existsSync(filePath)) return;
     const data = await sharp(filePath)
       .resize(500, 500, { fit: "inside", withoutEnlargement: true })
       .toBuffer();
 
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, data);
   } catch (err) {
     console.error("Resize error:", err);
@@ -74,6 +76,7 @@ const resizeImage = async (filePath) => {
 
 const compressImageToSize = async (filePath, maxKB = 50) => {
   try {
+    if (!filePath || !fs.existsSync(filePath)) return;
     let size = fs.statSync(filePath).size;
     let quality = 80;
 
@@ -122,7 +125,15 @@ const processUpload = (req, res, next) => {
       for (const field in req.files) {
         for (const file of req.files[field]) {
           try {
+            if (!file?.path || !fs.existsSync(file.path)) {
+              continue;
+            }
+
             await resizeImage(file.path);
+
+            if (!fs.existsSync(file.path)) {
+              continue;
+            }
 
             const sizeKB = fs.statSync(file.path).size / 1024;
             if (sizeKB > 50) {

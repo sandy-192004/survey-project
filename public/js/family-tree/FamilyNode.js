@@ -3,22 +3,24 @@ import React from "https://esm.sh/react@18.3.1";
 const FALLBACK_AVATAR =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23efe7dc'/%3E%3Ccircle cx='60' cy='46' r='20' fill='%23c2a98b'/%3E%3Crect x='28' y='72' width='64' height='30' rx='15' fill='%23c2a98b'/%3E%3C/svg%3E";
 
-export default function FamilyNode({ node, width, height, style, onClick }) {
-  const isFemale = String(node.gender || "").toLowerCase() === "female";
+export default function FamilyNode({ node, width, height, style, isClickable, onClick }) {
+  const clickable = Boolean(isClickable);
 
   return React.createElement(
     "button",
     {
       type: "button",
-      onClick: () => onClick(node),
+      onClick: () => clickable && onClick(node),
       className:
-        "group absolute rounded-xl border border-amber-900/20 bg-gradient-to-br from-[#fffaf3] to-[#f3ede4] p-3 shadow-md transition-transform duration-200 hover:scale-[1.03] hover:shadow-lg text-left",
+        `group absolute rounded-xl p-3 shadow-md transition-transform duration-200 text-left ${clickable
+          ? "border border-sky-400 bg-gradient-to-br from-sky-50 to-blue-50 hover:scale-[1.03] hover:shadow-lg cursor-pointer"
+          : "border border-stone-300 bg-gradient-to-br from-stone-100 to-stone-200 opacity-80 cursor-not-allowed"}`,
       style: {
         ...(style || {}),
         width: `${width}px`,
         minHeight: `${height}px`
       },
-      title: isFemale ? "Navigation disabled for female nodes" : "Click to navigate"
+      title: clickable ? "Click to navigate" : "Navigation disabled for female members"
     },
     React.createElement(
       "div",
@@ -47,7 +49,7 @@ export default function FamilyNode({ node, width, height, style, onClick }) {
             className:
               "inline-flex mt-2 rounded-full border border-amber-400/40 bg-amber-100/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-900"
           },
-          isFemale ? "view only" : "clickable"
+          clickable ? "clickable" : "disabled"
         )
       )
     )

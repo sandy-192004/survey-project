@@ -1,3 +1,423 @@
+const db = require("../config/db");
+
+function normalizeRelation(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function imagePath(image) {
+  return image ? `/uploads/${image}` : "/images/placeholder.png";
+}
+
+function pushUnique(list, value) {
+  if (!Array.isArray(list)) return;
+  if (!list.includes(value)) {
+    list.push(value);
+  }
+}
+
+function relationLabel(kind, gender) {
+  const normalized = normalizeRelation(kind);
+  const normalizedGender = String(gender || "").trim().toLowerCase();
+
+  if (normalized === "child") {
+    if (normalizedGender === "male" || normalizedGender === "m") return "Son";
+    if (normalizedGender === "female" || normalizedGender === "f") return "Daughter";
+    return "Child";
+  }
+
+  if (normalized === "father") return "Father";
+  if (normalized === "mother") return "Mother";
+  if (normalized === "spouse") return "Spouse";
+  if (normalized === "son") return "Son";
+  if (normalized === "daughter") return "Daughter";
+  if (normalized === "brother") return "Brother";
+  if (normalized === "sister") return "Sister";
+  if (normalized === "sibling") {
+    return String(gender || "").toLowerCase() === "female" ? "Sister" : "Brother";
+  }
+  return "Family Member";
+}
+
+function findHeadPersonId(persons, relationships, preferredId) {
+  const safePersons = Array.isArray(persons) ? persons : [];
+  const safeRelationships = Array.isArray(relationships) ? relationships : [];
+  const personIds = new Set(safePersons.map((person) => Number(person.id)));
+
+  if (Number.isFinite(Number(preferredId)) && personIds.has(Number(preferredId))) {
+    return Number(preferredId);
+  }
+
+  const score = new Map();
+  const relationWeight = new Map([
+    ["father", 4],
+    ["mother", 4],
+    ["spouse", 3],
+    ["brother", 2],
+    ["sister", 2],
+    ["sibling", 2],
+    ["child", 1],
+    ["son", 1],
+    ["daughter", 1]
+  ]);
+
+  safeRelationships.forEach((link) => {
+    const sourceId = Number(link.person_id);
+    const targetId = Number(link.related_person_id);
+    const relation = normalizeRelation(link.relation);
+    const weight = relationWeight.get(relation) || 1;
+
+    if (!personIds.has(sourceId) || !personIds.has(targetId)) {
+      return;
+    }
+
+    score.set(sourceId, (score.get(sourceId) || 0) + weight);
+    score.set(targetId, (score.get(targetId) || 0) + 1);
+  });
+
+  if (score.size === 0 && safePersons.length > 0) {
+    return Number(safePersons[0].id);
+  }
+
+  const ranked = Array.from(score.entries()).sort((left, right) => {
+    if (right[1] !== left[1]) return right[1] - left[1];
+    return left[0] - right[0];
+  });
+
+  return ranked.length ? ranked[0][0] : null;
+}
+
+function buildStructuredData(persons, relationships, rootId) {
+  const safePersons = Array.isArray(persons) ? persons : [];
+  const safeRelationships = Array.isArray(relationships) ? relationships : [];
+  const nodeMap = new Map();
+
+  safePersons.forEach((person) => {
+    const id = Number(person.id);
+    if (!Number.isInteger(id) || id <= 0) return;
+
+    nodeMap.set(id, {
+      id,
+      user_id: Number(person.user_id),
+      name: person.name || "Unknown",
+      gender: person.gender || "",
+      image: imagePath(person.image),
+      father: null,
+      mother: null,
+      spouses: [],
+      children: [],
+      relationship: id === Number(rootId) ? "Self" : "Family Member",
+      _priority: 0
+    });
+  });
+
+  safeRelationships.forEach((link) => {
+    const sourceId = Number(link.person_id);
+    const targetId = Number(link.related_person_id);
+    const relation = normalizeRelation(link.relation);
+
+    if (!nodeMap.has(sourceId) || !nodeMap.has(targetId) || sourceId === targetId) {
+      return;
+    }
+
+    const source = nodeMap.get(sourceId);
+    const target = nodeMap.get(targetId);
+
+    if (relation === "father") {
+      source.father = targetId;
+      if (target._priority < 5) {
+        target.relationship = "Father";
+        target._priority = 5;
+      }
+      return;
+    }
+
+    if (relation === "mother") {
+      source.mother = targetId;
+      if (target._priority < 5) {
+        target.relationship = "Mother";
+        target._priority = 5;
+      }
+      return;
+    }
+
+    if (relation === "spouse") {
+      pushUnique(source.spouses, targetId);
+      pushUnique(target.spouses, sourceId);
+      if (target._priority < 4) {
+        target.relationship = "Spouse";
+        target._priority = 4;
+      }
+      return;
+    }
+
+    if (relation === "brother" || relation === "sister" || relation === "sibling") {
+      if (target._priority < 3) {
+        target.relationship = relationLabel(relation, target.gender);
+        target._priority = 3;
+      }
+      return;
+    }
+
+    if (relation === "child" || relation === "son" || relation === "daughter") {
+      if (source.father !== targetId && source.mother !== targetId) {
+        pushUnique(source.children, targetId);
+      }
+
+      const sourceGender = String(source.gender || "").toLowerCase();
+      if (sourceGender === "male" && !target.father) {
+        target.father = sourceId;
+      }
+      if (sourceGender === "female" && !target.mother) {
+        target.mother = sourceId;
+      }
+
+      if (target._priority < 2) {
+        target.relationship = relationLabel(relation, target.gender);
+        target._priority = 2;
+      }
+    }
+  });
+
+  const nodes = Array.from(nodeMap.values()).map((node) => {
+    const parentSet = new Set();
+    if (node.father) parentSet.add(node.father);
+    if (node.mother) parentSet.add(node.mother);
+
+    return {
+      id: node.id,
+      user_id: node.user_id,
+      name: node.name,
+      gender: node.gender,
+      image: node.image,
+      father: node.father,
+      mother: node.mother,
+      spouses: Array.from(new Set(node.spouses)),
+      children: node.children.filter((childId) => !parentSet.has(childId)),
+      relationship: node.relationship
+    };
+  });
+
+  const relativesNodes = nodes.map((node) => {
+    const parents = [];
+    if (node.father) parents.push(node.father);
+    if (node.mother) parents.push(node.mother);
+
+    return {
+      id: node.id,
+      parents: Array.from(new Set(parents)),
+      spouses: Array.from(new Set(node.spouses)),
+      children: Array.from(new Set(node.children))
+    };
+  });
+
+  return {
+    nodeMap,
+    nodes,
+    relativesNodes
+  };
+}
+
+async function resolveUserAndRoot(personIdOrUserId) {
+  const id = Number(personIdOrUserId);
+  if (!Number.isFinite(id) || id <= 0) {
+    return null;
+  }
+
+  const [exactPersonRows] = await db.query(
+    `SELECT id, user_id
+     FROM persons
+     WHERE id = ?
+     LIMIT 1`,
+    [id]
+  );
+
+  if (Array.isArray(exactPersonRows) && exactPersonRows.length > 0) {
+    return {
+      userId: Number(exactPersonRows[0].user_id),
+      preferredRootId: Number(exactPersonRows[0].id)
+    };
+  }
+
+  const [familyRows] = await db.query(
+    `SELECT id, user_id
+     FROM persons
+     WHERE user_id = ?
+     ORDER BY id ASC
+     LIMIT 1`,
+    [id]
+  );
+
+  if (Array.isArray(familyRows) && familyRows.length > 0) {
+    return {
+      userId: Number(familyRows[0].user_id),
+      preferredRootId: Number(familyRows[0].id)
+    };
+  }
+
+  return null;
+}
+
+async function getFamilyData(personIdOrUserId) {
+  const resolved = await resolveUserAndRoot(personIdOrUserId);
+  if (!resolved) return null;
+
+  const [persons] = await db.query(
+    `SELECT id, user_id, name, gender, image
+     FROM persons
+     WHERE user_id = ?
+     ORDER BY id ASC`,
+    [resolved.userId]
+  );
+
+  if (!Array.isArray(persons) || persons.length === 0) {
+    return null;
+  }
+
+  const [relationships] = await db.query(
+    `SELECT person_id, related_person_id, relation
+     FROM relationships
+     WHERE user_id = ?
+     ORDER BY person_id ASC, related_person_id ASC`,
+    [resolved.userId]
+  );
+
+  const safeRelationships = Array.isArray(relationships) ? relationships : [];
+  const rootId = findHeadPersonId(persons, safeRelationships, resolved.preferredRootId);
+  const structured = buildStructuredData(persons, safeRelationships, rootId);
+  const root = structured.nodeMap.get(Number(rootId)) || null;
+
+  return {
+    userId: resolved.userId,
+    rootId: Number(rootId),
+    root,
+    nodes: structured.nodes,
+    relativesNodes: structured.relativesNodes,
+    relationships: safeRelationships
+  };
+}
+
+exports.renderFamilyTreePage = async (req, res) => {
+  const userId = Number(req.params.userId);
+  if (!Number.isFinite(userId) || userId <= 0) {
+    return res.status(400).send("Invalid family id");
+  }
+
+  try {
+    const data = await getFamilyData(userId);
+    if (!data) {
+      return res.status(404).send("Family not found");
+    }
+
+    return res.render("admin/family-tree-react", {
+      pageTitle: "Our Family Tree",
+      userId: data.userId,
+      rootPersonId: data.rootId
+    });
+  } catch (error) {
+    console.error("renderFamilyTreePage error:", error);
+    return res.status(500).send("Failed to load family tree page");
+  }
+};
+
+exports.getFamilyTreeApi = async (req, res) => {
+  try {
+    const personId = Number(req.params.personId);
+    if (!Number.isFinite(personId) || personId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid person id"
+      });
+    }
+
+    const data = await getFamilyData(personId);
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "Family not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      userId: data.userId,
+      rootId: data.rootId,
+      tree: data.root,
+      nodes: data.nodes,
+      relativesTree: data.relativesNodes,
+      relativesNodes: data.relativesNodes,
+      relationships: data.relationships,
+      count: Array.isArray(data.nodes) ? data.nodes.length : 0
+    });
+  } catch (error) {
+    console.error("getFamilyTreeApi error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load family tree"
+    });
+  }
+};
+
+exports.getFamilyTreeByUserApi = async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id"
+      });
+    }
+
+    const [headRows] = await db.query(
+      `SELECT id
+       FROM persons
+       WHERE user_id = ?
+       ORDER BY id ASC
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (!Array.isArray(headRows) || headRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Family not found"
+      });
+    }
+
+    const familyPayload = await loadFamilyByRootPerson(Number(headRows[0].id));
+    if (!familyPayload) {
+      return res.status(404).json({
+        success: false,
+        message: "Family not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      userId: familyPayload.userId,
+      rootId: familyPayload.rootId,
+      nodes: familyPayload.nodes,
+      relativesTree: familyPayload.relativesTree,
+      count: familyPayload.nodes.length
+    });
+  } catch (error) {
+    console.error("Failed to fetch family tree by user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch family tree"
+    });
+  }
+};
+
+exports.getFamilyTree = exports.renderFamilyTreePage;
+
+exports._private = {
+  normalizeRelation,
+  findHeadPersonId,
+  buildStructuredData,
+  getFamilyData
+};
 function normalizeRelation(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -325,348 +745,188 @@ exports.getFamilyTreeApi = async (req, res) => {
     });
   }
 };
-const db = require("../config/db");
 
-function normalizeRelation(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function imagePath(image) {
-  return image ? `/uploads/${image}` : "/images/placeholder.png";
-}
-
-function pushUnique(list, value) {
-  if (!Array.isArray(list)) return;
-  if (!list.includes(value)) {
-    list.push(value);
-  }
-}
-
-function relationLabel(kind, gender) {
-  const normalized = normalizeRelation(kind);
-  if (normalized === "father") return "Father";
-  if (normalized === "mother") return "Mother";
-  if (normalized === "spouse") return "Spouse";
-  if (normalized === "son") return "Son";
-  if (normalized === "daughter") return "Daughter";
-  if (normalized === "child") return "Child";
-  if (normalized === "brother") return "Brother";
-  if (normalized === "sister") return "Sister";
-  if (normalized === "sibling") {
-    return String(gender || "").toLowerCase() === "female" ? "Sister" : "Brother";
-  }
-  return "Family Member";
-}
-
-function findHeadPersonId(persons, relationships, preferredId) {
-  const personIds = new Set((persons || []).map((person) => Number(person.id)));
-  if (Number.isFinite(Number(preferredId)) && personIds.has(Number(preferredId))) {
-    return Number(preferredId);
-  }
-
-  const score = new Map();
-  const relationWeight = new Map([
-    ["father", 4],
-    ["mother", 4],
-    ["spouse", 3],
-    ["brother", 2],
-    ["sister", 2],
-    ["sibling", 2],
-    ["child", 1],
-    ["son", 1],
-    ["daughter", 1]
-  ]);
-
-  (relationships || []).forEach((link) => {
-    const sourceId = Number(link.person_id);
-    const targetId = Number(link.related_person_id);
-    const relation = normalizeRelation(link.relation);
-    const weight = relationWeight.get(relation) || 1;
-
-    if (!personIds.has(sourceId) || !personIds.has(targetId)) {
-      return;
-    }
-
-    score.set(sourceId, (score.get(sourceId) || 0) + weight);
-    score.set(targetId, (score.get(targetId) || 0) + 1);
-  });
-
-  if (score.size === 0 && persons.length > 0) {
-    return Number(persons[0].id);
-  }
-
-  const ranked = Array.from(score.entries()).sort((left, right) => {
-    if (right[1] !== left[1]) return right[1] - left[1];
-    return left[0] - right[0];
-  });
-
-  return ranked.length ? ranked[0][0] : null;
-}
-
-function buildStructuredData(persons, relationships, rootId) {
-  const nodeMap = new Map();
-
-  (persons || []).forEach((person) => {
-    const id = Number(person.id);
-    nodeMap.set(id, {
-      id,
-      user_id: Number(person.user_id),
-      name: person.name || "Unknown",
-      gender: person.gender || "",
-      image: imagePath(person.image),
-      father: null,
-      mother: null,
-      spouses: [],
-      children: [],
-      relationship: id === Number(rootId) ? "Self" : "Family Member",
-      _priority: 0
-    });
-  });
-
-  (relationships || []).forEach((link) => {
-    const sourceId = Number(link.person_id);
-    const targetId = Number(link.related_person_id);
-    const relation = normalizeRelation(link.relation);
-
-    if (!nodeMap.has(sourceId) || !nodeMap.has(targetId) || sourceId === targetId) {
-      return;
-    }
-
-    const source = nodeMap.get(sourceId);
-    const target = nodeMap.get(targetId);
-
-    if (relation === "father") {
-      source.father = targetId;
-      if (target._priority < 5) {
-        target.relationship = "Father";
-        target._priority = 5;
-      }
-      return;
-    }
-
-    if (relation === "mother") {
-      source.mother = targetId;
-      if (target._priority < 5) {
-        target.relationship = "Mother";
-        target._priority = 5;
-      }
-      return;
-    }
-
-    if (relation === "spouse") {
-      pushUnique(source.spouses, targetId);
-      pushUnique(target.spouses, sourceId);
-      if (target._priority < 4) {
-        target.relationship = "Spouse";
-        target._priority = 4;
-      }
-      return;
-    }
-
-    if (relation === "brother" || relation === "sister" || relation === "sibling") {
-      if (target._priority < 3) {
-        target.relationship = relationLabel(relation, target.gender);
-        target._priority = 3;
-      }
-      return;
-    }
-
-    if (relation === "child" || relation === "son" || relation === "daughter") {
-      if (source.father !== targetId && source.mother !== targetId) {
-        pushUnique(source.children, targetId);
-      }
-
-      const sourceGender = String(source.gender || "").toLowerCase();
-      if (sourceGender === "male" && !target.father) {
-        target.father = sourceId;
-      }
-      if (sourceGender === "female" && !target.mother) {
-        target.mother = sourceId;
-      }
-
-      if (target._priority < 2) {
-        target.relationship = relationLabel(relation, target.gender);
-        target._priority = 2;
-      }
-    }
-  });
-
-  const nodes = Array.from(nodeMap.values()).map((node) => {
-    const parentSet = new Set();
-    if (node.father) parentSet.add(node.father);
-    if (node.mother) parentSet.add(node.mother);
-
-    return {
-      id: node.id,
-      user_id: node.user_id,
-      name: node.name,
-      gender: node.gender,
-      image: node.image,
-      father: node.father,
-      mother: node.mother,
-      spouses: Array.from(new Set(node.spouses)),
-      children: node.children.filter((childId) => !parentSet.has(childId)),
-      relationship: node.relationship
-    };
-  });
-
-  const relativesNodes = nodes.map((node) => {
-    const parents = [];
-    if (node.father) parents.push(node.father);
-    if (node.mother) parents.push(node.mother);
-
-    return {
-      id: node.id,
-      parents: Array.from(new Set(parents)),
-      spouses: Array.from(new Set(node.spouses)),
-      children: Array.from(new Set(node.children))
-    };
-  });
-
-  return {
-    nodeMap,
-    nodes,
-    relativesNodes
-  };
-}
-
-async function resolveUserAndRoot(personIdOrUserId) {
-  const id = Number(personIdOrUserId);
-  if (!Number.isFinite(id) || id <= 0) {
-    return null;
-  }
-
-  const [exactPersonRows] = await db.query(
-    `SELECT id, user_id
-     FROM persons
-     WHERE id = ?
-     LIMIT 1`,
-    [id]
-  );
-
-  if (exactPersonRows.length > 0) {
-    return {
-      userId: Number(exactPersonRows[0].user_id),
-      preferredRootId: Number(exactPersonRows[0].id)
-    };
-  }
-
-  const [familyRows] = await db.query(
-    `SELECT id, user_id
-     FROM persons
-     WHERE user_id = ?
-     ORDER BY id ASC
-     LIMIT 1`,
-    [id]
-  );
-
-  if (familyRows.length > 0) {
-    return {
-      userId: Number(familyRows[0].user_id),
-      preferredRootId: Number(familyRows[0].id)
-    };
-  }
-
-  return null;
-}
-
-async function getFamilyData(personIdOrUserId) {
-  const resolved = await resolveUserAndRoot(personIdOrUserId);
-  if (!resolved) return null;
-
-  const [persons] = await db.query(
-    `SELECT id, user_id, name, gender, image
-     FROM persons
-     WHERE user_id = ?
-     ORDER BY id ASC`,
-    [resolved.userId]
-  );
-
-  if (!persons.length) {
-    return null;
-  }
-
-  const [relationships] = await db.query(
-    `SELECT person_id, related_person_id, relation
-     FROM relationships
-     WHERE user_id = ?
-     ORDER BY person_id ASC, related_person_id ASC`,
-    [resolved.userId]
-  );
-
-  const rootId = findHeadPersonId(persons, relationships, resolved.preferredRootId);
-  const structured = buildStructuredData(persons, relationships, rootId);
-  const root = structured.nodeMap.get(Number(rootId)) || null;
-
-  return {
-    userId: resolved.userId,
-    rootId: Number(rootId),
-    root,
-    nodes: structured.nodes,
-    relativesNodes: structured.relativesNodes,
-    relationships
-  };
-}
-
-exports.renderFamilyTreePage = async (req, res) => {
-  const userId = Number(req.params.userId);
-  if (!Number.isFinite(userId) || userId <= 0) {
-    return res.status(400).send("Invalid family id");
-  }
-
+/**
+ * Find if clicked person is head of another family and current user is their child
+ * Navigation scenario: Clicking father/uncle/brother moves to THEIR family tree
+ * 
+ * Query logic:
+ * 1. Check if clicked person is a "user_id" (family head)
+ * 2. Verify current user exists as their child or relative
+ * 3. Return the new family's user_id if found
+ * 
+ * RELATIONSHIP CASES:
+ * - Father: current user must be child of clicked person
+ * - Uncle: clicked person must be sibling of current user's father
+ * - Brother: clicked person must be sibling of current user (same father/mother)
+ */
+exports.findRelatedFamily = async (req, res) => {
   try {
-    const data = await getFamilyData(userId);
-    if (!data) {
-      return res.status(404).send("Family not found");
-    }
+    const clickedPersonId = Number(req.query.personId);
+    const currentUserId = Number(req.query.userId);
 
-    return res.render("admin/family-tree-react", {
-      pageTitle: "Our Family Tree",
-      userId: data.userId,
-      rootPersonId: data.rootId
-    });
-  } catch (error) {
-    console.error("renderFamilyTreePage error:", error);
-    return res.status(500).send("Failed to load family tree page");
-  }
-};
-
-exports.getFamilyTreeApi = async (req, res) => {
-  try {
-    const data = await getFamilyData(req.params.personId);
-
-    if (!data) {
-      return res.status(404).json({
+    if (!Number.isInteger(clickedPersonId) || clickedPersonId <= 0) {
+      return res.status(400).json({
         success: false,
-        message: "Family not found"
+        message: "Invalid person id"
       });
     }
 
-    return res.json({
-      success: true,
-      userId: data.userId,
-      rootId: data.rootId,
-      tree: data.root,
-      nodes: data.nodes,
-      relativesTree: data.relativesNodes,
-      relativesNodes: data.relativesNodes,
-      relationships: data.relationships,
-      count: Array.isArray(data.nodes) ? data.nodes.length : 0
+    if (!Number.isInteger(currentUserId) || currentUserId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id"
+      });
+    }
+
+    // Step 1: Get clicked person's info and check if they are a family head
+    const [clickedPersonRows] = await db.query(
+      `SELECT id, user_id, name, gender FROM persons WHERE id = ? LIMIT 1`,
+      [clickedPersonId]
+    );
+
+    if (!Array.isArray(clickedPersonRows) || clickedPersonRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Clicked person not found"
+      });
+    }
+
+    const clickedPerson = clickedPersonRows[0];
+    const clickedPersonUserId = Number(clickedPerson.user_id);
+    const clickedPersonGender = String(clickedPerson.gender || "").toLowerCase();
+
+    // Only male members can navigate to their families
+    if (clickedPersonGender !== "male" && clickedPersonGender !== "m") {
+      return res.status(403).json({
+        success: false,
+        message: "Navigation disabled for female members"
+      });
+    }
+
+    // Step 2: Check if clicked person has their own family (is a family head)
+    // A person has their own family if there are persons with user_id = their ID
+    const [clickedPersonFamilyRows] = await db.query(
+      `SELECT id FROM persons WHERE user_id = ? LIMIT 1`,
+      [clickedPersonUserId]
+    );
+
+    if (!Array.isArray(clickedPersonFamilyRows) || clickedPersonFamilyRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Clicked person does not have their own family yet"
+      });
+    }
+
+    // Step 3: Get current user's first person (head)
+    const [currentUserPersonRows] = await db.query(
+      `SELECT id FROM persons WHERE user_id = ? LIMIT 1`,
+      [currentUserId]
+    );
+
+    if (!Array.isArray(currentUserPersonRows) || currentUserPersonRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Current user not found"
+      });
+    }
+
+    const currentUserPersonId = Number(currentUserPersonRows[0].id);
+
+    // Step 4: Verify relationship between clicked person and current user
+    // Case 1: Direct parent-child relationship (Father)
+    const [directChildRows] = await db.query(
+      `SELECT relation FROM relationships
+       WHERE user_id = ? 
+       AND person_id = ? 
+       AND related_person_id = ?
+       AND relation IN ('child', 'son', 'daughter')
+       LIMIT 1`,
+      [clickedPersonUserId, clickedPersonId, currentUserPersonId]
+    );
+
+    if (Array.isArray(directChildRows) && directChildRows.length > 0) {
+      // Direct parent-child relationship found
+      return res.json({
+        success: true,
+        message: "Related family found",
+        newUserId: clickedPersonUserId,
+        newRootPersonId: clickedPersonId
+      });
+    }
+
+    // Case 2: Uncle relationship (clicked person is sibling of current user's father)
+    // Get current user's father
+    const [fatherRows] = await db.query(
+      `SELECT related_person_id FROM relationships
+       WHERE user_id = ? 
+       AND person_id = ? 
+       AND relation IN ('father')
+       LIMIT 1`,
+      [currentUserId, currentUserPersonId]
+    );
+
+    if (Array.isArray(fatherRows) && fatherRows.length > 0) {
+      const currentUserFatherId = Number(fatherRows[0].related_person_id);
+
+      // Check if clicked person and father are siblings
+      const [siblingRows] = await db.query(
+        `SELECT relation FROM relationships
+         WHERE user_id = ? 
+         AND person_id = ? 
+         AND related_person_id = ?
+         AND relation IN ('brother', 'sibling')
+         LIMIT 1`,
+        [currentUserId, currentUserFatherId, clickedPersonId]
+      );
+
+      if (Array.isArray(siblingRows) && siblingRows.length > 0) {
+        // Uncle relationship confirmed - clicked person is father's sibling
+        return res.json({
+          success: true,
+          message: "Related family found (uncle)",
+          newUserId: clickedPersonUserId,
+          newRootPersonId: clickedPersonId
+        });
+      }
+    }
+
+    // Case 3: Brother relationship (clicked person is sibling of current user)
+    // Check if they share the same father in current user's family
+    const [sharedFatherRows] = await db.query(
+      `SELECT r2.related_person_id FROM relationships r1
+       JOIN relationships r2 ON r1.related_person_id = r2.related_person_id
+       WHERE r1.user_id = ? 
+       AND r1.person_id = ? 
+       AND r1.relation IN ('father')
+       AND r2.user_id = ?
+       AND r2.person_id = ?
+       AND r2.relation IN ('father')
+       LIMIT 1`,
+      [currentUserId, currentUserPersonId, clickedPersonUserId, clickedPersonId]
+    );
+
+    if (Array.isArray(sharedFatherRows) && sharedFatherRows.length > 0) {
+      // Brother relationship confirmed
+      return res.json({
+        success: true,
+        message: "Related family found (brother)",
+        newUserId: clickedPersonUserId,
+        newRootPersonId: clickedPersonId
+      });
+    }
+
+    // No valid relationship found
+    return res.status(403).json({
+      success: false,
+      message: "Clicked person is not a direct relative (parent, uncle, or brother)"
     });
+
   } catch (error) {
-    console.error("getFamilyTreeApi error:", error);
+    console.error("findRelatedFamily error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to load family tree"
+      message: "Failed to find related family"
     });
   }
-};
-
-exports.getFamilyTree = exports.renderFamilyTreePage;
-
-exports._private = {
-  normalizeRelation,
-  findHeadPersonId,
-  buildStructuredData,
-  getFamilyData
 };

@@ -8,15 +8,36 @@ const db = require("../config/db");
 const { upload, processUpload } = require("../middleware/upload");
 
 // =======================
-// GET all families as JSON
+// GET all families as JSON (persons + relationships)
 // =======================
 router.get("/families", async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT f.id AS family_id, fm.*
-      FROM families f
-      JOIN family_members fm ON fm.family_id = f.id
-      ORDER BY f.id
+      SELECT
+        p.user_id AS family_id,
+        p.id AS person_id,
+        p.name,
+        p.gender,
+        p.mobile,
+        p.occupation,
+        p.door_no,
+        p.street,
+        p.district,
+        p.state,
+        p.pincode,
+        p.image,
+        (
+          SELECT r.relation
+          FROM relationships r
+          WHERE r.user_id = p.user_id
+            AND r.person_id = (
+              SELECT MIN(pp.id) FROM persons pp WHERE pp.user_id = p.user_id
+            )
+            AND r.related_person_id = p.id
+          LIMIT 1
+        ) AS relation_to_root
+      FROM persons p
+      ORDER BY p.user_id ASC, p.id ASC
     `);
     res.json(rows);
   } catch (err) {

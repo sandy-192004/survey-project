@@ -239,6 +239,14 @@ function inferChildRelation(gender) {
   return "child";
 }
 
+function inferSiblingRelation(gender) {
+  const normalizedGender = String(normalizeValue(gender) || "").toLowerCase();
+  if (normalizedGender === "female" || normalizedGender === "f") {
+    return "sister";
+  }
+  return "brother";
+}
+
 function buildUploadedImagePath(files, fieldName, folderName) {
   const fileName = getUploadedFileName(files, fieldName);
   return fileName ? `${folderName}/${fileName}` : null;
@@ -309,10 +317,20 @@ async function insertPerson(connection, userId, person) {
 }
 
 async function insertRelationship(connection, userId, personId, relatedPersonId, relation) {
+  const normalized = String(relation || "").trim().toLowerCase();
+  const relationForDb = {
+    husband: "spouse",
+    wife: "spouse",
+    son: "child",
+    daughter: "child",
+    brother: "sibling",
+    sister: "sibling"
+  }[normalized] || normalized;
+
   await connection.query(
     `INSERT INTO relationships (user_id, person_id, related_person_id, relation)
      VALUES (?, ?, ?, ?)`,
-    [userId, personId, relatedPersonId, relation]
+    [userId, personId, relatedPersonId, relationForDb]
   );
 }
 
@@ -478,9 +496,9 @@ async function createFamilyRecords(connection, userId, files, payload) {
     const siblingImageField = `siblings[${sibling.index}][image]`;
     const siblingPhotoField = `siblings[${sibling.index}][photo]`;
 
-    const siblingRelation = normalizeValue(sibling.relation)?.toLowerCase() === "sister"
-      ? "sister"
-      : "brother";
+    const siblingRelation = normalizeValue(sibling.relation)
+      ? (normalizeValue(sibling.relation).toLowerCase() === "sister" ? "sister" : "brother")
+      : inferSiblingRelation(sibling.gender);
 
     const siblingPersonId = await insertPerson(connection, userId, {
       name: siblingName,
@@ -495,7 +513,7 @@ async function createFamilyRecords(connection, userId, files, payload) {
           : null,
       ...sharedAddress
     });
-    await insertRelationship(connection, userId, headPersonId, siblingPersonId, "sibling");
+    await insertRelationship(connection, userId, headPersonId, siblingPersonId, siblingRelation);
   }
 
   return headPersonId;
@@ -646,10 +664,10 @@ exports.dashboard = async (req, res) => {
         ${stateExpression} AS state,
         ${occupationExpression} AS occupation,
         (
-          SELECT COUNT(DISTINCT r.related_person_id)
-          FROM relationships r
-          WHERE r.user_id = p.user_id AND r.relation IN ('child', 'son', 'daughter')
-        ) AS children_count
+          SELECT COUNT(*)
+          FROM persons pm
+          WHERE pm.user_id = p.user_id
+        ) AS members_count
       FROM persons p
       WHERE p.id = (
         SELECT MIN(p2.id)
@@ -1308,7 +1326,10 @@ exports.updateMember = async (req, res) => {
       }
 
       const relationRaw = String(normalizeValue(sibling.relation) || "").toLowerCase();
-      const isSister = relationRaw === "sister";
+      const siblingRelation = relationRaw === "sister" || relationRaw === "brother"
+        ? relationRaw
+        : inferSiblingRelation(sibling.gender);
+      const isSister = siblingRelation === "sister";
       const siblingGender = normalizeValue(sibling.gender) || (isSister ? "Female" : "Male");
 
       const siblingImageName = fileNameFromAnyUpload(files, `siblings[${sibling.index}][image]`)
@@ -1327,7 +1348,7 @@ exports.updateMember = async (req, res) => {
           normalizeValue(sibling.dob),
           normalizeValue(sibling.mobile),
           normalizeValue(sibling.occupation),
-          siblingImageName ? `children/${siblingImageName}` : (previousSiblingImage || null),
+          siblingImageName ? `siblings/${siblingImageName}` : (previousSiblingImage || null),
           sharedAddress.door_no,
           sharedAddress.street,
           sharedAddress.district,
@@ -1336,7 +1357,7 @@ exports.updateMember = async (req, res) => {
         ]
       );
 
-      await insertRelationship(connection, userId, selfId, Number(inserted.insertId), "sibling");
+      await insertRelationship(connection, userId, selfId, Number(inserted.insertId), siblingRelation);
     }
 
     await connection.commit();
@@ -1515,10 +1536,10 @@ exports.search = async (req, res) => {
         p.state,
         p.occupation,
         (
-          SELECT COUNT(DISTINCT r.related_person_id)
-          FROM relationships r
-          WHERE r.user_id = p.user_id AND r.relation IN ('child', 'son', 'daughter')
-        ) AS children_count
+          SELECT COUNT(*)
+          FROM persons pm
+          WHERE pm.user_id = p.user_id
+        ) AS members_count
       FROM persons p
       WHERE p.id = (
         SELECT MIN(p2.id)

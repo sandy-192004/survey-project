@@ -275,6 +275,8 @@
         width: 100%;
       }
     }
+
+    .form-label {
       font-weight: 700;
       color: var(--brown-primary);
       font-size: 0.95rem;
@@ -592,15 +594,17 @@
   </div>
 
   <!-- Family data store -->
-  <div id="familyDataStore" style="display:none;" 
-       data-children='<%= JSON.stringify(family.children || []) %>'
-       data-siblings='<%= JSON.stringify(family.siblings || []) %>'></div>
+    <div id="familyDataStore" style="display:none;" 
+      data-children='<%= JSON.stringify(family.children || []) %>'
+      data-siblings='<%= JSON.stringify(family.siblings || []) %>'
+      data-state-district-map='<%= encodeURIComponent(JSON.stringify(stateDistrictMap || {})) %>'></div>
 
   <script>
     // Parse family data from HTML attributes
     const dataStore = document.getElementById('familyDataStore');
     const childrenData = JSON.parse(dataStore.dataset.children);
     const siblingsData = JSON.parse(dataStore.dataset.siblings);
+    const stateDistrictMap = JSON.parse(decodeURIComponent(dataStore.dataset.stateDistrictMap || "%7B%7D"));
     let currentPhotoInputId = null;
 
     const photoOptionModalElement = document.getElementById("photoOptionModal");
@@ -893,7 +897,6 @@
     document.getElementById("adminEditForm").addEventListener("submit", validateMobileFields);
 
     // Initialize State/District Cascading Dropdowns
-    const stateDistrictMap = <%- JSON.stringify(stateDistrictMap || {}) %>;
     const currentState = '<%= family.self.state %>';
     const currentDistrict = '<%= family.self.district %>';
 

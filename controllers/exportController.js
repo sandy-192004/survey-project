@@ -1,60 +1,16 @@
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const db = require('../config/db');
-const Admin = require('../models/admin');
-const Child = require('../models/Child');
 
 
 // ===================== EXPORT TO EXCEL =====================
 exports.excel = async (req, res, next) => {
-  try {
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet("Families");
-
-    ws.columns = [
-      { header: "Name", key: "name", width: 25 },
-      { header: "Mobile", key: "mobile", width: 20 },
-      { header: "District", key: "district", width: 25 }
-    ];
-
-    const [rows] = await db.query(
-      "SELECT name, mobile, district FROM family_members WHERE member_type = 'parent'"
-    );
-
-    if (rows && rows.length > 0) {
-      ws.addRows(rows);
-    } else {
-      ws.addRow(["No data available"]);
-    }
-
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=families.xlsx"
-    );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-
-    await wb.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error("🔥 Excel export error:", err);
-    res.status(500).send("Failed to export Excel file");
-  }
+  return exports.exportToExcel(req, res, next);
 };
 
 // ===================== EXPORT TO PDF =====================
 exports.pdf = async (req, res, next) => {
-  try {
-    const { state, district } = req.query;
-    console.log('PDF export params received:', { state, district });
-
-
-  } catch (err) {
-    console.error("🔥 PDF export error:", err);
-    res.status(500).send("Failed to export PDF file");
-  }
+  return exports.exportToPdf(req, res, next);
 };
 
 exports.exportToExcel = async (req, res) => {

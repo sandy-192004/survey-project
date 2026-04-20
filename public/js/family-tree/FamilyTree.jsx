@@ -40,7 +40,7 @@ function connectorPath(parent, child) {
   return `M ${startX} ${startY} C ${startX} ${bendY}, ${endX} ${bendY}, ${endX} ${endY}`;
 }
 
-export default function FamilyTree({ initialRootId }) {
+export default function FamilyTree({ initialRootId, userId }) {
   const [loading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState("");
   const [rawNodes, setRawNodes] = React.useState([]);
@@ -121,31 +121,49 @@ export default function FamilyTree({ initialRootId }) {
   }, [drawNodes]);
 
   const handleNodeClick = React.useCallback(
-    (node) => {
+    async (node) => {
       const currentRoot = activeRoot || nodeById.get(Number(rootId));
       const gender = String(node.gender || "").toLowerCase();
-      const relation = String(node.relationship || "").toLowerCase();
 
+      // Block female members - no navigation allowed
       if (gender === "female" || gender === "f") {
         setErrorMessage("Navigation is disabled for female members.");
         return;
       }
 
-      if (relation === "brother" || relation === "sibling") {
-        const sameFather =
-          currentRoot &&
-          Number(currentRoot.father || 0) > 0 &&
-          Number(node.father || 0) > 0 &&
-          Number(currentRoot.father) === Number(node.father);
-
-        if (!sameFather) {
-          setErrorMessage("Cannot navigate: sibling verification failed (same father not found).");
-          return;
-        }
-      }
-
+      // For any MALE member: check if they have their own family and redirect
       setErrorMessage("");
-      loadTree(Number(node.id));
+      setLoading(true);
+
+      try {
+        // Call backend API to find if this person has their own family
+        const apiUrl = `/admin/family-tree/navigate/find-related?personId=${Number(node.id)}&personName=${encodeURIComponent(node.name || "")}`;
+        console.log("Calling API:", apiUrl);
+        
+        const response = await fetch(apiUrl);
+        console.log("API response status:", response.status);
+        
+        const data = await response.json();
+        console.log("API response data:", data);
+
+        if (response.ok && data.success && data.personUserId) {
+          console.log("Redirecting to family tree:", data.personUserId);
+          // Redirect to this person's family tree
+          window.location.href = `/family-tree/${data.personUserId}`;
+        } else {
+          console.log("No redirect - changing root within family");
+          // Person doesn't have their own family - just change root within current family
+          setLoading(false);
+          setErrorMessage(data.message || "");
+          loadTree(Number(node.id));
+        }
+      } catch (error) {
+        console.error("Error navigating to person's family:", error);
+        setLoading(false);
+        // Fallback: just change root within current family
+        setErrorMessage("");
+        loadTree(Number(node.id));
+      }
     },
     [activeRoot, loadTree, nodeById, rootId]
   );

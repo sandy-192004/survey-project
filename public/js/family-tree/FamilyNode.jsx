@@ -5,19 +5,30 @@ const FALLBACK_AVATAR =
 
 export default function FamilyNode({ node, width, height, onClick }) {
   const isFemale = String(node.gender || "").toLowerCase() === "female";
+  const isClickable = !isFemale;
+
+  const handleClick = () => {
+    if (isClickable) {
+      onClick(node);
+    }
+  };
 
   return React.createElement(
     "button",
     {
       type: "button",
-      onClick: () => onClick(node),
-      className:
-        "group absolute rounded-xl border border-amber-900/20 bg-gradient-to-br from-[#fffaf3] to-[#f3ede4] p-3 shadow-md transition-transform duration-200 hover:scale-[1.03] hover:shadow-lg text-left",
+      onClick: handleClick,
+      disabled: !isClickable,
+      className: isClickable
+        ? "group absolute rounded-xl border border-amber-900/20 bg-gradient-to-br from-[#fffaf3] to-[#f3ede4] p-3 shadow-md transition-transform duration-200 hover:scale-[1.03] hover:shadow-lg hover:border-amber-900/40 text-left cursor-pointer"
+        : "group absolute rounded-xl border border-amber-900/10 bg-gradient-to-br from-[#faf7f2] to-[#f0e8e0] p-3 shadow-sm text-left cursor-not-allowed opacity-75",
       style: {
         width: `${width}px`,
         minHeight: `${height}px`
       },
-      title: isFemale ? "Navigation disabled for female nodes" : "Click to navigate"
+      title: isFemale 
+        ? "Navigation disabled for female members" 
+        : "Click to navigate to this person's family tree"
     },
     React.createElement(
       "div",
@@ -25,28 +36,35 @@ export default function FamilyNode({ node, width, height, onClick }) {
       React.createElement("img", {
         src: node.image || FALLBACK_AVATAR,
         alt: node.name || "Member",
-        className: "h-14 w-14 rounded-full border-2 border-amber-300 object-cover bg-amber-50"
+        className: isFemale
+          ? "h-14 w-14 rounded-full border-2 border-amber-200 object-cover bg-amber-50 opacity-80"
+          : "h-14 w-14 rounded-full border-2 border-amber-300 object-cover bg-amber-50"
       }),
       React.createElement(
         "div",
         { className: "min-w-0" },
         React.createElement(
           "p",
-          { className: "truncate font-semibold text-[15px] text-stone-900" },
+          {
+            className: isFemale
+              ? "truncate font-semibold text-[15px] text-stone-600"
+              : "truncate font-semibold text-[15px] text-stone-900"
+          },
           node.name || "Unknown"
         ),
         React.createElement(
           "p",
-          { className: "text-xs text-stone-600 mt-1" },
+          { className: "text-xs text-stone-500 mt-1" },
           node.relationship || "Family Member"
         ),
         React.createElement(
           "span",
           {
-            className:
-              "inline-flex mt-2 rounded-full border border-amber-400/40 bg-amber-100/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-900"
+            className: isClickable
+              ? "inline-flex mt-2 rounded-full border border-blue-400/40 bg-blue-100/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-blue-900 font-medium"
+              : "inline-flex mt-2 rounded-full border border-amber-400/30 bg-amber-100/40 px-2 py-0.5 text-[10px] uppercase tracking-wide text-amber-700 font-medium"
           },
-          isFemale ? "view only" : "clickable"
+          isClickable ? "clickable" : "view only"
         )
       )
     )

@@ -16,6 +16,26 @@ function relationIn(value, expectedList) {
   return expectedList.some((item) => normalized === normalizeRelation(item));
 }
 
+function inferSiblingRelation(gender) {
+  return "sibling";
+}
+
+function canonicalizeRelationForDb(relation, fallback = "sibling") {
+  const normalized = normalizeRelation(relation);
+  const relationMap = {
+    husband: "spouse",
+    wife: "spouse",
+    son: "child",
+    daughter: "child",
+    brother: "sibling",
+    sister: "sibling"
+  };
+
+  const canonical = relationMap[normalized] || normalized;
+  const allowed = new Set(["father", "mother", "spouse", "child", "sibling"]);
+  return allowed.has(canonical) ? canonical : fallback;
+}
+
 async function buildFamilyDataForUser(userId, preferredRootId = null) {
   let selfId = null;
 
@@ -64,6 +84,52 @@ async function buildFamilyDataForUser(userId, preferredRootId = null) {
     children: allMembers.filter((r) => relationIn(r.relation, ["child", "son", "daughter"])),
     siblings: allMembers.filter((r) => relationIn(r.relation, ["sibling", "brother", "sister"]))
   };
+}
+
+function buildMemberListFromFamilyData(familyData) {
+  if (!familyData || typeof familyData !== "object") return [];
+
+  const pushMember = (bucket, person, relation) => {
+    if (!person || !person.id) return;
+    bucket.push({
+      ...person,
+      relation,
+      photo: person.image || null,
+      member_type: relationIn(relation, ["child", "son", "daughter"]) ? "child" : "parent"
+    });
+  };
+
+  const members = [];
+  pushMember(members, familyData.father, "father");
+  pushMember(members, familyData.mother, "mother");
+  pushMember(members, familyData.self, "Self");
+  pushMember(members, familyData.spouse, "spouse");
+
+  (Array.isArray(familyData.siblings) ? familyData.siblings : []).forEach((member) => {
+    const siblingRelation = relationIn(member.relation, ["brother", "sister"])
+      ? normalizeRelation(member.relation)
+      : inferSiblingRelation(member.gender);
+    pushMember(members, member, siblingRelation);
+  });
+
+  (Array.isArray(familyData.children) ? familyData.children : []).forEach((member) => {
+    pushMember(members, member, "child");
+  });
+
+  return members;
+}
+
+function safeMoveUploadToFolder(reqFile, folderName) {
+  if (!reqFile || !folderName) return null;
+  const photoPath = `${folderName}/${reqFile.filename}`;
+  const oldPath = reqFile.path;
+  const newPath = path.join(__dirname, "../uploads", photoPath);
+
+  if (oldPath && newPath && oldPath !== newPath) {
+    fs.renameSync(oldPath, newPath);
+  }
+
+  return photoPath;
 }
 
 /* ================= AUTH ================= */
@@ -201,19 +267,16 @@ exports.familyCheck = async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    // Check if family exists
-    const [families] = await db.query(
-      "SELECT * FROM families WHERE user_id = ? LIMIT 1",
+    const [persons] = await db.query(
+      "SELECT id FROM persons WHERE user_id = ? LIMIT 1",
       [userId]
     );
 
-    if (families.length > 0) {
-      // Family exists → redirect to my-family
+    if (persons.length > 0) {
       return res.redirect("/my-family");
-    } else {
-      // Family does not exist → redirect to add form
-      return res.redirect("/family-form");
     }
+
+    return res.redirect("/family-form");
   } catch (err) {
     console.error(err);
     return res.redirect("/dashboard");
@@ -254,6 +317,19 @@ exports.saveFamily = async (req, res) => {
       door_no, street, state, district, pincode,
       children, siblings
     } = req.body;
+
+    const toIndexedList = (collection) => {
+      if (Array.isArray(collection)) return collection;
+      if (collection && typeof collection === "object") {
+        return Object.entries(collection)
+          .sort((a, b) => Number(a[0]) - Number(b[0]))
+          .map(([, value]) => value);
+      }
+      return [];
+    };
+
+    const childrenList = toIndexedList(children);
+    const siblingsList = toIndexedList(siblings);
 
     await connection.beginTransaction();
 
@@ -310,9 +386,9 @@ exports.saveFamily = async (req, res) => {
     const spouseId = await insertPerson(spouse_name, spouse_gender, null, spouse_mobile, spouse_occupation, 'spouse_image', req.body.existing_spouse_image);
 
     const childrenIds = [];
-    if (children && Array.isArray(children)) {
-      for (let i = 0; i < children.length; i++) {
-        const c = children[i];
+    if (childrenList.length > 0) {
+      for (let i = 0; i < childrenList.length; i++) {
+        const c = childrenList[i];
         if (c && c.name) {
           const cid = await insertPerson(c.name, c.gender, c.dob, null, null, `children[${i}][image]`, c.existing_image);
           if (cid) childrenIds.push(cid);
@@ -321,11 +397,13 @@ exports.saveFamily = async (req, res) => {
     }
 
     const siblingIds = [];
-    if (siblings && Array.isArray(siblings)) {
-      for (let i = 0; i < siblings.length; i++) {
-        const s = siblings[i];
+    if (siblingsList.length > 0) {
+      for (let i = 0; i < siblingsList.length; i++) {
+        const s = siblingsList[i];
         if (s && s.name) {
-          const sid = await insertPerson(s.name, s.gender, null, null, null, `siblings[${i}][image]`, s.existing_image);
+          const relationRaw = normalizeRelation(s.relation);
+          const siblingGender = s.gender || (relationRaw === "sister" ? "Female" : relationRaw === "brother" ? "Male" : null);
+          const sid = await insertPerson(s.name, siblingGender, null, null, null, `siblings[${i}][image]`, s.existing_image);
           if (sid) siblingIds.push(sid);
         }
       }
@@ -334,9 +412,11 @@ exports.saveFamily = async (req, res) => {
     // STEP 6: Insert Relationships
     const insertRelation = async (p1, p2, rel1, rel2) => {
       if (!p1 || !p2) return;
+      const safeRel1 = canonicalizeRelationForDb(rel1);
+      const safeRel2 = canonicalizeRelationForDb(rel2);
       await connection.query(
         `INSERT INTO relationships (user_id, person_id, related_person_id, relation) VALUES (?, ?, ?, ?), (?, ?, ?, ?)`,
-        [userId, p1, p2, rel1, userId, p2, p1, rel2]
+        [userId, p1, p2, safeRel1, userId, p2, p1, safeRel2]
       );
     };
 
@@ -349,8 +429,12 @@ exports.saveFamily = async (req, res) => {
       await insertRelation(selfId, cid, 'child', myParentRel);
     }
 
-    for (const sid of siblingIds) {
-      await insertRelation(selfId, sid, 'sibling', 'sibling');
+    for (let i = 0; i < siblingIds.length; i++) {
+      const sid = siblingIds[i];
+      const sibling = siblingsList[i] || null;
+      const relationFromSelf = inferSiblingRelation(sibling?.gender);
+      const relationFromSibling = inferSiblingRelation(my_gender);
+      await insertRelation(selfId, sid, relationFromSelf, relationFromSibling);
     }
 
     await connection.commit();
@@ -426,8 +510,8 @@ exports.myFamily = async (req, res) => {
     const mother = uniqueMembers.find((m) => m.relation === "mother") || null;
     const self = uniqueMembers.find((m) => m.relation === "Self") || null;
     const spouse = uniqueMembers.find((m) => m.relation === "spouse") || null;
-    const siblings = uniqueMembers.filter((m) => m.relation === "sibling");
-    const children = uniqueMembers.filter((m) => m.relation === "child");
+    const siblings = uniqueMembers.filter((m) => relationIn(m.relation, ["brother", "sister", "sibling"]));
+    const children = uniqueMembers.filter((m) => relationIn(m.relation, ["child", "son", "daughter"]));
 
     return res.render("my-family", {
       members: uniqueMembers,
@@ -459,10 +543,15 @@ exports.myFamily = async (req, res) => {
 exports.viewFamily = async (req, res) => {
   try {
     const { familyId } = req.params;
-    const [members] = await db.query(
-      "SELECT * FROM family_members WHERE family_id = ?",
-      [familyId]
-    );
+    const userId = Number(familyId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).send("Invalid family id");
+    }
+
+    const familyData = await buildFamilyDataForUser(userId);
+    const members = buildMemberListFromFamilyData(familyData);
+
     res.render("my-family", { members });
   } catch (err) {
     console.error("Error loading specific family:", err);
@@ -478,21 +567,12 @@ exports.getMyFamilyJson = async (req, res) => {
     }
     const userId = req.session.user.id;
 
-    const [familyRows] = await db.query(
-      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
-      [userId]
-    );
-
-    if (familyRows.length === 0) {
-      return res.json({ success: false });
+    const familyData = await buildFamilyDataForUser(userId);
+    if (!familyData) {
+      return res.json({ success: false, members: [] });
     }
 
-    const familyId = familyRows[0].id;
-
-    const [members] = await db.query(
-      "SELECT * FROM family_members WHERE family_id = ?",
-      [familyId]
-    );
+    const members = buildMemberListFromFamilyData(familyData);
 
     res.json({ success: true, members });
 
@@ -512,55 +592,53 @@ exports.addChild = async (req, res) => {
     const userId = req.session.user.id;
 
     const { name, dob, gender, occupation, relationship, door_no, street, pincode, state, district } = req.body;
-    let photoPath = null;
-    if (req.file) {
-      photoPath = `children/${req.file.filename}`;
-      const oldPath = req.file.path;
-      const newPath = path.join(__dirname, '../uploads', photoPath);
-      if (oldPath !== newPath) {
-        fs.renameSync(oldPath, newPath);
-      }
-    }
-    const validRelationship = relationship || 'other';
-
-    // Get family_id from families table
-    const [familyRows] = await db.query(
-      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+    const [selfRows] = await db.query(
+      "SELECT id, gender FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1",
       [userId]
     );
 
-    if (familyRows.length === 0) {
+    if (selfRows.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No family found. Please create a family first."
+        message: "No family found. Please create family data first."
       });
     }
 
-    const familyId = familyRows[0].id;
+    const self = selfRows[0];
+    const photoPath = req.file ? safeMoveUploadToFolder(req.file, "children") : null;
+    const validRelationship = relationIn(relationship, ["child", "son", "daughter"])
+      ? canonicalizeRelationForDb(relationship, "child")
+      : "child";
 
-    // Insert child into family_members
-    const sql = `
-      INSERT INTO family_members
-      (family_id, member_type, name, relationship, dob, gender, occupation, door_no, street, pincode, state, district, photo)
-      VALUES (?, 'child', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    const [childResult] = await db.query(
+      `INSERT INTO persons
+       (user_id, name, dob, gender, occupation, door_no, street, pincode, state, district, image)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        name,
+        dob || null,
+        gender || null,
+        occupation || null,
+        door_no || null,
+        street || null,
+        pincode || null,
+        state || null,
+        district || null,
+        photoPath
+      ]
+    );
 
-    const [result] = await db.query(sql, [
-      familyId,
-      name,
-      validRelationship,
-      dob || null,
-      gender || null,
-      occupation || null,
-      door_no || null,
-      street || null,
-      pincode || null,
-      state || null,
-      district || null,
-      photoPath
-    ]);
+    const childId = childResult.insertId;
+    const parentRelation = normalizeRelation(self.gender) === "female" ? "mother" : "father";
 
-    res.json({ success: true, id: result.insertId, message: "Child added successfully" });
+    await db.query(
+      `INSERT INTO relationships (user_id, person_id, related_person_id, relation)
+       VALUES (?, ?, ?, ?), (?, ?, ?, ?)`,
+      [userId, self.id, childId, validRelationship, userId, childId, self.id, parentRelation]
+    );
+
+    res.json({ success: true, id: childId, message: "Child added successfully" });
   } catch (err) {
     console.error("Add child error:", err);
     res.status(500).json({ success: false, message: "Failed to add child", error: err.message });
@@ -594,9 +672,8 @@ exports.showMemberEdit = async (req, res) => {
     const memberId = req.params.id;
     const userId = req.session.user.id;
 
-    // Get the specific member
     const [members] = await db.query(
-      "SELECT * FROM family_members WHERE id = ? AND family_id IN (SELECT id FROM families WHERE user_id = ?)",
+      "SELECT * FROM persons WHERE id = ? AND user_id = ? LIMIT 1",
       [memberId, userId]
     );
 
@@ -616,64 +693,70 @@ exports.updateFamily = async (req, res) => {
     const userId = req.session.user.id;
     const { husband_name, wife_name, husband_mobile, wife_mobile, husband_occupation, wife_occupation, door_no, street, state, district, pincode } = req.body;
 
-    // Get family_id
-    const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
-    if (familyRows.length === 0) {
+    const [selfRows] = await db.query("SELECT id FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1", [userId]);
+    if (selfRows.length === 0) {
       return res.status(404).json({ success: false, message: "Family not found" });
     }
-    const familyId = familyRows[0].id;
+    const selfId = selfRows[0].id;
 
-    // Handle photos
+    const [spouseRows] = await db.query(
+      `SELECT p.id, p.image
+       FROM relationships r
+       JOIN persons p ON p.id = r.related_person_id
+       WHERE r.user_id = ? AND r.person_id = ? AND r.relation = 'spouse'
+       LIMIT 1`,
+      [userId, selfId]
+    );
+
+    const spouseId = spouseRows.length > 0 ? spouseRows[0].id : null;
+
     let husbandPhotoPath = null;
     let wifePhotoPath = null;
     if (req.files) {
       if (req.files['husband_photo'] && req.files['husband_photo'][0]) {
-        husbandPhotoPath = `parent/${req.files['husband_photo'][0].filename}`;
-        // Delete old husband photo if exists
-        const [husbandRows] = await db.query("SELECT photo FROM family_members WHERE family_id = ? AND relationship = 'husband'", [familyId]);
-        if (husbandRows.length > 0 && husbandRows[0].photo) {
-          const oldPath = path.join(__dirname, '../uploads', husbandRows[0].photo);
+        const [husbandRows] = await db.query("SELECT image FROM persons WHERE id = ? LIMIT 1", [selfId]);
+        if (husbandRows.length > 0 && husbandRows[0].image) {
+          const oldPath = path.join(__dirname, '../uploads', husbandRows[0].image);
           if (fs.existsSync(oldPath)) {
             fs.unlinkSync(oldPath);
           }
         }
+        husbandPhotoPath = safeMoveUploadToFolder(req.files['husband_photo'][0], "parent");
       }
-      if (req.files['wife_photo'] && req.files['wife_photo'][0]) {
-        wifePhotoPath = `parent/${req.files['wife_photo'][0].filename}`;
-        // Delete old wife photo if exists
-        const [wifeRows] = await db.query("SELECT photo FROM family_members WHERE family_id = ? AND relationship = 'wife'", [familyId]);
-        if (wifeRows.length > 0 && wifeRows[0].photo) {
-          const oldPath = path.join(__dirname, '../uploads', wifeRows[0].photo);
+
+      if (spouseId && req.files['wife_photo'] && req.files['wife_photo'][0]) {
+        const [wifeRows] = await db.query("SELECT image FROM persons WHERE id = ? LIMIT 1", [spouseId]);
+        if (wifeRows.length > 0 && wifeRows[0].image) {
+          const oldPath = path.join(__dirname, '../uploads', wifeRows[0].image);
           if (fs.existsSync(oldPath)) {
             fs.unlinkSync(oldPath);
           }
         }
+        wifePhotoPath = safeMoveUploadToFolder(req.files['wife_photo'][0], "parent");
       }
     }
 
-    // Update husband
     if (husband_name) {
-      let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, state=?, district=?, pincode=?`;
+      let sql = `UPDATE persons SET name=?, mobile=?, occupation=?, door_no=?, street=?, state=?, district=?, pincode=?`;
       let params = [husband_name, husband_mobile || null, husband_occupation || null, door_no || null, street || null, state || null, district || null, pincode || null];
       if (husbandPhotoPath) {
-        sql += `, photo=?`;
+        sql += `, image=?`;
         params.push(husbandPhotoPath);
       }
-      sql += ` WHERE family_id=? AND relationship='husband'`;
-      params.push(familyId);
+      sql += ` WHERE id=? AND user_id=?`;
+      params.push(selfId, userId);
       await db.query(sql, params);
     }
 
-    // Update wife
-    if (wife_name) {
-      let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, state=?, district=?, pincode=?`;
+    if (spouseId && wife_name) {
+      let sql = `UPDATE persons SET name=?, mobile=?, occupation=?, door_no=?, street=?, state=?, district=?, pincode=?`;
       let params = [wife_name, wife_mobile || null, wife_occupation || null, door_no || null, street || null, state || null, district || null, pincode || null];
       if (wifePhotoPath) {
-        sql += `, photo=?`;
+        sql += `, image=?`;
         params.push(wifePhotoPath);
       }
-      sql += ` WHERE family_id=? AND relationship='wife'`;
-      params.push(familyId);
+      sql += ` WHERE id=? AND user_id=?`;
+      params.push(spouseId, userId);
       await db.query(sql, params);
     }
 
@@ -690,9 +773,8 @@ exports.updateMember = async (req, res) => {
     const userId = req.session.user.id;
     const { name, relationship, mobile, occupation, dob, gender, door_no, street, district, state, pincode } = req.body;
 
-    // Verify the member belongs to the user
     const [members] = await db.query(
-      "SELECT * FROM family_members WHERE id = ? AND family_id IN (SELECT id FROM families WHERE user_id = ?)",
+      "SELECT * FROM persons WHERE id = ? AND user_id = ? LIMIT 1",
       [memberId, userId]
     );
 
@@ -711,47 +793,81 @@ exports.updateMember = async (req, res) => {
 
     let photoPath = null;
     if (req.file) {
-      const folder = member.member_type === 'child' ? 'children' : 'parent';
+      const folder = relationIn(finalRelationship, ['child', 'son', 'daughter'])
+        ? 'children'
+        : relationIn(finalRelationship, ['sibling', 'brother', 'sister'])
+          ? 'siblings'
+          : 'parent';
 
-      // Delete old photo file if exists
-      if (member.photo) {
-        const fullOldPath = path.join(__dirname, '../uploads', member.photo);
+      if (member.image) {
+        const fullOldPath = path.join(__dirname, '../uploads', member.image);
         if (fs.existsSync(fullOldPath)) {
           fs.unlinkSync(fullOldPath);
         }
       }
 
-      // Generate new filename
-      const filename = req.file.filename;
-      photoPath = `${folder}/${filename}`;
-      const oldPath = req.file.path;
-      const newPath = path.join(__dirname, '../uploads', photoPath);
-
-      // Rename/move the file to the desired path
-      if (oldPath !== newPath) {
-        fs.renameSync(oldPath, newPath);
-      }
+      photoPath = safeMoveUploadToFolder(req.file, folder);
     }
-
 
     let sql, params;
     if (photoPath) {
       sql = `
-        UPDATE family_members
-        SET name=?, relationship=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?, photo=?
-        WHERE id=?
+        UPDATE persons
+        SET name=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?, image=?
+        WHERE id=? AND user_id=?
       `;
-      params = [name, finalRelationship, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, photoPath, memberId];
+      params = [name, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, photoPath, memberId, userId];
     } else {
       sql = `
-        UPDATE family_members
-        SET name=?, relationship=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?
-        WHERE id=?
+        UPDATE persons
+        SET name=?, mobile=?, occupation=?, dob=?, gender=?, door_no=?, street=?, district=?, state=?, pincode=?
+        WHERE id=? AND user_id=?
       `;
-      params = [name, finalRelationship, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, memberId];
+      params = [name, mobile, occupation, finalDob, gender, door_no, street, district, state, pincode, memberId, userId];
     }
 
     await db.query(sql, params);
+
+    const [selfRows] = await db.query(
+      "SELECT id, gender FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1",
+      [userId]
+    );
+
+    if (selfRows.length > 0 && Number(selfRows[0].id) !== Number(memberId)) {
+      const selfId = selfRows[0].id;
+      const normalized = canonicalizeRelationForDb(finalRelationship);
+      const reverseRelationMap = {
+        father: "child",
+        mother: "child",
+        spouse: "spouse",
+        husband: "spouse",
+        wife: "spouse",
+        child: normalizeRelation(selfRows[0].gender) === "female" ? "mother" : "father",
+        son: normalizeRelation(selfRows[0].gender) === "female" ? "mother" : "father",
+        daughter: normalizeRelation(selfRows[0].gender) === "female" ? "mother" : "father",
+        sibling: "sibling",
+        brother: "sibling",
+        sister: "sibling"
+      };
+
+      const reverseRelation = canonicalizeRelationForDb(reverseRelationMap[normalized] || "sibling");
+
+      await db.query(
+        "DELETE FROM relationships WHERE user_id = ? AND person_id = ? AND related_person_id = ?",
+        [userId, selfId, memberId]
+      );
+      await db.query(
+        "DELETE FROM relationships WHERE user_id = ? AND person_id = ? AND related_person_id = ?",
+        [userId, memberId, selfId]
+      );
+
+      await db.query(
+        `INSERT INTO relationships (user_id, person_id, related_person_id, relation)
+         VALUES (?, ?, ?, ?), (?, ?, ?, ?)`,
+        [userId, selfId, memberId, normalized, userId, memberId, selfId, reverseRelation]
+      );
+    }
+
     res.json({ success: true, message: "Member updated successfully" });
   } catch (err) {
     console.error("Update member error:", err);
@@ -764,44 +880,32 @@ exports.updateHusband = async (req, res) => {
     const userId = req.session.user.id;
     const { name, mobile, occupation, door_no, street, pincode, state, district } = req.body;
 
-    const [familyRows] = await db.query("SELECT id FROM families WHERE user_id = ? LIMIT 1", [userId]);
-    if (familyRows.length === 0) {
+    const [selfRows] = await db.query("SELECT id, image FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1", [userId]);
+    if (selfRows.length === 0) {
       return res.status(404).json({ success: false, message: "Family not found" });
     }
 
-    const familyId = familyRows[0].id;
-
-    // Get current husband photo to delete if new photo uploaded
-    const [husbandRows] = await db.query("SELECT photo FROM family_members WHERE family_id = ? AND relationship = 'husband'", [familyId]);
+    const selfId = selfRows[0].id;
     let photoPath = null;
     if (req.file) {
-      // Delete old photo file if exists
-      if (husbandRows.length > 0 && husbandRows[0].photo) {
-        const fullOldPath = path.join(__dirname, '../uploads', husbandRows[0].photo);
+      if (selfRows[0].image) {
+        const fullOldPath = path.join(__dirname, '../uploads', selfRows[0].image);
         if (fs.existsSync(fullOldPath)) {
           fs.unlinkSync(fullOldPath);
         }
       }
 
-      // Generate new filename without file size
-      photoPath = `parent/${req.file.filename}`;
-      const oldPath = req.file.path;
-      const newPath = path.join(__dirname, '../uploads', photoPath);
-
-      // Rename/move the file to the desired path
-      if (oldPath !== newPath) {
-        fs.renameSync(oldPath, newPath);
-      }
+      photoPath = safeMoveUploadToFolder(req.file, "parent");
     }
 
-    let sql = `UPDATE family_members SET name=?, mobile=?, occupation=?, door_no=?, street=?, pincode=?, state=?, district=?`;
+    let sql = `UPDATE persons SET name=?, mobile=?, occupation=?, door_no=?, street=?, pincode=?, state=?, district=?`;
     let params = [name, mobile || null, occupation || null, door_no || null, street || null, pincode || null, state || null, district || null];
     if (photoPath) {
-      sql += `, photo=?`;
+      sql += `, image=?`;
       params.push(photoPath);
     }
-    sql += ` WHERE family_id=? AND relationship='husband'`;
-    params.push(familyId);
+    sql += ` WHERE id=? AND user_id=?`;
+    params.push(selfId, userId);
 
     await db.query(sql, params);
     res.json({ success: true, message: "Husband updated successfully" });
@@ -820,24 +924,18 @@ exports.deleteFamily = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // Get family_id for the user
-    const [familyRows] = await connection.query(
-      "SELECT id FROM families WHERE user_id = ? LIMIT 1",
+    const [personRows] = await connection.query(
+      "SELECT id FROM persons WHERE user_id = ? LIMIT 1",
       [userId]
     );
 
-    if (familyRows.length === 0) {
+    if (personRows.length === 0) {
       await connection.rollback();
       return res.status(404).json({ success: false, message: "Family not found" });
     }
 
-    const familyId = familyRows[0].id;
-
-    // Delete family members first (due to foreign key constraint)
-    await connection.query("DELETE FROM family_members WHERE family_id = ?", [familyId]);
-
-    // Delete the family
-    await connection.query("DELETE FROM families WHERE id = ?", [familyId]);
+    await connection.query("DELETE FROM relationships WHERE user_id = ?", [userId]);
+    await connection.query("DELETE FROM persons WHERE user_id = ?", [userId]);
 
     await connection.commit();
 
@@ -856,13 +954,14 @@ exports.deleteFamily = async (req, res) => {
 exports.getMember = async (req, res) => {
   try {
     const memberId = req.params.id;
-    const [rows] = await db.query('SELECT * FROM family_members WHERE id = ?', [memberId]);
+    const userId = req.session.user && req.session.user.id;
+    const [rows] = await db.query('SELECT * FROM persons WHERE id = ? AND user_id = ? LIMIT 1', [memberId, userId]);
 
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Member not found' });
     }
 
-    res.json({ success: true, member: rows[0] });
+    res.json(rows[0]);
   } catch (err) {
     console.error('Get member error:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch member' });
@@ -873,13 +972,29 @@ exports.getMember = async (req, res) => {
 exports.getChild = async (req, res) => {
   try {
     const childId = req.params.id;
-    const [rows] = await db.query('SELECT * FROM family_members WHERE id = ?', [childId]);
+    const userId = req.session.user && req.session.user.id;
+    const [rows] = await db.query('SELECT * FROM persons WHERE id = ? AND user_id = ? LIMIT 1', [childId, userId]);
 
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Child not found' });
     }
 
-    res.json({ success: true, child: rows[0] });
+    const member = rows[0];
+
+    const [selfRows] = await db.query(
+      'SELECT id FROM persons WHERE user_id = ? ORDER BY id ASC LIMIT 1',
+      [userId]
+    );
+
+    if (selfRows.length > 0 && Number(selfRows[0].id) !== Number(childId)) {
+      const [relRows] = await db.query(
+        'SELECT relation FROM relationships WHERE user_id = ? AND person_id = ? AND related_person_id = ? LIMIT 1',
+        [userId, selfRows[0].id, childId]
+      );
+      member.relationship = relRows.length > 0 ? relRows[0].relation : member.relationship;
+    }
+
+    res.json(member);
   } catch (err) {
     console.error('Get child error:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch child' });

@@ -98,18 +98,98 @@ exports.validateTreeNavigation = async (req, res) => {
   }
 };
 
+/**
+ * Find if clicked person (male) has their own family
+ * Supports both GET (personId) and POST (personName) methods
+ */
 exports.findRelatedFamilyTree = async (req, res) => {
   try {
-    const personName = String(req.body.personName || "").trim();
-    const relationType = normalizeRelation(req.body.relationType);
-    const currentUserId = Number(req.body.currentUserId);
+    let personId;
+    let personName;
+    let currentUserId;
 
-    if (!personName || !relationType || !Number.isFinite(currentUserId)) {
+    // Handle both GET and POST requests
+    if (req.method === "GET") {
+      personId = Number(req.query.personId);
+      personName = String(req.query.personName || "").trim();
+    } else {
+      // POST request
+      personName = String(req.body.personName || "").trim();
+      const relationType = normalizeRelation(req.body.relationType);
+      currentUserId = Number(req.body.currentUserId);
+    }
+
+    // If we have personId (GET request), use it directly
+    if (personId && Number.isFinite(personId) && personId > 0) {
+      console.log("[findRelatedFamilyTree] GET - personId:", personId);
+      
+      const [personRows] = await db.query(
+        `SELECT id, user_id, name, gender
+         FROM persons
+         WHERE id = ?
+         LIMIT 1`,
+        [personId]
+      );
+
+      if (!Array.isArray(personRows) || personRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Person not found"
+        });
+      }
+
+      const person = personRows[0];
+      const personGender = String(person.gender || "").toLowerCase();
+
+      if (personGender !== "male" && personGender !== "m") {
+        return res.status(403).json({
+          success: false,
+          message: "Navigation is only available for male members"
+        });
+      }
+
+      const personUserId = Number(person.user_id);
+
+      if (!Number.isFinite(personUserId) || personUserId <= 0) {
+        return res.status(404).json({
+          success: false,
+          message: `${person.name || "This person"} does not have their own family yet`
+        });
+      }
+
+      const [familyCheckRows] = await db.query(
+        `SELECT id FROM persons
+         WHERE user_id = ?
+         LIMIT 1`,
+        [personUserId]
+      );
+
+      if (!Array.isArray(familyCheckRows) || familyCheckRows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: `${person.name || "This person"} does not have their own family yet`
+        });
+      }
+
+      console.log("[findRelatedFamilyTree] GET SUCCESS - personUserId:", personUserId);
+      return res.json({
+        success: true,
+        personUserId: personUserId,
+        userId: personUserId,
+        personName: person.name,
+        message: `Redirecting to ${person.name}'s family tree`
+      });
+    }
+
+    // POST request with personName
+    if (!personName || !currentUserId || !Number.isFinite(currentUserId)) {
       return res.status(400).json({
         success: false,
         message: "Missing parameters"
       });
     }
+
+    console.log("[findRelatedFamilyTree] POST - personName:", personName, "currentUserId:", currentUserId);
 
     const [currentFamilyRows] = await db.query(
       `SELECT id, name
@@ -142,25 +222,9 @@ exports.findRelatedFamilyTree = async (req, res) => {
       [personName, currentUserId]
     );
 
-    for (const candidate of candidateHeads) {
-      if (relationType === "father" || relationType === "mother") {
-        const [verificationRows] = await db.query(
-          `SELECT child.id
-           FROM relationships r
-           JOIN persons child ON child.id = r.related_person_id
-           WHERE r.user_id = ?
-             AND r.person_id = ?
-             AND LOWER(r.relation) IN ('son', 'daughter', 'child')
-             AND LOWER(TRIM(child.name)) = LOWER(TRIM(?))
-           LIMIT 1`,
-          [candidate.user_id, candidate.id, currentHead.name]
-        );
-
-        if (!verificationRows.length) {
-          continue;
-        }
-      }
-
+    if (candidateHeads.length > 0) {
+      const candidate = candidateHeads[0];
+      console.log("[findRelatedFamilyTree] POST SUCCESS - userId:", candidate.user_id);
       return res.json({
         success: true,
         message: "Family found",
@@ -173,11 +237,12 @@ exports.findRelatedFamilyTree = async (req, res) => {
       success: false,
       message: "Matching related family was not found"
     });
+
   } catch (error) {
-    console.error("findRelatedFamilyTree error:", error);
+    console.error("[findRelatedFamilyTree] ERROR:", error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while searching for the family. Please try again."
+      message: "Failed to find person's family"
     });
   }
 };
