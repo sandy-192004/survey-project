@@ -1,6 +1,7 @@
 const express = require("express");
 const session = require("express-session");
 require('dotenv').config();
+global.__dotenvConfigured = true;
 // const hemlet = require("helmet");
 
 const path = require("path");
@@ -8,6 +9,7 @@ const path = require("path");
 const familyRoutes = require("./routes/familyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminSearchRoutes = require("./routes/adminSearchRoutes");
+const familytreeRoutes = require("./routes/familyTree");
 const db = require("./config/db");
 
 const app = express();
@@ -56,6 +58,7 @@ app.use(
 app.use("/", familyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin", adminSearchRoutes);
+app.use("/", familytreeRoutes);
 
 
 // ================== ERROR HANDLER ==================
@@ -70,11 +73,11 @@ app.use((err, req, res, next) => {
 
 // ================== SERVER START ==================
 
-app.listen(process.env.PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${process.env.PORT}`);
+app.listen(4000, () => {
+  console.log(`Server running on http://localhost:4000`);
 });        
 
 
-     
 
+     
 

@@ -1,78 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const multer = require("multer");
-// const controller = require("../controllers/adminController");
-// const familyController = require("../controllers/familyController"); // Newly added import for family controller
-
-// const exportController = require("../controllers/exportController");
-
-
-// const db = require("../config/db");
-// const { upload, processUpload } = require("../middleware/upload");
-
-// // Get all families as JSON
-// router.get('/families', async (req, res) => {
-//     try {
-//         const [rows] = await db.query(`
-//             SELECT f.id AS family_id, fm.*
-//             FROM families f
-//             JOIN family_members fm ON fm.family_id = f.id
-//             ORDER BY f.id
-//         `);
-//         res.json(rows);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Error loading data');
-//     }
-// });
-
-// // Dashboard page
-// router.get("/dashboard", controller.dashboard);
-
-// // Search
-// router.get("/search", controller.search);
-
-// // Add Family - Reuse existing User-side form and logic
-// router.get("/add-family", (req, res) => {
-//   res.redirect("/family-form"); // Newly added route to reuse existing User add family form
-// });
-
-// // Create Family - Direct access without authentication
-// router.get("/create-family", (req, res) => {
-//   res.render("admin/create-family");
-// });
-
-// // POST Create Family
-// router.post("/create-family", processUpload, controller.createFamily);
-
-// // View and Edit routes
-// router.get("/view/:id", controller.viewMember);
-// router.get("/edit/:id", controller.editMember);
-// router.post("/edit/:id", upload.any(), controller.updateMember);
-// router.post("/add-child", upload.fields([{ name: 'photo', maxCount: 1 }]), controller.addChild);
-
-// router.get("/export/excel", exportController.exportToExcel);
-// router.get("/export/pdf", exportController.exportToPdf);
-
-// // Create Family (Admin)
-// router.get("/create-family", (req, res) => {
-//   res.render("admin/create-family");
-// });
-// router.post("/create-family", upload.any(), controller.createFamily);
-
-// // Delete family
-// router.post("/delete/:id", controller.deleteFamily);
-
-// // Logout
-// router.post("/logout", controller.logout);
-
-
-
-
-// module.exports = router;
-
-
-
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -83,15 +8,36 @@ const db = require("../config/db");
 const { upload, processUpload } = require("../middleware/upload");
 
 // =======================
-// GET all families as JSON
+// GET all families as JSON (persons + relationships)
 // =======================
 router.get("/families", async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT f.id AS family_id, fm.*
-      FROM families f
-      JOIN family_members fm ON fm.family_id = f.id
-      ORDER BY f.id
+      SELECT
+        p.user_id AS family_id,
+        p.id AS person_id,
+        p.name,
+        p.gender,
+        p.mobile,
+        p.occupation,
+        p.door_no,
+        p.street,
+        p.district,
+        p.state,
+        p.pincode,
+        p.image,
+        (
+          SELECT r.relation
+          FROM relationships r
+          WHERE r.user_id = p.user_id
+            AND r.person_id = (
+              SELECT MIN(pp.id) FROM persons pp WHERE pp.user_id = p.user_id
+            )
+            AND r.related_person_id = p.id
+          LIMIT 1
+        ) AS relation_to_root
+      FROM persons p
+      ORDER BY p.user_id ASC, p.id ASC
     `);
     res.json(rows);
   } catch (err) {
@@ -111,16 +57,37 @@ router.get("/dashboard", controller.dashboard);
 router.get("/search", controller.search);
 
 // =======================
+// ADMIN SIDE FAMILY AUTH
+// =======================
+router.get("/family-login", controller.showFamilyLogin);
+router.post("/family-login", controller.familyLogin);
+router.post("/family-register", controller.familyRegister);
+
+// =======================
 // ADD FAMILY (reuse user form)
 // =======================
 router.get("/add-family", (req, res) => {
-  res.redirect("/family-form");
+  req.session.adminNextAfterAuth = "/admin/create-family";
+  res.redirect("/admin/family-login?flow=create-family");
 });
+
+// =======================
+// CREATE FAMILY with USER (Admin Direct Flow)
+// =======================
+router.get("/view/create-family", (req, res) => {
+  res.render("admin/create-family");
+});
+router.post("/view/create-family", processUpload, controller.createFamilyWithUser);
 
 // =======================
 // CREATE FAMILY
 // =======================
 router.get("/create-family", (req, res) => {
+  if (!req.session.user || req.session.user.role !== "user") {
+    req.session.adminNextAfterAuth = "/admin/create-family";
+    return res.redirect("/admin/family-login?flow=create-family");
+  }
+
   res.render("admin/create-family");
 });
 router.post("/create-family", processUpload, controller.createFamily);

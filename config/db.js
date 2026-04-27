@@ -1,12 +1,15 @@
 const mysql = require("mysql2");
-require('dotenv').config();
+if (!global.__dotenvConfigured) {
+  require('dotenv').config();
+  global.__dotenvConfigured = true;
+}
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
 
-  password: process.env.DB_PASSWORD || "disneyTorn@123",
-  database: process.env.DB_NAME || "admin_db",
+  password: process.env.DB_PASSWORD || "sandhiya@sowmiya2004",
+  database: process.env.DB_NAME || "survey_app",
 
 
   waitForConnections: true,

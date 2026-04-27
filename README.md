@@ -1,234 +1,188 @@
 # Family Survey Portal
 
-A comprehensive web application for managing family data collection and surveys. The system provides separate portals for families to register and manage their information, and for administrators to view, search, filter, and export family data.
+Family Survey Portal is a Node.js + Express application to capture, manage, and export family records with two major flows:
+
+1. Family user flow (login, create family, maintain members)
+2. Admin flow (search, edit, export, and direct family creation)
+
+The project is server-rendered with EJS, uses MySQL, and stores family structure using persons + relationships tables.
+
+## Project Flow
+
+### 1) Family User Flow
+
+1. User opens login/register page.
+2. User authenticates using email + password.
+3. User lands on dashboard.
+4. If family data does not exist, user fills the family form.
+5. User can view and edit existing members from My Family.
+6. User can add children and update photos/details.
+
+Main routes in this flow:
+
+- GET /, GET /login, POST /login
+- GET /register, POST /register, GET /logout
+- GET /dashboard
+- GET /family-form, POST /save-family
+- GET /my-family, GET /my-family-json
+- GET /family/:familyId
+- GET /family-edit/:id, GET /member-edit/:id
+- POST /update-family/:id, POST /update-member/:id, POST /update-husband
+- POST /add-child
+- DELETE /delete-family
+
+### 2) Admin Flow
+
+1. Admin logs in and opens admin dashboard.
+2. Admin reviews families list and member details.
+3. Admin can search/filter family records.
+4. Admin can edit members, upload photos, add child records.
+5. Admin can delete families.
+6. Admin can export data (Excel/PDF).
+7. Admin can also create a full family with user credentials directly from admin create flow.
+
+Main routes in this flow:
+
+- GET /admin/dashboard
+- GET /admin/search
+- GET /admin/families (JSON list)
+- GET /admin/view/:id, GET /admin/edit/:id, POST /admin/edit/:id
+- POST /admin/upload-photo/:familyId
+- POST /admin/add-child
+- POST /admin/delete/:id
+- GET /admin/export/excel, GET /admin/export/pdf
+- GET /admin/family-login, POST /admin/family-login, POST /admin/family-register
+- GET /admin/add-family
+- GET /admin/create-family, POST /admin/create-family
+- GET /admin/view/create-family, POST /admin/view/create-family
+
+### 3) Family Tree Flow
+
+1. User/admin opens family tree page by user id.
+2. Tree data is served through API endpoints by person id or user id.
+3. Navigation endpoint resolves related family tree nodes.
+
+Main routes:
+
+- GET /family-tree/:userId
+- GET /api/family-tree/:personId
+- GET /api/family-tree-user/:userId
+- GET/POST /admin/family-tree/navigate/find-related
 
 ## Features
 
-### Family Portal
-- **User Authentication**: Secure registration and login system with bcrypt password hashing
-- **Family Registration**: Create and manage family profiles with personal information
-- **Member Management**: Add and edit family members (parents and children)
-- **Photo Uploads**: Upload and manage family member photos
-- **Profile Editing**: Update family and member information
-- **State/District Selection**: Location-based data with Indian states and districts
+- Session-based authentication for users/admin
+- Family creation with parent/spouse/children/sibling relationships
+- Image upload support for family members
+- Admin family management (view/edit/delete)
+- Search/filter support for admin views
+- Excel and PDF export
+- Family tree rendering and related-node navigation
+- State/district selection from static India dataset
 
-### Admin Portal
-- **Dashboard**: Overview of all registered families with statistics
-- **Advanced Search & Filtering**: Filter families by state, district, and search terms
-- **Family Management**: View, edit, and delete family records
-- **Create Families**: Admin can create new family entries
-- **Data Export**: Export family data to Excel/PDF formats
-- **Pagination**: Efficient data browsing with paginated views
-- **Image Management**: View and manage uploaded family photos
+## Tech Stack
 
-## Technology Stack
+- Backend: Node.js, Express.js
+- View Engine: EJS
+- Database: MySQL (mysql2)
+- ORM/Migrations: Sequelize, sequelize-cli
+- Auth: express-session + bcryptjs
+- Uploads: Multer
+- Image Processing: Sharp
+- Export: ExcelJS, PDFKit
+- Dev Tooling: Nodemon, Jest, Supertest
 
-- **Backend**: Node.js with Express.js
-- **Template Engine**: EJS (Embedded JavaScript)
-- **Database**: MySQL with Sequelize ORM
-- **Authentication**: Express-session with bcrypt password hashing
-- **File Upload**: Multer for handling multipart/form-data
-- **Image Processing**: Sharp for image optimization
-- **Export Tools**: ExcelJS for Excel exports, PDFKit for PDF generation
-- **Development**: Nodemon for auto-reload during development
+## Current Data Model
 
-## Project Structure
+The active runtime flow is centered on:
 
-```
-survey-project/
-│
-├── app.js                      # Main application entry point
-├── package.json                # Project dependencies and scripts
-├── README.md                   # Project documentation
-│
-├── config/                     # Configuration files
-│   ├── config.json            # Database configuration (dev, test, prod)
-│   └── db.js                  # Database connection setup
-│
-├── controllers/               # Business logic controllers
-│   ├── adminController.js     # Admin dashboard, CRUD operations
-│   ├── adminSearchController.js # Advanced search and filtering
-│   ├── exportController.js    # Excel/PDF export functionality
-│   └── familyController.js    # Family portal auth and operations
-│
-├── middleware/                # Express middleware
-│   ├── auth.js               # Authentication middleware
-│   └── upload.js             # File upload middleware (Multer config)
-│
-├── migrations/                # Database migrations (Sequelize)
-│   ├── 20260202095059-create-users.js
-│   ├── 20260202095140-create-families.js
-│   ├── 20260202095206-create-family-members.js
-│   └── 20260202095207-alter-families.js
-│
-├── models/                    # Data models
-│   ├── admin.js              # Admin model
-│   ├── Child.js              # Child model
-│   ├── FamilyMember.js       # Family member model
-│   ├── index.js              # Sequelize models index
-│   └── User.js               # User model
-│
-├── public/                    # Static assets
-│   ├── data/
-│   │   └── india-states-districts.json  # Indian states and districts data
-│   ├── images/               # Static images
-│   ├── js/                   # Client-side JavaScript
-│   │   ├── family.js         # Family portal scripts
-│   │   └── india-states-districts.js  # Location dropdown handler
-│   └── uploads/              # User uploaded files (public access)
-│
-├── routes/                    # Route definitions
-│   ├── adminRoutes.js        # Admin portal routes
-│   ├── adminSearchRoutes.js  # Admin search routes
-│   └── familyRoutes.js       # Family portal routes
-│
-├── uploads/                   # File upload storage
-│   ├── children/             # Children photos
-│   ├── parent/               # Parent photos (single)
-│   └── parents/              # Parents photos (multiple)
-│
-└── views/                     # EJS templates
-    ├── dashboard.ejs         # Family dashboard
-    ├── family-edit.ejs       # Edit family form
-    ├── family-form.ejs       # New family form
-    ├── family-login.ejs      # Family login page
-    ├── member-edit.ejs       # Edit member form
-    ├── my-family.ejs         # Family details view
-    └── admin/                # Admin views
-        ├── create-family.ejs
-        ├── dashboard.ejs
-        ├── edit.ejs
-        ├── search-filter-form.ejs
-        └── view.ejs
+- users
+- persons
+- relationships
+
+Notes:
+
+- Legacy families/family_members naming still appears in some files/migrations.
+- The compatibility layer in model logic writes/reads through persons + relationships for current flows.
+
+## Folder Overview
+
+- app.js: App bootstrapping, middleware, route mounting, global error handler
+- config/: DB configuration and pool setup
+- controllers/: Business logic for family, admin, export, tree navigation
+- routes/: Family/admin/search/tree route declarations
+- middleware/: Auth and upload middleware
+- models/: Data access and compatibility model logic
+- migrations/: Historical schema migration files
+- views/: EJS pages for family and admin UI
+- public/: Static JS, images, data files
+- uploads/: Uploaded media storage
+
+## Setup
+
+1. Install dependencies
+
+```bash
+npm install
 ```
 
-## Directory Explanation
+2. Create environment file
 
-### Core Files
-- **app.js**: Express application setup, middleware configuration, route mounting, and server initialization
-- **package.json**: Dependencies, scripts, and project metadata
+Create .env with your DB values (example):
 
-### config/
-Database configuration and connection management
-- `config.json`: Environment-specific database credentials (development, test, production)
-- `db.js`: MySQL connection pool setup using mysql2
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=survey_app
+ADMIN_EMAIL=admin@example.com
+```
 
-### controllers/
-Business logic separated from routes
-- `adminController.js`: Dashboard stats, family CRUD operations, member management
-- `adminSearchController.js`: Search and filter functionality with pagination
-- `exportController.js`: Generate Excel and PDF exports of family data
-- `familyController.js`: User authentication, family registration, member management
+3. Ensure MySQL database exists
 
-### middleware/
-Reusable middleware functions
-- `auth.js`: Session-based authentication guards for protected routes
-- `upload.js`: Multer configuration for handling file uploads with validation
+- Database name used by default: survey_app
 
-### migrations/
-Database schema versioning using Sequelize CLI
-- Sequential migrations for creating and altering tables
-- Maintains database schema history
+4. Run migrations (if needed for your environment)
 
-### models/
-Data access layer with Sequelize ORM
-- Define table schemas and relationships
-- Provide methods for database operations
+```bash
+npx sequelize-cli db:migrate
+```
 
-### public/
-Static files served directly to clients
-- `data/`: JSON data files (states, districts)
-- `images/`: Static images and assets
-- `js/`: Client-side JavaScript for dynamic behavior
-- `uploads/`: Publicly accessible uploaded files
+5. Start the app
 
-### routes/
-URL routing and request handling
-- Map HTTP endpoints to controller functions
-- Apply middleware (authentication, validation)
+```bash
+npm start
+```
 
-### uploads/
-File storage for user uploads
-- Organized by member type (children, parent, parents)
-- Files stored with unique hashed names
+For development:
 
-### views/
-EJS templates for server-side rendering
-- Family portal views (login, registration, dashboard)
-- Admin portal views (dashboard, search, edit)
-- Reusable layouts and partials
+```bash
+npm run dev
+```
 
-## Installation
+## Run & Access
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd survey-project
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure the database**
-   - Update `config/config.json` with your MySQL credentials
-   - Create a MySQL database: `survey_app`
-
-4. **Run migrations**
-   ```bash
-   npx sequelize-cli db:migrate
-   ```
-
-5. **Start the application**
-   ```bash
-   # Production
-   npm start
-   
-   # Development (with auto-reload)
-   npm run dev
-   ```
-
-6. **Access the application**
-   - Family Portal: http://localhost:3000
-   - Admin Portal: http://localhost:3000/admin
-
-## Database Schema
-
-The application uses the following main tables:
-- **users**: User authentication and credentials
-- **families**: Family information (deprecated in favor of family_members)
-- **family_members**: Stores all family member data (parents and children)
+- App currently starts on: http://localhost:4000
+- Family login: http://localhost:4000/login
+- Admin dashboard: http://localhost:4000/admin/dashboard
 
 ## Scripts
 
-- `npm start`: Start the production server
-- `npm run dev`: Start development server with nodemon
-- `npm test`: Run tests (placeholder)
+- npm start: start server
+- npm run dev: start server with nodemon
+- npm test: placeholder test command
 
-## Security Features
+## Docker Notes
 
-- Password hashing with bcrypt
-- Session-based authentication with httpOnly cookies
-- File upload validation and sanitization
-- Protected admin routes
-- SQL injection prevention with parameterized queries
+Docker files exist (Dockerfile + docker-compose.yml), but verify exposed/internal port mappings with app.js before production use.
 
-## Contributing
+## Security & Operations Notes
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+- Passwords are hashed using bcryptjs
+- Session cookie is httpOnly and sameSite=lax
+- Update session secret and DB credentials for production
+- Keep uploads directory writable by runtime user
 
 ## License
 
 ISC
-
-## Notes
-
-- Ensure MySQL server is running before starting the application
-- Upload directories are automatically created if they don't exist
-- Images are processed and optimized using Sharp
-- Session secret should be changed in production environments
