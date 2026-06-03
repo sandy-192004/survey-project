@@ -37,6 +37,15 @@
                         display: none;
                         margin-top: 8px;
                     }
+                    .img-thumbnail.passport {
+                        width: 150px;
+                        height: 150px;
+                        max-height: none;
+                        object-fit: cover;
+                        display: none;
+                        margin-top: 8px;
+                        border-radius: 4px;
+                    }
                 </style>
 
                 <form id="familyForm" action="/save-family" method="POST" enctype="multipart/form-data">
@@ -57,7 +66,7 @@
                                         </div>
                                         <input type="file" id="father_image" name="father_image" class="d-none" accept="image/*" hidden>
                                         <input type="file" id="father_image_camera" accept="image/*" capture="environment" style="display:none;">
-                                        <img id="preview_father_image" class="img-thumbnail w-100"
+                                        <img id="preview_father_image" class="img-thumbnail passport"
                                             style="display:none;">
                                     </div>
                                     <div class="col-12 col-md-6 ps-md-4">
@@ -69,7 +78,7 @@
                                         </div>
                                         <input type="file" id="mother_image" name="mother_image" class="d-none" accept="image/*" hidden>
                                         <input type="file" id="mother_image_camera" accept="image/*" capture="environment" style="display:none;">
-                                        <img id="preview_mother_image" class="img-thumbnail w-100"
+                                        <img id="preview_mother_image" class="img-thumbnail passport"
                                             style="display:none;">
                                     </div>
                                 </div>
@@ -103,8 +112,8 @@
                                         </div>
                                         <input type="file" id="my_image" name="my_image" class="d-none" accept="image/*" hidden>
                                         <input type="file" id="my_image_camera" accept="image/*" capture="environment" style="display:none;">
-                                        <img id="preview_my_image" class="img-thumbnail"
-                                            style="display:none; max-width:200px;">
+                                        <img id="preview_my_image" class="img-thumbnail passport"
+                                            style="display:none;">
                                     </div>
                                 </div>
                             </div>
@@ -136,8 +145,8 @@
                                         </div>
                                         <input type="file" id="spouse_image" name="spouse_image" class="d-none" accept="image/*" hidden>
                                         <input type="file" id="spouse_image_camera" accept="image/*" capture="environment" style="display:none;">
-                                        <img id="preview_spouse_image" class="img-thumbnail"
-                                            style="display:none; max-width:200px;">
+                                        <img id="preview_spouse_image" class="img-thumbnail passport"
+                                            style="display:none;">
                                     </div>
                                 </div>
                             </div>
@@ -284,7 +293,7 @@
       <div class="border rounded p-3 mb-3 bg-light position-relative" id="childRow_${childIndex}">
         <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="document.getElementById('childRow_${childIndex}').remove()"></button>
         <h6 class="fw-bold mb-3 small text-muted">Child #${childIndex + 1}</h6>
-        <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" value="${name}" required>
+        <input class="form-control mb-2 small" name="children[${childIndex}][name]" placeholder="Child Name" value="${name}">
         <select class="form-select mb-2 small" name="children[${childIndex}][gender]">
           <option value="">Gender</option>
           <option value="male" ${gender === 'male' || gender === 'Male' ? 'selected' : ''}>Male</option>
@@ -298,7 +307,7 @@
                 <input type="file" id="child_img_${childIndex}" name="children[${childIndex}][image]" class="d-none" accept="image/*" hidden>
                 <input type="file" id="child_img_${childIndex}_camera" accept="image/*" capture="environment" style="display:none;">
         <input type="hidden" name="children[${childIndex}][existing_image]" value="${imgPath}">
-        <img id="preview_child_img_${childIndex}" src="${displayImg}" class="img-thumbnail mt-2" style="display:${displayImg ? 'block' : 'none'}; max-height:100px;">
+        <img id="preview_child_img_${childIndex}" src="${displayImg}" class="img-thumbnail passport mt-2" style="display:${displayImg ? 'block' : 'none'};">
       </div>
     `;
                             document.getElementById('childrenContainer').insertAdjacentHTML('beforeend', html);
@@ -317,7 +326,7 @@
       <div class="border rounded p-3 mb-3 bg-light position-relative" id="siblingRow_${siblingIndex}">
         <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="document.getElementById('siblingRow_${siblingIndex}').remove()"></button>
         <h6 class="fw-bold mb-3 small text-muted">Sibling #${siblingIndex + 1}</h6>
-        <input class="form-control mb-2 small" name="siblings[${siblingIndex}][name]" placeholder="Sibling Name" value="${name}" required>
+        <input class="form-control mb-2 small" name="siblings[${siblingIndex}][name]" placeholder="Sibling Name" value="${name}">
         <select class="form-select mb-2 small" name="siblings[${siblingIndex}][gender]">
           <option value="">Gender</option>
           <option value="male" ${gender === 'male' || gender === 'Male' ? 'selected' : ''}>Male</option>
@@ -335,7 +344,7 @@
         <input type="file" id="sibling_img_${siblingIndex}" name="siblings[${siblingIndex}][image]" class="d-none" accept="image/*" hidden>
         <input type="file" id="sibling_img_${siblingIndex}_camera" accept="image/*" capture="environment" style="display:none;">
         <input type="hidden" name="siblings[${siblingIndex}][existing_image]" value="${imgPath}">
-        <img id="preview_sibling_img_${siblingIndex}" src="${displayImg}" class="img-thumbnail mt-2" style="display:${displayImg ? 'block' : 'none'}; max-height:100px;">
+        <img id="preview_sibling_img_${siblingIndex}" src="${displayImg}" class="img-thumbnail passport mt-2" style="display:${displayImg ? 'block' : 'none'};">
       </div>
     `;
                             document.getElementById('siblingsContainer').insertAdjacentHTML('beforeend', html);
@@ -435,11 +444,30 @@
                         function showFileSize(baseId) {
                             const uploadInput = document.getElementById(baseId);
                             const fileTextBox = document.getElementById('file_text_' + baseId);
-                            if (!uploadInput || !uploadInput.files[0]) return;
+                            const previewImg = document.getElementById('preview_' + baseId);
+                            if (!uploadInput || !uploadInput.files || !uploadInput.files[0]) return;
                             const file = uploadInput.files[0];
                             const sizeKB = (file.size / 1024).toFixed(2);
+
+                            // show size in the upload placeholder/text box
                             if (fileTextBox) {
                                 fileTextBox.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>Selected: ' + sizeKB + ' KB';
+                            }
+
+                            // show inline preview if an <img id="preview_<baseId>"> exists
+                            if (previewImg) {
+                                // revoke previous object URL if present
+                                try {
+                                    if (uploadInput.dataset.previewUrl) {
+                                        URL.revokeObjectURL(uploadInput.dataset.previewUrl);
+                                    }
+                                } catch (e) { /* ignore */ }
+
+                                const url = URL.createObjectURL(file);
+                                uploadInput.dataset.previewUrl = url;
+                                previewImg.src = url;
+                                previewImg.classList.add('passport');
+                                previewImg.style.display = 'block';
                             }
                         }
 
@@ -491,8 +519,33 @@
                             });
                         }
 
-                        function loadDistricts() {
-                            const state = document.getElementById('state').value;
+                        function setSelectValue(selectEl, rawValue) {
+                            if (!selectEl || rawValue === undefined || rawValue === null) return false;
+
+                            const target = String(rawValue).trim();
+                            if (!target) return false;
+
+                            const exactOption = Array.from(selectEl.options).find(opt => opt.value === target);
+                            if (exactOption) {
+                                selectEl.value = exactOption.value;
+                                return true;
+                            }
+
+                            const folded = target.toLowerCase();
+                            const looseOption = Array.from(selectEl.options).find(
+                                opt => String(opt.value || '').trim().toLowerCase() === folded
+                            );
+
+                            if (looseOption) {
+                                selectEl.value = looseOption.value;
+                                return true;
+                            }
+
+                            return false;
+                        }
+
+                        function loadDistricts(stateOverride = null, districtToSelect = null) {
+                            const state = stateOverride || document.getElementById('state').value;
                             const districtDropdown = document.getElementById('district');
 
                             districtDropdown.innerHTML = '<option value="">Select District</option>';
@@ -502,6 +555,10 @@
                                     districtDropdown.innerHTML += `<option value="${district}">${district}</option>`;
                                 });
                             }
+
+                            if (districtToSelect) {
+                                setSelectValue(districtDropdown, districtToSelect);
+                            }
                         }
 
                         window.onclick = function (event) {
@@ -509,8 +566,8 @@
                             if (event.target === modal) closeModal();
                         };
 
-                        window.onload = function () {
-                            loadStates();
+                        window.onload = async function () {
+                            await loadStates();
 
                             // Setup image file size display for all inputs
                             setupImageInputPair('father_image');
@@ -537,6 +594,7 @@
                                 const img = document.getElementById(id);
                                 if (img) {
                                     img.src = displayPath;
+                                    img.classList.add('passport');
                                     img.style.display = 'block';
                                 }
                             };
@@ -565,31 +623,23 @@
                                 setVal('street', existingData.self?.street);
                                 setVal('pincode', existingData.self?.pincode);
 
+                                const stateSelect = document.getElementById('state');
                                 if (existingData.self?.state) {
-                                    const stateSelect = document.getElementById('state');
-                                    stateSelect.value = existingData.self.state;
-                                    loadDistricts();
-                                    if (existingData.self?.district) {
-                                        setVal('district', existingData.self.district);
+                                    const stateMatched = setSelectValue(stateSelect, existingData.self.state);
+                                    if (stateMatched) {
+                                        loadDistricts(stateSelect.value, existingData.self?.district || '');
                                     }
                                 }
 
                                 document.getElementById('childrenContainer').innerHTML = '';
-                                if (existingData.children?.length > 0) {
-                                    existingData.children.forEach(c => addChild(c));
-                                } else {
-                                    addChild();
-                                }
+                                    if (existingData.children?.length > 0) {
+                                        existingData.children.forEach(c => addChild(c));
+                                    }
 
                                 document.getElementById('siblingsContainer').innerHTML = '';
                                 if (existingData.siblings?.length > 0) {
                                     existingData.siblings.forEach(s => addSibling(s));
-                                } else {
-                                    addSibling();
                                 }
-                            } else {
-                                addChild();
-                                addSibling();
                             }
                         };
                     </script>

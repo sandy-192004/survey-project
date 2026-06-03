@@ -143,6 +143,31 @@
 <script>
   let parentsAddress = {};
 
+  function setSelectValue(selectEl, rawValue) {
+    if (!selectEl || rawValue === undefined || rawValue === null) return false;
+
+    const target = String(rawValue).trim();
+    if (!target) return false;
+
+    const exactOption = Array.from(selectEl.options).find(opt => opt.value === target);
+    if (exactOption) {
+      selectEl.value = exactOption.value;
+      return true;
+    }
+
+    const folded = target.toLowerCase();
+    const looseOption = Array.from(selectEl.options).find(
+      opt => String(opt.value || '').trim().toLowerCase() === folded
+    );
+
+    if (looseOption) {
+      selectEl.value = looseOption.value;
+      return true;
+    }
+
+    return false;
+  }
+
   function handlePhotoSelect(input, target) {
     if (input.files && input.files[0]) {
       const file = input.files[0];
@@ -154,16 +179,21 @@
   document.addEventListener("DOMContentLoaded", async () => {
     try {
       const memberId = window.location.pathname.split('/').pop();
-      const res = await fetch(`/get-child/${memberId}`);
-      const member = await res.json();
+      const res = await fetch(`/get-member/${memberId}`);
+      const payload = await res.json();
+      if (!res.ok || (payload && payload.success === false)) {
+        throw new Error(payload?.message || 'Failed to fetch member details');
+      }
+
+      const member = payload.member || payload;
 
       if (member) {
         document.querySelector('input[name="name"]').value = member.name || '';
         document.querySelector('input[name="mobile"]').value = member.mobile || '';
         document.querySelector('input[name="occupation"]').value = member.occupation || '';
-        document.querySelector('input[name="dob"]').value = member.dob || '';
+        document.querySelector('input[name="dob"]').value = member.dob ? String(member.dob).split('T')[0] : '';
         document.querySelector('select[name="gender"]').value = member.gender || '';
-        document.querySelector('select[name="relationship"]').value = member.relationship || '';
+        document.querySelector('select[name="relationship"]').value = member.relationship || member.relation || '';
         document.querySelector('input[name="door_no"]').value = member.door_no || '';
         document.querySelector('input[name="street"]').value = member.street || '';
         document.querySelector('input[name="pincode"]').value = member.pincode || '';
@@ -223,19 +253,35 @@
         const option = document.createElement("option");
         option.value = state;
         option.textContent = state;
-        if (state === selectedState) option.selected = true;
         stateSelect.appendChild(option);
       });
 
+      // Keep legacy values visible even if not found in current dataset.
+      if (selectedState && !setSelectValue(stateSelect, selectedState)) {
+        const fallbackState = document.createElement("option");
+        fallbackState.value = selectedState;
+        fallbackState.textContent = selectedState;
+        stateSelect.appendChild(fallbackState);
+        stateSelect.value = selectedState;
+      }
+
       // Load districts if state is selected
-      if (selectedState && indiaData[selectedState]) {
-        indiaData[selectedState].forEach(district => {
+      const resolvedState = stateSelect.value;
+      if (resolvedState && indiaData[resolvedState]) {
+        indiaData[resolvedState].forEach(district => {
           const option = document.createElement("option");
           option.value = district;
           option.textContent = district;
-          if (district === selectedDistrict) option.selected = true;
           districtSelect.appendChild(option);
         });
+
+        setSelectValue(districtSelect, selectedDistrict);
+      } else if (selectedDistrict) {
+        const fallbackDistrict = document.createElement("option");
+        fallbackDistrict.value = selectedDistrict;
+        fallbackDistrict.textContent = selectedDistrict;
+        districtSelect.appendChild(fallbackDistrict);
+        districtSelect.value = selectedDistrict;
       }
 
       // Add change event listener for state
@@ -259,20 +305,34 @@
   }
 
   // Handle checkbox for same as parents address
-  document.getElementById('sameAsParents').addEventListener('change', function() {
+  document.getElementById('sameAsParents').addEventListener('change', async function() {
     const isChecked = this.checked;
-    const addressFields = ['door_no', 'street', 'state', 'district', 'pincode'];
+    const doorNoEl = document.querySelector('[name="door_no"]');
+    const streetEl = document.querySelector('[name="street"]');
+    const pincodeEl = document.querySelector('[name="pincode"]');
+    const stateEl = document.querySelector('[name="state"]');
+    const districtEl = document.querySelector('[name="district"]');
 
-    addressFields.forEach(field => {
-      const element = document.querySelector(`[name="${field}"]`);
-      if (isChecked) {
-        element.value = parentsAddress[field] || '';
-        element.disabled = true;
-      } else {
-        element.disabled = false;
-        // Optionally clear fields or keep current values
-      }
-    });
+    if (isChecked) {
+      doorNoEl.value = parentsAddress.door_no || '';
+      streetEl.value = parentsAddress.street || '';
+      pincodeEl.value = parentsAddress.pincode || '';
+
+      await loadStatesForMemberEdit(parentsAddress.state || '', parentsAddress.district || '');
+
+      doorNoEl.disabled = true;
+      streetEl.disabled = true;
+      pincodeEl.disabled = true;
+      stateEl.disabled = true;
+      districtEl.disabled = true;
+      return;
+    }
+
+    doorNoEl.disabled = false;
+    streetEl.disabled = false;
+    pincodeEl.disabled = false;
+    stateEl.disabled = false;
+    districtEl.disabled = false;
   });
 
   document.getElementById('editMemberForm').addEventListener('submit', async (e) => {
